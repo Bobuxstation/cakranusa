@@ -1,0 +1,22 @@
+::-webkit-scrollbar {
+    width: 2px;
+    height: 2px;
+}
+
+::-webkit-scrollbar-button {
+    width: 4px;
+    height: 4px;
+}
+
+::-webkit-scrollbar-thumb {
+    background: gray;
+    border: 0px none rgb(255, 255, 255);
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: gray;
+}
+
+::-webkit-scrollbar-thumb:active {
+    background: gray;
+}

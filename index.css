@@ -1,0 +1,123 @@
+@font-face {
+    font-family: 'ra-inet';
+    src: url('assets/C&C Red Alert [INET].ttf');
+}
+
+@font-face {
+    font-family: 'ra-lan';
+    src: url('assets/C&C Red Alert [INET].ttf');
+}
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    overflow: hidden;
+    font-family: 'ra-lan';
+}
+
+#uiBottom {
+    width: 100dvw;
+    height: fit-content;
+    pointer-events: none;
+    position: absolute;
+    bottom: 0;
+}
+
+#uiBottom div {
+    padding: 5px;
+    background: #ffffffbd;
+    border: darkgray solid 1px;
+    margin: 15px 15px 15px 0px;
+    width: fit-content;
+    display: inline-block;
+    pointer-events: all;
+    border-radius: 5px;
+    box-shadow: rgba(149, 157, 165, 0.5) 0px 8px 24px;
+    backdrop-filter: blur(10px);
+}
+
+#uiBottom span {
+    padding: 5px;
+    padding-bottom: 0px;
+    display: inline-block;
+    padding-right: 2px;
+    margin-bottom: -2px;
+}
+
+button {
+    padding: 5px;
+    border-radius: 3px;
+    border: darkgray solid;
+    padding-bottom: 3px;
+    border-width: 1px 1px 3px 1px;
+    cursor: pointer;
+    box-shadow: rgba(149, 157, 165, 0.5) 0px 8px 24px;
+    transition: all 0.10s ease;
+}
+
+button:hover {
+    border: gray solid;
+    border-width: 1px 1px 3px 1px;
+    background: lightgray;
+    transition: all 0.10s ease;
+}
+
+button:active {
+    border: gray solid 1px;
+    background: lightgray;
+    box-shadow: none;
+    transition: all 0.10s ease;
+}
+
+#uiBottom div:first-child {
+    margin-left: 15px;
+}
+
+#money, #date {
+    float: right;
+}
+
+#tools {
+    margin-bottom: 0px !important;
+}
+
+.tab {
+    position: absolute;
+    border-radius: 5px;
+    border: darkgray solid 1px;
+    bottom: 0;
+    background: #ffffffbd;
+    margin: 15px;
+    margin-bottom: 65px;
+    box-shadow: rgba(149, 157, 165, 0.5) 0px 8px 24px;
+    backdrop-filter: blur(10px);
+}
+
+.right, .left {
+    width: fit-content;
+    height: 25dvw;
+    float: left;
+    padding: 5px;
+    overflow: auto;
+}
+
+.left button {
+    display: block;
+    aspect-ratio: 1/1;
+    width: 75px;
+    padding: 5px;
+    margin-top: 5px;
+}
+
+.left button:first-child,
+.right button:first-child {
+    margin: 0;
+}
+
+.right button {
+    width: 25vw;
+    text-align: left;
+    display: block;
+    margin-top: 5px;
+}
