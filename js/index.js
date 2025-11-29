@@ -1,21 +1,26 @@
 // Create a scene
 var scene = new THREE.Scene();
-var camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 2000000);
-camera.position.set(5, 5, 0);
-camera.lookAt(scene.position);
-window.createImageBitmap = null
+
+// isometric camera
+var d = 20;
+var camera = new THREE.OrthographicCamera(-d * window.innerWidth / window.innerHeight, d * window.innerWidth / window.innerHeight, d, -d, 1, 9999);
+camera.position.set(30, 30, 30);
 
 // Create a renderer
 var renderer = new THREE.WebGLRenderer({ antialias: true });
 renderer.setSize(window.innerWidth, window.innerHeight);
 renderer.setPixelRatio(window.devicePixelRatio);
 renderer.outputEncoding = THREE.sRGBEncoding;
-renderer.toneMapping = THREE.ACESFilmicToneMapping;
 renderer.shadowMap.enabled = true;
 renderer.shadowMap.type = THREE.PCFSoftShadowMap;
 document.body.appendChild(renderer.domElement);
 
 var controls = new THREE.OrbitControls(camera, renderer.domElement);
+controls.mouseButtons.LEFT = 2;
+controls.mouseButtons.RIGHT = 3;
+controls.touches.ONE = 2;
+controls.touches.TWO = 1;
+
 var composer = new THREE.EffectComposer(renderer);
 composer.addPass(new THREE.RenderPass(scene, camera));
 
@@ -36,7 +41,10 @@ animate();
 
 //resize window
 function onWindowResize() {
-    camera.aspect = window.innerWidth / window.innerHeight;
+    camera.left = -d * window.innerWidth / window.innerHeight;
+    camera.right = d * window.innerWidth / window.innerHeight;
+    camera.top = d;
+    camera.bottom = -d;
     camera.updateProjectionMatrix();
 
     renderer.setSize(window.innerWidth, window.innerHeight);

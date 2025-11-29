@@ -6,7 +6,8 @@ let foliage = [
 ];
 
 let houses = [
-    'assets/residential/house-1'
+    'assets/residential/house-1',
+    'assets/residential/house-2',
 ];
 
 //biased random

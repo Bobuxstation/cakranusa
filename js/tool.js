@@ -1,57 +1,83 @@
 // select tiles
 async function select(event, duration) {
-    if (duration > 250) return;
-
     var mouse = new THREE.Vector2();
     mouse.x = (event.clientX / renderer.domElement.clientWidth) * 2 - 1;
     mouse.y = - (event.clientY / renderer.domElement.clientHeight) * 2 + 1;
 
     var raycaster = new THREE.Raycaster();
-    raycaster.setFromCamera(mouse, camera);
+    raycaster.setFromCamera(mouse, camera)
 
+    var intersectsGrid = false;
     var intersects = raycaster.intersectObjects(scene.children, true);
-    if (intersects.length > 0) {
-        var selectedObject = intersects[0].object;
+    if (intersects.length == 0 || duration > 250) return;
 
-        if (selectedObject instanceof THREE.InstancedMesh) {
-            let index = intersects[0].instanceId;
-            let tile = sceneData.find((element) =>
-                element.find((index) =>
-                    index.index == intersects[0].instanceId
-                )
-            ).find((index) => index.index == intersects[0].instanceId);
+    intersects.forEach(async item => {
+        if (item.object != gridInstance || intersectsGrid) return;
+        let index = item.instanceId;
+        let tile = sceneData.find((element) => element.find((item) => item.index == index)).find((item) => item.index == index);
 
-            switch (tool.category) {
-                case "zones":
-                    // remove foliage
-                    if (tile.type == 3 & tile.zone == tool.type) return;
-                    if (tile.type == 1) scene.remove(meshLocations[index]);
+        intersectsGrid = true;
 
-                    tile.type = 3; //zoned for buildings
-                    tile.zone = tool.type;
-                    tile.occupied = false;
+        switch (tool.category) {
+            case "zones":
+                // remove foliage
+                if (tile.type == 3 & tile.zone == tool.type) return;
+                cleanTileData(tile)
 
-                    // add billboard to tile
-                    let object = await loadWMat(`assets/zoning/${tool.type}`);
-                    object.position.set(tile["posX"], tile["posY"] + 0.12, tile["posZ"]);
-                    object.scale.setScalar(0.156);
+                tile.type = 3; //zoned for buildings
+                tile.zone = tool.type;
+                tile.occupied = false;
 
-                    scene.add(object);
-                    meshLocations[index] = object;
-                    break;
-                case "building":
-                    tile.type = 4; // pre made buildings
-                    tile.building = tool.type;
-                    break;
-                case "road": placeRoad(tile); break;
-            }
+                // add billboard to tile
+                let object = await loadWMat(`assets/zoning/${tool.type}`);
+                object.position.set(tile["posX"], tile["posY"] + 0.12, tile["posZ"]);
+                object.scale.setScalar(0.156);
+
+                scene.add(object);
+                animMove(object, true);
+
+                meshLocations[index] = object;
+                break;
+            case "building":
+                cleanTileData(tile)
+                tile.type = 4; // pre made buildings
+                tile.building = tool.type;
+                break;
+            case "demolish": cleanTileData(tile, true); break;
+            case "road": placeRoad(tile); break;
         }
-    }
+    })
 }
 
+// capture mouse for selection
 renderer.domElement.addEventListener('mousedown', () => { st = Date.now(); });
 renderer.domElement.addEventListener('mouseup', (e) => { if (st) select(e, Date.now() - st); });
 let st = 0;
+
+// remove additional information from tile
+function cleanTileData(tile, resetType = false) {
+    if (tile.building) delete tile.building;
+    if (tile.zone) delete tile.zone;
+    if (tile.foliageType) delete tile.foliageType;
+
+    if (resetType & typeof meshLocations[tile.index] != "undefined") {
+        animMove(meshLocations[tile.index], false);
+        setTimeout(() => {
+            // update neighboring roads
+            Object.values(checkNeighborForRoads(tile["posX"], tile["posZ"], false, true)).forEach(tile => {
+                setRoadModel(checkNeighborForRoads(tile["posX"], tile["posZ"], false, true), tile, true);
+            });
+
+            if (meshLocations[tile.index]) scene.remove(meshLocations[tile.index])
+            setInstanceColor((tile.posX + tile.posZ) % 2 === 0 ? 0x008000 : 0x007000, gridInstance, tile.index);
+        }, 500);
+    } else {
+        setInstanceColor((tile.posX + tile.posZ) % 2 === 0 ? 0x008000 : 0x007000, gridInstance, tile.index);
+        if (meshLocations[tile.index]) scene.remove(meshLocations[tile.index]);
+    };
+
+    if (resetType) tile.type = 0; // plains
+}
 
 // build tab mode
 let tool = {};
@@ -60,14 +86,8 @@ function setTool(type, category) {
     tool["category"] = category;
 }
 
-// set color of tile
-function setInstanceColor(color, instance, index) {
-    instance.setColorAt(index, (new THREE.Color()).set(color));
-    instance.instanceColor.needsUpdate = true;
-}
-
-// render road model on tile following neighbors
-async function setRoadModel(directions, tile) {
+// render road model on tile based on neighbors
+async function setRoadModel(directions, tile, isUpdate = false) {
     let object
 
     if (meshLocations[tile.index]) scene.remove(meshLocations[tile.index]);
@@ -124,19 +144,23 @@ async function setRoadModel(directions, tile) {
     object.position.set(tile["posX"], tile["posY"] + 0.12, tile["posZ"]);
     object.scale.setScalar(0.1565);
     scene.add(object);
+
     meshLocations[tile.index] = object;
+    if (isUpdate) return;
+    
+    animMove(object, true);
+    setTimeout(() => setInstanceColor(0x222222, gridInstance, tile.index), 500);
 }
 
 // place road on tile and update neighbors
 function placeRoad(tile) {
     tile.type = 2;
-    setInstanceColor(0x111111, gridInstance, tile.index);
+    cleanTileData(tile)
 
     let neighbors = checkNeighborForRoads(tile["posX"], tile["posZ"], false, true);
     setRoadModel(neighbors, tile);
 
     Object.values(neighbors).forEach(tile => {
-        let neighbors = checkNeighborForRoads(tile["posX"], tile["posZ"], false, true);
-        setRoadModel(neighbors, tile);
+        setRoadModel(checkNeighborForRoads(tile["posX"], tile["posZ"], false, true), tile, true);
     });
 }

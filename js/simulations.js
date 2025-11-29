@@ -3,18 +3,19 @@ async function citizenSimulation(seed) {
     // increase housing demand under these conditions
     // - its less than the max limit
     // - no empty housing lots
-    if (housingDemand < 100 && findZone("housing", true) == false) {
-        housingDemand += 1;
-    };
+    if (housingDemand < 100) housingDemand += 10;
+    if (commercialDemand < 100) commercialDemand += 10;
+    if (IndustrialDemand < 100) IndustrialDemand += 10;
+    if (FarmlandDemand < 100) FarmlandDemand += 10;
 
     // occupy a house
     let tile = findZone("housing", true, true);
-    if (tile) {
+    if (tile != false & housingDemand >= 25) {
         let connectedRoad = checkNeighborForRoads(tile["posX"], tile["posZ"], true);
         let houseType = houses[Math.floor(Math.random() * houses.length)];
 
         if (!connectedRoad) return;
-        
+
         tile.road = connectedRoad.road;
         tile.rot = connectedRoad.rot;
         tile.type = houseType;
@@ -24,17 +25,20 @@ async function citizenSimulation(seed) {
         object.position.set(tile["posX"], tile["posY"] + 0.12, tile["posZ"]);
         object.rotation.set(0, connectedRoad.rot, 0);
         object.scale.setScalar(0.156);
-        
+
         scene.remove(meshLocations[tile.index]);
         scene.add(object);
+        animMove(object, true);
 
-        meshLocations[tile.index] += object;
+        housingDemand -= 25;
+        meshLocations[tile.index] = object;
         setInstanceColor(0x555555, gridInstance, tile.index);
     }
 
     setTimeout(citizenSimulation, 1000);
 }
 
+// check neighbor of tiles for roads (north, east, south, west)
 function checkNeighborForRoads(x, z, rand, all = false) {
     const north = sceneData.flat().find(item => item.posX == x && item.posZ == z + 1 && item.type == 2);
     const south = sceneData.flat().find(item => item.posX == x && item.posZ == z - 1 && item.type == 2);
@@ -46,7 +50,7 @@ function checkNeighborForRoads(x, z, rand, all = false) {
     if (south) directions.south = south;
     if (east) directions.east = east;
     if (west) directions.west = west;
-    
+
     const directionRotation = {
         north: (Math.PI / 2),
         south: -(Math.PI / 2),
@@ -78,6 +82,7 @@ function checkNeighborForRoads(x, z, rand, all = false) {
     return false;
 }
 
+// find zone for citizens
 function findZone(zone, occupied, checkRoad) {
     const matches = sceneData.flat().filter(item => item.zone === zone);
 

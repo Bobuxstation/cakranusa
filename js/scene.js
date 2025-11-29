@@ -30,25 +30,6 @@ function newBlankScene(terrainSize, seed) {
     return scene;
 };
 
-// load obj building models
-async function loadWMat(location) {
-    let mtlloader = new THREE.MTLLoader();
-    loaded[`${location}.mtl`] ??= await mtlloader.loadAsync(`${location}.mtl`)
-
-    let objloader = new THREE.OBJLoader();
-    objloader.setMaterials(loaded[`${location}.mtl`]);
-    loaded[`${location}.obj`] ??= await objloader.loadAsync(`${location}.obj`);
-
-    let object = loaded[`${location}.obj`].clone();
-    object.traverse((child) => {
-        if (!child.isMesh) return;
-        child.castShadow = true;
-        child.receiveShadow = true;
-    })
-
-    return object;
-}
-
 async function generateGrid(data) {
     // instance for checkerboard grid
     let terrainSize = data.length;
@@ -99,7 +80,7 @@ async function generateGrid(data) {
                 meshLocations[index] = cloned;
                 scene.add(cloned);
             } else if (itemData.type == 2) {
-                color.set(0x111111);
+                color.set(0x222222);
                 instance.setColorAt(index, color);
 
                 let object = await loadWMat("assets/roads/road_straight");
@@ -164,11 +145,11 @@ function allOfTheLights() {
     sky.material.uniforms.sunPosition.value.copy(sun);
 }
 
-let meshLocations, sceneData, gridInstance, worldSeed
+let meshLocations, sceneData, gridInstance, worldSeed, citizens;
 async function initScene() {
     worldSeed = Math.random();
     meshLocations = {};
-    sceneData = newBlankScene(32, Math.floor(worldSeed * 100000));
+    sceneData = newBlankScene(64, Math.floor(worldSeed * 100000));
     gridInstance = await generateGrid(sceneData);
     allOfTheLights();
     citizenSimulation(worldSeed);

@@ -20,6 +20,7 @@
     <script type="text/javascript" src="deps/MTLLoader.js"></script>
     <script type="text/javascript" src="deps/OBJLoader.js"></script>
 
+    <script type="text/javascript" src="js/helper.js" defer></script>
     <script type="text/javascript" src="js/index.js" defer></script>
     <script type="text/javascript" src="js/tool.js" defer></script>
     <script type="text/javascript" src="js/definitions.js" defer></script>
@@ -56,7 +57,7 @@
         <div id="tools">
             <button onclick="openTab('menu', 'tab', true)">Menu</button>
             <button onclick="openTab('build', 'tab', true)">Build</button>
-            <button>Demolish</button>
+            <button onclick="setTool('', 'demolish')">Demolish</button>
             <button>Stats</button>
         </div>
         <div id="money">
