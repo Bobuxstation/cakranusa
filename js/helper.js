@@ -1,3 +1,82 @@
+//========================
+// Helper Functions
+//========================
+
+//biased random
+function mulberry32(a) {
+    var t = a += 0x6D2B79F5;
+    t = Math.imul(t ^ t >>> 15, t | 1);
+    t ^= t + Math.imul(t ^ t >>> 7, t | 61);
+    return ((t ^ t >>> 14) >>> 0) / 4294967296;
+}
+
+// open tab
+var lastTab = {};
+function openTab(tabname, tabGroup, doubleClickHide = false) {
+    let tabs = document.getElementsByClassName(tabGroup);
+
+    lastTab[tabGroup] = tabname;
+    Object.values(tabs).forEach(element => {
+        let action = (element.id == tabname) ? "block" : "none";
+        let prev = element.style.display;
+
+        if (doubleClickHide & prev == action & action == "block") {
+            element.style.animation = "slideOutDown 0.25s both";
+            lastTab[tabGroup] = '';
+
+            setTimeout(() => {
+                element.style.display = "none";
+                element.style.animation = "bounceInUp 0.5s both";
+            }, 250);
+        } else {
+            element.style.display = action;
+        }
+    });
+}
+
+// remove additional information from tile
+function cleanTileData(tile, resetType = false) {
+    if (tile.building) delete tile.building;
+    if (tile.zone) delete tile.zone;
+    if (tile.foliageType) delete tile.foliageType;
+    if (tile.uuid) delete tile.uuid;
+
+    if (Object.keys(citizens).find(item => item == tile.index)) {
+        delete citizens[tile.index];
+    }
+
+    if (resetType & typeof meshLocations[tile.index] != "undefined") {
+        animMove(meshLocations[tile.index], false);
+        setTimeout(() => {
+            // update neighboring roads
+            Object.values(checkNeighborForRoads(tile["posX"], tile["posZ"], false, true)).forEach(tile => {
+                setRoadModel(checkNeighborForRoads(tile["posX"], tile["posZ"], false, true), tile, true);
+            });
+
+            setInstanceColor((tile.posX + tile.posZ) % 2 === 0 ? 0x008000 : 0x007000, gridInstance, tile.index);
+            if (meshLocations[tile.index]) {
+                scene.remove(meshLocations[tile.index]);
+                delete meshLocations[tile.index];
+            };
+        }, 500);
+    } else {
+        setInstanceColor((tile.posX + tile.posZ) % 2 === 0 ? 0x008000 : 0x007000, gridInstance, tile.index);
+        if (meshLocations[tile.index]) scene.remove(meshLocations[tile.index]);
+    }
+
+    if (resetType) {
+        tile.type = 0; // plains
+        tile.occupied = false;
+    }
+}
+
+//scale, rotate and move building to tile
+function positionTile(connectedRoad, tile, object) {
+    object.position.set(tile["posX"], tile["posY"] + 0.12, tile["posZ"]);
+    object.rotation.set(0, connectedRoad.rot || -Math.PI, 0);
+    object.scale.setScalar(0.156);
+}
+
 // building (up) and demolishing (down) animation
 function animMove(target, isUp) {
     const startY = target.position.y;
@@ -8,7 +87,7 @@ function animMove(target, isUp) {
         spawnSmoke(target.position, 3000);
         (new Audio("assets/audio/829103__squirrel_404__smasheddemolished-brick-wall-crumblingcaving-in.mp3")).play();
     };
-    
+
     function lerpAnim() {
         const t = Math.min((performance.now() - startTime) / 500, 1);
 
@@ -98,6 +177,7 @@ async function loadWMat(location) {
     return object;
 }
 
+// make unique id from array
 function makeUniqueId(array) {
     let characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
     let maxAttempts = 1000;

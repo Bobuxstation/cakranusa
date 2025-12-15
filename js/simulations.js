@@ -1,12 +1,17 @@
 let housingDemand = 0, commercialDemand = 0, IndustrialDemand = 0, FarmlandDemand = 0;
 
+//========================
+// Citizen & City Simulation
+//========================
+
 //create new citizen object
 function createNewCitizen(tile) {
     let data = {
         home: tile.uuid,
         job: false,
         wallet: 100000, // start with 100k
-        health: 100
+        health: 100,
+        education: 1 // basic education
     }
 
     return data;
@@ -29,68 +34,9 @@ function citizenStep(data, time) {
     if (!checkJob) delete data;
 }
 
-//occupy resizential tile
-async function occupyHouse(tile) {
-    let connectedRoad = checkNeighborForRoads(tile["posX"], tile["posZ"], true);
-    if (!connectedRoad) return;
-
-    let buildingType = Object.keys(houses)[Math.floor(Math.random() * Object.keys(houses).length)];
-    tile.road = connectedRoad.road;
-    tile.occupied = true;
-    tile.uuid = makeUniqueId(sceneData.flat());
-
-    for (let i = 0; i < houses[buildingType]["slots"]; i++) {
-        citizens[tile.index] ??= [];
-        citizens[tile.index].push(createNewCitizen(tile));
-    }
-
-    let object = await loadWMat(buildingType);
-    positionTile(connectedRoad, tile, object)
-
-    scene.remove(meshLocations[tile.index]);
-    scene.add(object);
-    meshLocations[tile.index] = object;
-    animMove(object, true);
-    setInstanceColor(0x555555, gridInstance, tile.index);
-}
-
-//occupy commercial/industrial/farm tile
-async function occupyWorkplace(tile, type) {
-    let connectedRoad = checkNeighborForRoads(tile["posX"], tile["posZ"], true);
-    if (!connectedRoad) return;
-
-    let buildingType = Object.keys(type)[Math.floor(Math.random() * Object.keys(type).length)];
-    tile.road = connectedRoad.road;
-    tile.slot = type[buildingType]["slots"];
-    tile.occupied = true;
-    tile.uuid = makeUniqueId(sceneData.flat());
-
-    let object = await loadWMat(buildingType);
-    positionTile(connectedRoad, tile, object)
-
-    scene.remove(meshLocations[tile.index]);
-    scene.add(object);
-    meshLocations[tile.index] = object;
-    animMove(object, true);
-    setInstanceColor(0x555555, gridInstance, tile.index);
-}
-
-//scale, rotate and move building to tile
-function positionTile(connectedRoad, tile, object) {
-    object.position.set(tile["posX"], tile["posY"] + 0.12, tile["posZ"]);
-    object.rotation.set(0, connectedRoad.rot, 0);
-    object.scale.setScalar(0.156);
-}
-
-//check employees of tile
-function checkEmployees(tile) {
-    return Object.values(citizens).flat().filter(citizen => citizen.job === tile.uuid);
-}
-
 //simulate world
 let step = 0;
 async function citizenSimulation(seed) {
-
     // find empty land
     let housingtile = findZone("housing", true, true);
     let commercialtile = findZone("commercial", true, true);
@@ -105,11 +51,11 @@ async function citizenSimulation(seed) {
     let jobless = typeof Object.values(citizens).flat().find(item => item.job == false) !== "undefined";
     if (commercialtile != false & jobless & commercialDemand >= 25) occupyWorkplace(commercialtile, commercial);
     if (jobless != false & commercialDemand < 100) commercialDemand += 10;
-    
+
     //occupy industrial
     if (industrialtile != false & jobless & IndustrialDemand >= 25) occupyWorkplace(industrialtile, industrial);
     if (jobless != false & IndustrialDemand < 100) IndustrialDemand += 10;
-    
+
     //occupy farmland
     if (farmlandtile != false & jobless & FarmlandDemand >= 25) occupyWorkplace(farmlandtile, farm);
     if (jobless != false & FarmlandDemand < 100) FarmlandDemand += 10;
@@ -123,51 +69,60 @@ async function citizenSimulation(seed) {
         step -= 1;
     }
 
+    //update stats
+    document.getElementById("populationData").innerText = Object.values(citizens).flat().length;
+    document.getElementById("unemployedData").innerText = Object.values(citizens).flat().filter(item => item.job == false).length;
     setTimeout(citizenSimulation, 1000);
 }
 
-// check neighbor of tiles for roads (north, east, south, west)
-function checkNeighborForRoads(x, z, rand, all = false) {
-    const north = sceneData.flat().find(item => item.posX == x && item.posZ == z + 1 && item.type == 2);
-    const south = sceneData.flat().find(item => item.posX == x && item.posZ == z - 1 && item.type == 2);
-    const east = sceneData.flat().find(item => item.posX == x + 1 && item.posZ == z && item.type == 2);
-    const west = sceneData.flat().find(item => item.posX == x - 1 && item.posZ == z && item.type == 2);
+//========================
+// Simulation Helpers
+//========================
 
-    const directions = {};
-    if (north) directions.north = north;
-    if (south) directions.south = south;
-    if (east) directions.east = east;
-    if (west) directions.west = west;
+//occupy resizential tile
+async function occupyHouse(tile) {
+    let connectedRoad = checkNeighborForRoads(tile["posX"], tile["posZ"], true);
+    if (!connectedRoad) return;
 
-    const directionRotation = {
-        north: (Math.PI / 2),
-        south: -(Math.PI / 2),
-        east: Math.PI,
-        west: Math.PI * 2
-    };
+    let buildingType = Object.keys(houses)[Math.floor(Math.random() * Object.keys(houses).length)];
+    tile.road = connectedRoad.road;
+    tile.occupied = true;
+    tile.uuid = makeUniqueId(sceneData.flat());
+    setInstanceColor(0x555555, gridInstance, tile.index);
 
-    if (all) {
-        return directions;
+    for (let i = 0; i < houses[buildingType]["slots"]; i++) {
+        citizens[tile.index] ??= [];
+        citizens[tile.index].push(createNewCitizen(tile));
     }
 
-    if (Object.values(directions).length > 0) {
-        if (rand) {
-            const pick = Math.floor(Math.random() * Object.values(directions).length);
-            return {
-                tile: Object.values(directions)[pick],
-                direction: Object.keys(directions)[pick],
-                rot: directionRotation[Object.keys(directions)[pick]],
-            };
-        } else {
-            return {
-                tile: Object.values(directions)[0],
-                direction: Object.keys(directions)[0],
-                rot: directionRotation[Object.keys(directions)[0]]
-            };
-        }
-    }
+    let object = await loadWMat(buildingType);
+    positionTile(connectedRoad, tile, object)
 
-    return false;
+    scene.remove(meshLocations[tile.index]);
+    scene.add(object);
+    meshLocations[tile.index] = object;
+    animMove(object, true);
+}
+
+//occupy commercial/industrial/farm tile
+async function occupyWorkplace(tile, type) {
+    let connectedRoad = checkNeighborForRoads(tile["posX"], tile["posZ"], true);
+    if (!connectedRoad) return;
+
+    let buildingType = Object.keys(type)[Math.floor(Math.random() * Object.keys(type).length)];
+    tile.road = connectedRoad.road;
+    tile.slot = type[buildingType]["slots"];
+    tile.occupied = true;
+    tile.uuid = makeUniqueId(sceneData.flat());
+    setInstanceColor(0x555555, gridInstance, tile.index);
+
+    let object = await loadWMat(buildingType);
+    positionTile(connectedRoad, tile, object)
+
+    scene.remove(meshLocations[tile.index]);
+    scene.add(object);
+    meshLocations[tile.index] = object;
+    animMove(object, true);
 }
 
 // find zone for citizens
@@ -204,4 +159,9 @@ function findJob(data) {
     }
 
     return false;
+}
+
+//check employees of tile
+function checkEmployees(tile) {
+    return Object.values(citizens).flat().filter(citizen => citizen.job === tile.uuid);
 }

@@ -11,12 +11,12 @@ function newBlankScene(terrainSize, seed) {
             let random2 = mulberry32(parseInt(`${index}${seed}`));
             let type = 0; // plains
             let additionalData = {};
-            let height = parseFloat(ImprovedNoise.noise(x / 20, seed, y / 20).toFixed(3));
+            let height = 0//parseFloat(ImprovedNoise.noise(x / 20, seed, y / 20).toFixed(3));
 
             if (x == Math.floor(terrainSize / 2)) {
                 type = 2; // road
             } else {
-                if (random < 0.025) {
+                if (random < 0.25) {
                     type = 1; // foliage
                     additionalData["foliageType"] = foliage[Math.floor(random2 * foliage.length)];
                 }
@@ -110,18 +110,17 @@ function allOfTheLights() {
 
     // create directional light
     const dirLight = new THREE.DirectionalLight(0xffffff, 1);
-    dirLight.color.setHSL(0.1, 1, 0.95);
-    dirLight.position.set(0, 1.75, -1.75);
+    dirLight.position.set(-1.5, 1.5, -1.5);
     dirLight.position.multiplyScalar(30);
+    dirLight.shadow.mapSize.set(8192, 8192);
     dirLight.castShadow = true;
-    dirLight.shadow.mapSize.width = 4096;
-    dirLight.shadow.mapSize.height = 4096;
     dirLight.shadow.camera.left = -50;
     dirLight.shadow.camera.right = 50;
     dirLight.shadow.camera.top = 50;
     dirLight.shadow.camera.bottom = -50;
-    dirLight.shadow.camera.near = 0.5;
+    dirLight.shadow.camera.near = 1;
     dirLight.shadow.camera.far = 3500;
+    dirLight.shadow.radius = 0;
     scene.add(dirLight);
 
     // create ambient light

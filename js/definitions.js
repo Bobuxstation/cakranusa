@@ -1,9 +1,8 @@
 let loaded = {};
-let foliage = [
-    'assets/Tree.glb',
-    'assets/Tree2.glb',
-    'assets/Tree3.glb'
-];
+
+//========================
+// Zoned buildings preset
+//========================
 
 //residential buildings
 let houses = {
@@ -41,34 +40,80 @@ let farm = {
     }
 };
 
-//biased random
-function mulberry32(a) {
-    var t = a += 0x6D2B79F5;
-    t = Math.imul(t ^ t >>> 15, t | 1);
-    t ^= t + Math.imul(t ^ t >>> 7, t | 61);
-    return ((t ^ t >>> 14) >>> 0) / 4294967296;
+//========================
+// Build Menu
+//========================
+
+let foliage = [
+    //'assets/Tree.glb',
+    //'assets/Tree2.glb',
+    'assets/Tree3.glb'
+];
+
+//zone types
+let zones = {
+    "housing": {
+        "model": "assets/zoning/housing"
+    },
+    "commercial": {
+        "model": "assets/zoning/commercial"
+    },
+    "industrial": {
+        "model": "assets/zoning/industrial"
+    },
+    "farm": {
+        "model": "assets/zoning/farm"
+    },
 }
 
-// open tab
-var lastTab = {};
-function openTab(tabname, tabGroup, doubleClickHide = false) {
-    let tabs = document.getElementsByClassName(tabGroup);
+//transport types
+let transport = {
+    "road": {
+        "model": "assets/roads/road"
+    }
+}
 
-    lastTab[tabGroup] = tabname;
-    Object.values(tabs).forEach(element => {
-        let action = (element.id == tabname) ? "block" : "none";
-        let prev = element.style.display;
+//govt facility
+let facility = {
+    "hospital": {
+        "model": "assets/facility/hospital",
+        "type": "medical",
+        "range": 8
+    },
+    "elementary school": {
+        "model": "assets/facility/sd",
+        "type": "education",
+        "level": 2,
+        "capacity": 16
+    }
+}
 
-        if (doubleClickHide & prev == action & action == "block") {
-            element.style.animation = "slideOutDown 0.25s both";
-            lastTab[tabGroup] = '';
+//for build menu
+let buildmenu = {
+    "Zones": zones,
+    "Transport": transport,
+    "Facility": facility
+}
 
-            setTimeout(() => {
-                element.style.display = "none";
-                element.style.animation = "bounceInUp 0.5s both";
-            }, 250);
-        } else {
-            element.style.display = action;
-        }
+//fill build menu
+Object.keys(buildmenu).forEach((item, i) => {
+    const button = document.createElement("button");
+    button.innerText = item;
+    button.onclick = () => { openTab(`${item}`, 'buildTab') };
+
+    const tab = document.createElement("div");
+    tab.className = "buildTab innertab";
+    tab.id = item;
+    if (i == 0) tab.style.display = "block";
+
+    Object.keys(buildmenu[item]).forEach(subItem => {
+        const subItemButton = document.createElement("button");
+        subItemButton.innerText = subItem;
+        subItemButton.onclick = () => { setTool(subItem, item) };
+
+        tab.appendChild(subItemButton);
     });
-}
+
+    document.getElementById("buildLeft").appendChild(button);
+    document.getElementById("buildRight").appendChild(tab);
+});

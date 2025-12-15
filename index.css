@@ -1,6 +1,7 @@
 @font-face {
     font-family: 'ra-inet';
     src: url('assets/C&C Red Alert [INET].ttf');
+    font-weight: lighter;
 }
 
 * {
@@ -9,6 +10,11 @@
     box-sizing: border-box;
     overflow: hidden;
     font-family: 'ra-inet';
+    user-select: none;
+}
+
+.fitH {
+    height: fit-content !important;
 }
 
 canvas {
@@ -116,7 +122,7 @@ button:active {
     overflow: auto;
 }
 
-#build button {
+.dual button {
     display: block;
     aspect-ratio: 1/1;
     width: 75px;
@@ -124,22 +130,29 @@ button:active {
     margin-top: 5px;
 }
 
-#build .right {
+.dual .right {
     width: 326px;
 }
 
-#build .left {
+.dual .left {
     background-color: #00000020;
 }
 
-#build .right button {
+.dual .right button {
     display: inline-block;
     margin-top: 0;
+    text-transform: capitalize;
+    margin-right: 5px;
+    float: left;
 }
 
 #menu button:first-child,
-#build button:first-child {
-    margin: 0;
+.dual button:first-child {
+    margin-top: 0;
+}
+
+.dual button:last-child {
+    margin-right: 0;
 }
 
 #menu button {
@@ -149,7 +162,7 @@ button:active {
     margin-top: 5px;
 }
 
-.buildTab {
+.innertab {
     display: none;
 }
 

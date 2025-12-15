@@ -21,6 +21,7 @@
     <script type="text/javascript" src="deps/MTLLoader.js"></script>
     <script type="text/javascript" src="deps/OBJLoader.js"></script>
 
+    <script type="text/javascript" src="js/road.js" defer></script>
     <script type="text/javascript" src="js/helper.js" defer></script>
     <script type="text/javascript" src="js/index.js" defer></script>
     <script type="text/javascript" src="js/tool.js" defer></script>
@@ -31,29 +32,53 @@
 
 <body>
     <div id="tabs">
-        <div class="tab" id="build">
-            <div class="left">
-                <button onclick="openTab('Zones', 'buildTab')">Zones</button>
-                <button onclick="openTab('Transport', 'buildTab')">Transport</button>
-            </div>
-            <div class="right">
-                <div class="buildTab" id="Zones" style="display: block;">
-                    <button onclick="setTool('housing', 'zones')">Housing</button>
-                    <button onclick="setTool('commercial', 'zones')">Commercial</button>
-                    <button onclick="setTool('industrial', 'zones')">Industrial</button>
-                    <button onclick="setTool('farm', 'zones')">Farm</button>
-                </div>
-                <div class="buildTab" id="Transport">
-                    <button onclick="setTool('', 'road')">Road</button>
-                </div>
-            </div>
+        <div class="tab dual" id="build">
+            <div class="left" id="buildLeft"></div>
+            <div class="right" id="buildRight"></div>
         </div>
 
-        <div class="tab right" id="menu">
+        <div class="tab right fitH" id="menu">
             <button>Quit</button>
             <button>Save</button>
             <button>Load</button>
             <button>Take Screenshot</button>
+        </div>
+
+        <div class="tab dual" id="stats">
+            <div class="left">
+                <button onclick="openTab('population', 'statsTab')">Population</button>
+                <button onclick="openTab('education', 'statsTab')">Education</button>
+                <button onclick="openTab('happiness', 'statsTab')">Happiness</button>
+            </div>
+            <div class="right">
+                <div class="statsTab innertab" id="population" style="display: block;">
+                    Population : <span id="populationData"></span><br>
+                    Basic Needs : <span id=""></span><br>
+                    Unemployed : <span id="unemployedData"></span><br>
+                </div>
+                <div class="statsTab innertab" id="education">
+                    Basic Education : <span id=""></span><br>
+                    Middle Education : <span id=""></span><br>
+                    Higher Education : <span id=""></span><br>
+                </div>
+                <div class="statsTab innertab" id="happiness">
+                    Entertainment : <span id=""></span><br>
+                    Culture : <span id=""></span><br>
+                    Environment : <span id=""></span>
+                </div>
+            </div>
+        </div>
+
+        <div class="tab dual" id="policies">
+            <div class="left">
+                <button onclick="openTab('taxes', 'policyTab')">Taxes</button>
+            </div>
+            <div class="right">
+                <div class="policyTab innertab" id="taxes" style="display: block;">
+                    <button>Land</button>
+                    <button>Vehicle</button>
+                </div>
+            </div>
         </div>
     </div>
 
@@ -67,14 +92,19 @@
     </div>
 
     <div id="uiBottom" class="navigation">
-        <div id="tools">
+        <div id="tools2">
             <button onclick="openTab('menu', 'tab', true)">Menu</button>
+            <button onclick="openTab('stats', 'tab', true)">Stats</button>
+            <button onclick="openTab('policies', 'tab', true)">Policies</button>
+        </div>
+
+        <div id="tools">
             <button onclick="openTab('build', 'tab', true)">Build</button>
             <button onclick="setTool('', 'demolish')">Demolish</button>
-            <!-- <button>Stats</button> -->
         </div>
+
         <div id="toolselected" style="display: none;">
-            <button id="hideTool">X</button>
+            <button id="hideTool">X</button>&nbsp;
             <span id="toolname">tool</span>
         </div>
     </div>
