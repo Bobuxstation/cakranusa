@@ -23,6 +23,7 @@
 
     <script type="text/javascript" src="js/road.js" defer></script>
     <script type="text/javascript" src="js/helper.js" defer></script>
+    <script type="text/javascript" src="js/pathfinding.js" defer></script>
     <script type="text/javascript" src="js/index.js" defer></script>
     <script type="text/javascript" src="js/tool.js" defer></script>
     <script type="text/javascript" src="js/definitions.js" defer></script>
@@ -82,7 +83,7 @@
         </div>
     </div>
 
-    <div id="uiTop" class="navigation">
+    <div class="navigation overlay">
         <div id="money">
             <span>Rp100.000.000,00</span>
         </div>
@@ -91,7 +92,7 @@
         </div>
     </div>
 
-    <div id="uiBottom" class="navigation">
+    <div id="tabButtons" class="navigation bottom overlay">
         <div id="tools2">
             <button onclick="openTab('menu', 'tab', true)">Menu</button>
             <button onclick="openTab('stats', 'tab', true)">Stats</button>
@@ -102,8 +103,10 @@
             <button onclick="openTab('build', 'tab', true)">Build</button>
             <button onclick="setTool('', 'demolish')">Demolish</button>
         </div>
+    </div>
 
-        <div id="toolselected" style="display: none;">
+    <div id="toolOverlay" class="navigation bottom overlay">
+        <div>
             <button id="hideTool">X</button>&nbsp;
             <span id="toolname">tool</span>
         </div>

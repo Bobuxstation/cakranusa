@@ -11,7 +11,7 @@ function newBlankScene(terrainSize, seed) {
             let random2 = mulberry32(parseInt(`${index}${seed}`));
             let type = 0; // plains
             let additionalData = {};
-            let height = 0//parseFloat(ImprovedNoise.noise(x / 20, seed, y / 20).toFixed(3));
+            let height = 0; // parseFloat(ImprovedNoise.noise(x / 20, seed, y / 20).toFixed(3));
 
             if (x == Math.floor(terrainSize / 2)) {
                 type = 2; // road
@@ -34,7 +34,7 @@ async function generateGrid(data) {
     // instance for checkerboard grid
     let terrainSize = data.length;
     let material = new THREE.MeshToonMaterial({ color: 0xffffff });
-    let geometry = new THREE.BoxGeometry(1, 0.25, 1);
+    let geometry = new THREE.BoxGeometry(1, 1, 1);
     let instance = new THREE.InstancedMesh(geometry, material, terrainSize * terrainSize);
     instance.castShadow = true;
     instance.receiveShadow = true;
@@ -47,7 +47,7 @@ async function generateGrid(data) {
 
             // checkerboard geometry
             let dummy = new THREE.Object3D();
-            dummy.position.set((x - (terrainSize / 2)), itemData.height, (y - (terrainSize / 2)));
+            dummy.position.set((x - (terrainSize / 2)), itemData.height - 0.38, (y - (terrainSize / 2)));
             dummy.updateMatrix();
             instance.setMatrixAt(index, dummy.matrix);
 

@@ -22,7 +22,7 @@ canvas {
     width: 100dvw !important;
 }
 
-#uiBottom, #uiTop, #tabs {
+.overlay, #tabs {
     position: absolute;
     width: 100dvw;
     height: fit-content;
@@ -32,16 +32,20 @@ canvas {
     overflow: visible;
 }
 
-#toolselected button {
+#toolOverlay button {
     height: 25px;
     aspect-ratio: 1/1;
+}
+
+#toolOverlay {
+    display: none;
 }
 
 #toolname {
     text-transform: capitalize;
 }
 
-#uiBottom {
+.bottom {
     bottom: 0;
 }
 

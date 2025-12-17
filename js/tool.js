@@ -5,25 +5,29 @@
 // build tab mode
 let tool = {};
 function setTool(type, category) {
-    let toolDiv = document.getElementById("tools");
-    let selectDiv = document.getElementById("toolselected");
+    let toolDiv = document.getElementById("tabButtons");
+    let selectDiv = document.getElementById("toolOverlay");
     let toolname = document.getElementById("toolname");
     let lastmenu = lastTab['tab'];
 
+    //animations and text
     renderer.domElement.style.cursor = 'crosshair';
     toolDiv.style.animation = "slideOutDown 0.25s both";
     toolname.innerText = `${category}${type ? ` - ${type}` : ""}`;
 
+    // hide tabs and activate tool
     openTab('', 'tab', true);
     tool["type"] = type;
     tool["category"] = category;
 
+    //show selection overlay
     setTimeout(() => {
-        selectDiv.style.display = "block";
+        selectDiv.style.display = "flex";
         toolDiv.style.display = "none";
         toolDiv.style.animation = "";
     }, 250);
 
+    //close tool button
     document.getElementById("hideTool").onclick = () => {
         selectDiv.style.animation = "slideOutDown 0.25s both";
         renderer.domElement.style.cursor = 'unset';
@@ -35,13 +39,13 @@ function setTool(type, category) {
         setTimeout(() => {
             selectDiv.style.display = "none";
             selectDiv.style.animation = "";
-            toolDiv.style.display = "block";
+            toolDiv.style.display = "flex";
         }, 250);
     };
 }
 
 // select tiles
-async function select(event, duration) {
+async function select(event) {
     var mouse = new THREE.Vector2();
     mouse.x = (event.clientX / renderer.domElement.clientWidth) * 2 - 1;
     mouse.y = - (event.clientY / renderer.domElement.clientHeight) * 2 + 1;
@@ -51,7 +55,7 @@ async function select(event, duration) {
 
     var intersectsGrid = false;
     var intersects = raycaster.intersectObjects(scene.children, true);
-    if (intersects.length == 0 || duration > 250) return;
+    if (intersects.length == 0 || moved) return;
 
     intersects.forEach(async item => {
         if (item.object != gridInstance || intersectsGrid) return;
@@ -69,9 +73,10 @@ async function select(event, duration) {
 }
 
 // capture mouse for selection
-renderer.domElement.addEventListener('mousedown', () => { st = Date.now(); });
-renderer.domElement.addEventListener('mouseup', (e) => { if (st) select(e, Date.now() - st); });
-let st = 0;
+renderer.domElement.addEventListener('pointermove', () => {moved = true;});
+renderer.domElement.addEventListener('pointerdown', () => { moved = false; });
+renderer.domElement.addEventListener('pointerup', (e) => { select(e); });
+let moved = false;
 
 //========================
 // Tool Functions
@@ -93,7 +98,7 @@ async function placeZone(tile) {
 
     positionTile(connectedRoad, tile, object)
     animMove(object, true);
-    
+
     meshLocations[tile.index] = object;
 }
 
@@ -118,6 +123,6 @@ async function placeFacility(tile) {
     positionTile(connectedRoad, tile, object)
     animMove(object, true);
     setInstanceColor(0x555555, gridInstance, tile.index);
-    
+
     meshLocations[tile.index] = object;
 }

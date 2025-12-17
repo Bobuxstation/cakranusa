@@ -21,6 +21,7 @@ let commercial = {
     'assets/commercial/shop-1': {
         "level": 1,
         "slots": 3,
+        "pay": 30000
     }
 };
 
@@ -29,6 +30,7 @@ let industrial = {
     'assets/commercial/shop-1': {
         "level": 1,
         "slots": 3,
+        "pay": 30000
     }
 };
 
@@ -37,6 +39,7 @@ let farm = {
     'assets/farm/farm-1': {
         "level": 1,
         "slots": 5,
+        "pay": 30000
     }
 };
 

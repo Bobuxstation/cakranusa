@@ -4,38 +4,145 @@ let housingDemand = 0, commercialDemand = 0, IndustrialDemand = 0, FarmlandDeman
 // Citizen & City Simulation
 //========================
 
-//create new citizen object
+//create new citizen data
 function createNewCitizen(tile) {
     let data = {
         home: tile.uuid,
+        uuid: makeUniqueId(Object.values(citizens).flat()),
         job: false,
         wallet: 100000, // start with 100k
         health: 100,
-        education: 1 // basic education
+        education: 1, // basic education
+
+        location: findTileCoordinate(sceneData, tile),
+        status: "home",
+        targetType: "",
+        targetDir: "",
+        targetRoute: [],
+
+        sessionTick: 0
     }
 
     return data;
 }
 
 //simulate individual citizen
-function citizenStep(data, time) {
-    //find job
-    if (data.job == false) {
-        let commercialtile = findJob(data);
-        if (commercialtile != false) data.job = commercialtile.uuid;
-    } else {
-        //refresh job, if workplace is destroyed reset the job
-        let checkJob = sceneData.flat().find(item => item.uuid == data.job);
-        if (!checkJob) data.job = false;
+let vehicles = {}
+function citizenStep(data) {
+    //if house is destroyed, disappear
+    let checkHome = sceneData.flat().find(item => item.uuid == data.home);
+    if (!checkHome) { delete data; return }
+
+    //apply new job if there is none
+    let jobTile = findJob(data);
+    if (jobTile != false & data.job == false) { data.job = jobTile.uuid; return }
+
+    //check if job still exists
+    let checkJob = sceneData.flat().find(item => item.uuid == data.job);
+    if (!checkJob) { data.job = false; return }
+
+    //simulation steps
+    switch (data.status) {
+        case "home":
+            //find way to work after 10 ticks at home
+            if (data.job == false || data.sessionTick <= 10) break;
+            let pathMap = convertPathfind(sceneData, sceneData[data.location.y][data.location.x], checkJob);
+
+            //generate route to work
+            let route = astar(pathMap);
+            if (route == null) break;
+
+            //set route and change to moving mode
+            data.targetDir = "";
+            data.sessionTick = 0;
+            data.status = "moving";
+            data.targetType = "work"; // set to work mode when arrived
+            data.targetRoute = route;
+            break;
+        case "moving":
+            //create vehicle if first step
+            let currentStep = data.targetRoute.indexOf(data.location);
+            if (!vehicles[data.uuid]) {
+                let material = new THREE.MeshToonMaterial({ color: 0xffffff });
+                let geometry = new THREE.BoxGeometry(0.20, 0.20, 0.20);
+                let mesh = new THREE.Mesh(geometry, material);
+                vehicles[data.uuid] = mesh;
+                scene.add(mesh);
+            }
+
+            //steps
+            if (currentStep == data.targetRoute.length - 1) {
+                //delete vehicle model (final step)
+                scene.remove(vehicles[data.uuid]);
+                delete vehicles[data.uuid];
+
+                //change to target mode
+                data.status = data.targetType;
+                data.targetRoute = [];
+                data.sessionTick = 0;
+                data.targetType = "";
+            } else {
+                //set coordinates for vehicle
+                let targetPosX = data.location.x - (sceneData[0].length / 2);
+                let targetPosY = data.location.y - (sceneData[0].length / 2);
+                let targetPos = data.targetRoute[currentStep + 1];
+
+                //move conditions (is home, is final target or vehicle obstructing path)
+                let isHome = data.location.x === data.targetRoute[0].x && data.location.y === data.targetRoute[0].y;
+                let finalTarget = data.targetRoute.at(-1);
+                let isFinalTarget = targetPos.x === finalTarget.x && targetPos.y === finalTarget.y;
+                let vehicleInTarget = Object.values(citizens).flat().some(item => item.location.x === targetPos.x && item.location.y === targetPos.y && item.location.direction === targetPos.direction);
+                if (vehicleInTarget && !isFinalTarget && !isHome) break;
+
+                //shift to correct lane
+                if (targetPos.direction == "left") targetPosY -= 0.10;
+                if (targetPos.direction == "right") targetPosY += 0.10;
+                if (targetPos.direction == "down") targetPosX -= 0.10;
+                if (targetPos.direction == "up") targetPosX += 0.10;
+                data.location = targetPos;
+
+                //set vehicle position (first step) or animate movement
+                if (currentStep == 0) { vehicles[data.uuid].position.set(targetPosY, 0.16, targetPosX); break; }
+                let oldPos = vehicles[data.uuid].position.clone();
+                let startTime = performance.now();
+                let lerpAnim = () => {
+                    let t = Math.min((performance.now() - startTime) / 500, 1);
+                    let lerpX = lerp(oldPos.x, targetPosY, t);
+                    let lerpZ = lerp(oldPos.z, targetPosX, t);
+                    try { vehicles[data.uuid].position.set(lerpX, vehicles[data.uuid].position.y, lerpZ); } catch (e) { } //sometimes broken idk why
+                    if (t < 1) requestAnimationFrame(lerpAnim);
+                };
+
+                lerpAnim()
+            }
+            break;
+        case "work":
+            //after 15 ticks find path home
+            if (data.sessionTick <= 15) break;
+            let homePathMap = convertPathfind(sceneData, sceneData[data.location.y][data.location.x], checkHome);
+            let routeHome = astar(homePathMap);
+
+            if (routeHome == null) break;
+
+            //set route and change to moving mode
+            data.sessionTick = 0;
+            data.status = "moving";
+            data.targetType = "home"; //set mode to home when arrived
+            data.targetRoute = routeHome;
+            data.wallet += 50000;
+            break;
+        default:
+            //if invalid, teleport to home
+            data.location = findTileCoordinate(sceneData, checkHome),
+            data.status = "home";
+            break;
     }
 
-    //if house is destroyed, disappear
-    let checkJob = sceneData.flat().find(item => item.uuid == data.home);
-    if (!checkJob) delete data;
+    //increase timer for session
+    data.sessionTick += 1;
 }
 
 //simulate world
-let step = 0;
 async function citizenSimulation(seed) {
     // find empty land
     let housingtile = findZone("housing", true, true);
@@ -61,18 +168,12 @@ async function citizenSimulation(seed) {
     if (jobless != false & FarmlandDemand < 100) FarmlandDemand += 10;
 
     //simulate citizen
-    Object.values(citizens).flat().forEach(citizen => citizenStep(citizen, step));
-
-    if (step < 4) {
-        step++
-    } else {
-        step -= 1;
-    }
+    Object.values(citizens).flat().forEach(citizen => citizenStep(citizen));
 
     //update stats
     document.getElementById("populationData").innerText = Object.values(citizens).flat().length;
     document.getElementById("unemployedData").innerText = Object.values(citizens).flat().filter(item => item.job == false).length;
-    setTimeout(citizenSimulation, 1000);
+    setTimeout(citizenSimulation, 500);
 }
 
 //========================
@@ -82,33 +183,30 @@ async function citizenSimulation(seed) {
 //occupy resizential tile
 async function occupyHouse(tile) {
     let connectedRoad = checkNeighborForRoads(tile["posX"], tile["posZ"], true);
-    if (!connectedRoad) return;
-
     let buildingType = Object.keys(houses)[Math.floor(Math.random() * Object.keys(houses).length)];
     tile.road = connectedRoad.road;
     tile.occupied = true;
     tile.uuid = makeUniqueId(sceneData.flat());
     setInstanceColor(0x555555, gridInstance, tile.index);
 
+    //create new citizens
     for (let i = 0; i < houses[buildingType]["slots"]; i++) {
         citizens[tile.index] ??= [];
         citizens[tile.index].push(createNewCitizen(tile));
     }
 
     let object = await loadWMat(buildingType);
-    positionTile(connectedRoad, tile, object)
-
     scene.remove(meshLocations[tile.index]);
     scene.add(object);
+
     meshLocations[tile.index] = object;
+    positionTile(connectedRoad, tile, object)
     animMove(object, true);
 }
 
 //occupy commercial/industrial/farm tile
 async function occupyWorkplace(tile, type) {
     let connectedRoad = checkNeighborForRoads(tile["posX"], tile["posZ"], true);
-    if (!connectedRoad) return;
-
     let buildingType = Object.keys(type)[Math.floor(Math.random() * Object.keys(type).length)];
     tile.road = connectedRoad.road;
     tile.slot = type[buildingType]["slots"];
@@ -117,11 +215,11 @@ async function occupyWorkplace(tile, type) {
     setInstanceColor(0x555555, gridInstance, tile.index);
 
     let object = await loadWMat(buildingType);
-    positionTile(connectedRoad, tile, object)
-
     scene.remove(meshLocations[tile.index]);
     scene.add(object);
+
     meshLocations[tile.index] = object;
+    positionTile(connectedRoad, tile, object)
     animMove(object, true);
 }
 
