@@ -39,6 +39,7 @@ function cleanTileData(tile, resetType = false) {
     if (tile.building) delete tile.building;
     if (tile.zone) delete tile.zone;
     if (tile.foliageType) delete tile.foliageType;
+    if (tile.level) delete tile.level;
     if (tile.uuid) delete tile.uuid;
 
     if (Object.keys(citizens).find(item => item == tile.index)) {
@@ -158,6 +159,19 @@ function spawnSmoke(position, duration = 3000) {
     update();
 }
 
+//vehicle movement animation
+function lerpVehicle(oldPos, targetPosX, targetPosY, targetPosHeight, startTime, data) {
+    function lerpAnim() {
+        let t = Math.min((performance.now() - startTime) / simulationSpeed, 1);
+        let lerpX = lerp(oldPos.x, targetPosY, t);
+        let lerpZ = lerp(oldPos.z, targetPosX, t);
+        let lerpHeight = lerp(oldPos.y, targetPosHeight, t);
+        try { vehicles[data.uuid].position.set(lerpX, lerpHeight, lerpZ); } catch (e) { } //sometimes broken idk why
+        if (t < 1) requestAnimationFrame(lerpAnim);
+    }; 
+    lerpAnim();
+}
+
 // load obj building models
 async function loadWMat(location) {
     let mtlloader = new THREE.MTLLoader();
@@ -206,4 +220,9 @@ function makeUniqueId(array) {
             attempts = 0;
         }
     }
+}
+
+//random between two values
+function randomIntFromInterval(min, max) {
+    return Math.floor(Math.random() * (max - min + 1) + min);
 }

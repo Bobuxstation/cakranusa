@@ -22,14 +22,19 @@ let commercial = {
         "level": 1,
         "slots": 3,
         "pay": 30000
+    },
+    'assets/commercial/shop-2': {
+        "level": 3,
+        "slots": 6,
+        "pay": 30000
     }
 };
 
 //industrial buildings
 let industrial = {
-    'assets/commercial/shop-1': {
-        "level": 1,
-        "slots": 3,
+    'assets/industrial/industrial-1': {
+        "level": 3,
+        "slots": 6,
         "pay": 30000
     }
 };
@@ -86,16 +91,37 @@ let facility = {
     "elementary school": {
         "model": "assets/facility/sd",
         "type": "education",
-        "level": 2,
-        "capacity": 16
+        "education": 1,
+        "slots": 16
+    },
+    "middle school": {
+        "model": "assets/facility/sd",
+        "type": "education",
+        "education": 2,
+        "slots": 16
+    },
+    "high school": {
+        "model": "assets/facility/sd",
+        "type": "education",
+        "education": 3,
+        "slots": 16
     }
 }
+
+let highestEducation = Object.keys(facility)
+.filter(key => typeof facility[key].education === "number")
+.reduce((maxKey, key) => facility[key].education > facility[maxKey].education ? key : maxKey);
 
 //for build menu
 let buildmenu = {
     "Zones": zones,
     "Transport": transport,
     "Facility": facility
+}
+
+//policy template
+let policyTemplate = {
+
 }
 
 //fill build menu

@@ -115,6 +115,10 @@ async function placeFacility(tile) {
     cleanTileData(tile);
     tile.type = 4; // pre made buildings
     tile.building = tool.type;
+    tile.buildingType = facility[tool.type].type;
+    tile.buildingData = facility[tool.type];
+    tile.occupied = true;
+    tile.uuid = makeUniqueId(sceneData.flat());
 
     let object = await loadWMat(facility[tool.type].model);
     let connectedRoad = checkNeighborForRoads(tile["posX"], tile["posZ"], true);

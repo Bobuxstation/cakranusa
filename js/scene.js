@@ -11,7 +11,7 @@ function newBlankScene(terrainSize, seed) {
             let random2 = mulberry32(parseInt(`${index}${seed}`));
             let type = 0; // plains
             let additionalData = {};
-            let height = 0; // parseFloat(ImprovedNoise.noise(x / 20, seed, y / 20).toFixed(3));
+            let height = parseFloat(ImprovedNoise.noise(x / 20, seed, y / 20).toFixed(3));
 
             if (x == Math.floor(terrainSize / 2)) {
                 type = 2; // road
@@ -144,7 +144,10 @@ function allOfTheLights() {
     sky.material.uniforms.sunPosition.value.copy(sun);
 }
 
-let meshLocations, sceneData, gridInstance, worldSeed, citizens = {}, jobs = {};
+let meshLocations, sceneData, gridInstance, worldSeed;
+let citizens = {};
+let simulationSpeed = 100;
+
 async function initScene() {
     worldSeed = Math.random();
     meshLocations = {};
