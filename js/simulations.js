@@ -34,9 +34,10 @@ function citizenStep(data) {
     let checkHome = sceneData.flat().find(item => item.uuid == data.home);
     if (!checkHome) { delete data; return; }
 
-    //apply new job if there is none
+    //apply new job if there is none or if there is a better job
     let jobTile = findJob(data);
-    if (jobTile != false & data.job == false) data.job = jobTile.uuid;
+    let currentJobLevel = sceneData.flat().find(item => item.uuid == data.job) ? sceneData.flat().find(item => item.uuid == data.job).buildingData.level : 0;
+    if ((jobTile != false && data.job == false) || (jobTile ? currentJobLevel < jobTile.buildingData.level : false)) data.job = jobTile.uuid;
     if (!sceneData.flat().find(item => item.uuid == data.job)) data.job = false;
 
     //add school if there is none
@@ -147,7 +148,7 @@ function citizenStep(data) {
             data.status = "moving";
             data.targetType = "home"; //set mode to home when arrived
             data.targetRoute = routeHome;
-            data.wallet += 50000;
+            data.wallet += sceneData.flat().find(item => item.uuid == data.job) ? sceneData.flat().find(item => item.uuid == data.job).buildingData.pay : 0;
             break;
         case "learn":
             //after 15-25 ticks find path home
@@ -189,21 +190,38 @@ async function citizenSimulation(seed) {
     if (housingtile != false & housingDemand >= 25) occupyHouse(housingtile);
     if (housingtile != false & housingDemand < 100) housingDemand += 10;
 
-    //occupy commercial
+    // anyone unemployed for job creation
     let jobless = typeof Object.values(citizens).flat().find(item => item.job == false) !== "undefined";
-    if (commercialtile != false & jobless & commercialDemand >= 25) occupyWorkplace(commercialtile, commercial);
-    if (jobless != false & commercialDemand < 100) commercialDemand += 10;
+    let eligibleWorkplace = [];
+
+    // better job needed from citizens
+    let citizenFlat = Object.values(citizens).flat();
+    let sceneFlat = Object.values(sceneData).flat();
+    let citizenHighest = citizenFlat.length > 0 ? citizenFlat.reduce((maxKey, key) => key.education > maxKey.education ? key : maxKey).education : 0;
+    let jobHighest = sceneFlat.filter(item => (item.zone === "commercial" || item.zone === "industrial" || item.zone === "farm") && item.occupied);
+    jobHighest = (jobHighest.length != 0) ? jobHighest.reduce((maxKey, key) => key.buildingData.level > maxKey.buildingData.level ? key : maxKey).buildingData.level : 0;
+
+    //occupy commercial
+    if (commercialtile != false & (jobless || Math.floor(citizenHighest) > jobHighest) & commercialDemand >= 25) eligibleWorkplace.push(() => occupyWorkplace(commercialtile, commercial));
+    if ((jobless || Math.floor(citizenHighest) > jobHighest) & commercialDemand < 100) commercialDemand += 10;
 
     //occupy industrial
-    if (industrialtile != false & jobless & IndustrialDemand >= 25) occupyWorkplace(industrialtile, industrial);
-    if (jobless != false & IndustrialDemand < 100) IndustrialDemand += 10;
+    if (industrialtile != false & (jobless || Math.floor(citizenHighest) > jobHighest) & IndustrialDemand >= 25) eligibleWorkplace.push(() => occupyWorkplace(industrialtile, industrial));
+    if ((jobless || Math.floor(citizenHighest) > jobHighest) & IndustrialDemand < 100) IndustrialDemand += 10;
 
     //occupy farmland
-    if (farmlandtile != false & jobless & FarmlandDemand >= 25) occupyWorkplace(farmlandtile, farm);
-    if (jobless != false & FarmlandDemand < 100) FarmlandDemand += 10;
+    if (farmlandtile != false & (jobless || Math.floor(citizenHighest) > jobHighest) & FarmlandDemand >= 25) eligibleWorkplace.push(() => occupyWorkplace(farmlandtile, farm));
+    if ((jobless || Math.floor(citizenHighest) > jobHighest) & FarmlandDemand < 100) FarmlandDemand += 10;
+
+    //pick one work tile to build workplace on if eligible
+    if (eligibleWorkplace.length != 0) eligibleWorkplace[Math.floor(Math.random() * eligibleWorkplace.length)]()
 
     //simulate citizen
     Object.values(citizens).flat().forEach(citizen => citizenStep(citizen));
+
+    //workplace tile tick
+    let workplaces = sceneData.flat().filter(item => (item.zone === "commercial" || item.zone === "industrial" || item.zone === "farm") && item.occupied);
+    workplaces.forEach(workplace => workplaceTick(workplace));
 
     //update edu stats
     let educationTab = document.getElementById("education");
@@ -211,7 +229,7 @@ async function citizenSimulation(seed) {
     Object.keys(facility).filter(key => facility[key].type == "education").forEach(key => {
         let item = facility[key];
         let textElem = document.createElement('span');
-        textElem.innerHTML = `${key}: ${Object.values(citizens).flat().filter(i => i.education > item.education + 1).length} / ${Object.values(citizens).flat().length}<br>`
+        textElem.innerHTML = `${key}: ${Object.values(citizens).flat().filter(i => i.education >= item.education + 1).length} / ${Object.values(citizens).flat().length}<br>`
         educationTab.appendChild(textElem);
     })
 
@@ -229,7 +247,7 @@ async function citizenSimulation(seed) {
 async function occupyHouse(tile) {
     let connectedRoad = checkNeighborForRoads(tile["posX"], tile["posZ"], true);
     let buildingType = Object.keys(houses)[Math.floor(Math.random() * Object.keys(houses).length)];
-    tile.road = connectedRoad.road;
+    tile.road = connectedRoad;
     tile.occupied = true;
     tile.uuid = makeUniqueId(sceneData.flat());
     setInstanceColor(0x555555, gridInstance, tile.index);
@@ -251,13 +269,17 @@ async function occupyHouse(tile) {
 
 //occupy commercial/industrial/farm tile
 async function occupyWorkplace(tile, type) {
+    //find connected road
     let connectedRoad = checkNeighborForRoads(tile["posX"], tile["posZ"], true);
-    let buildingType = Object.keys(type)[Math.floor(Math.random() * Object.keys(type).length)];
-    tile.road = connectedRoad.road;
+    let filterBuildings = Object.keys(type).filter(item => type[item].level == findOpportunity());
+    let buildingType = filterBuildings[Math.floor(Math.random() * Object.keys(filterBuildings).length)];
+    if (filterBuildings.length == 0) return;
+
+    tile.buildingData = type[buildingType];
+    tile.road = connectedRoad;
     tile.slot = type[buildingType]["slots"];
     tile.occupied = true;
     tile.uuid = makeUniqueId(sceneData.flat());
-    tile.level = type[buildingType]["level"];
     setInstanceColor(0x555555, gridInstance, tile.index);
 
     let object = await loadWMat(buildingType);
@@ -267,6 +289,17 @@ async function occupyWorkplace(tile, type) {
     meshLocations[tile.index] = object;
     positionTile(connectedRoad, tile, object)
     animMove(object, true);
+}
+
+//if empty for too long, clear workplace
+function workplaceTick(tile) {
+    if (checkEmployees(tile).length == 0) {
+        if (typeof tile.emptyTick == "undefined") { tile.emptyTick = 0; return; }
+        tile.emptyTick++;
+        if (tile.emptyTick > 30) cleanTileData(tile, true, true)
+    } else {
+        if (tile.emptyTick) delete tile.emptyTick;
+    }
 }
 
 // find zone for citizens
@@ -292,20 +325,26 @@ function findZone(zone, occupied, checkRoad) {
 
 //find vacant jobs
 function findJob(data) {
-    //find workplace tile
-    const matches = sceneData.flat().filter(item => (
-        (item.zone === "commercial" || item.zone === "industrial" || item.zone === "farm") & data.education >= item.level
-    ));
+    // find workplace tile
+    let matches = sceneData.flat().filter(item => (item.zone === "commercial" || item.zone === "industrial" || item.zone === "farm") && item.occupied);
+    matches = matches.filter(item => item.buildingData.level <= data.education);
+    matches.sort((a, b) => Math.abs(data.education - a.buildingData.level) - Math.abs(data.education - b.buildingData.level));
 
-    //shuffle results
-    for (let i = matches.length - 1; i > 0; i--) {
-        const j = Math.floor(Math.random() * (i + 1));
-        [matches[i], matches[j]] = [matches[j], matches[i]];
+    // shuffle matches with same closest level
+    let i = 0;
+    while (i < matches.length) {
+        let j = i + 1;
+        while (j < matches.length && Math.abs(data.education - matches[i].buildingData.level) === Math.abs(data.education - matches[j].buildingData.level)) { j++; }
+        for (let k = j - 1; k > i; k--) {
+            const l = i + Math.floor(Math.random() * (k - i + 1));
+            [matches[k], matches[l]] = [matches[l], matches[k]];
+        }
+        i = j;
     }
 
-    //check if not full
+    // check if not full
     for (const match of matches) {
-        if (match.occupied == true & (checkEmployees(match).length < match.slot)) return match;
+        if (checkEmployees(match).length < match.slot) return match;
     }
 
     return false;
@@ -339,6 +378,21 @@ function checkStudents(tile) {
 //check employees of tile
 function checkEmployees(tile) {
     return Object.values(citizens).flat().filter(citizen => citizen.job === tile.uuid);
+}
+
+//find unfilled job level
+function findOpportunity() {
+    let citizenFlat = Object.values(citizens).flat();
+    if (citizenFlat.length != 0) {
+        if (citizenFlat.filter(item => item.job != false).length == 0) return 1;
+
+        let citizen = citizenFlat.filter(item => item.job != false).filter(data => sceneData.flat().find(item => item.uuid == data.job).buildingData.level < Math.floor(data.education));
+        let majorityVal = getMajorityValue(citizen, 'education');
+
+        return (majorityVal == null) ? 0 : parseInt(majorityVal);
+    }
+
+    return 1;
 }
 
 //cleanup vehicles not linked to drivers

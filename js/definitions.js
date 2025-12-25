@@ -19,7 +19,7 @@ let houses = {
 //commercial buildings
 let commercial = {
     'assets/commercial/shop-1': {
-        "level": 1,
+        "level": 2,
         "slots": 3,
         "pay": 30000
     },
@@ -33,7 +33,7 @@ let commercial = {
 //industrial buildings
 let industrial = {
     'assets/industrial/industrial-1': {
-        "level": 3,
+        "level": 4,
         "slots": 6,
         "pay": 30000
     }

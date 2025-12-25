@@ -64,7 +64,7 @@ async function select(event) {
 
         //call corresponding tool function
         switch (tool.category) {
-            case "Zones": placeZone(tile); break;
+            case "Zones": placeZone(tile, tool.type); break;
             case "Transport": placeTransport(tile); break;
             case "Facility": placeFacility(tile); break;
             case "demolish": cleanTileData(tile, true); break;
@@ -83,16 +83,15 @@ let moved = false;
 //========================
 
 // place tile zone
-async function placeZone(tile) {
+async function placeZone(tile, type) {
     // remove foliage
-    if (tile.type == 3 & tile.zone == tool.type) return;
+    if (tile.type == 3 & tile.zone == type) return;
     cleanTileData(tile)
     tile.type = 3; //zoned for buildings
-    tile.zone = tool.type;
-    tile.occupied = false;
+    tile.zone = type;
 
     // add billboard to tile
-    let object = await loadWMat(zones[tool.type].model);
+    let object = await loadWMat(zones[type].model);
     let connectedRoad = checkNeighborForRoads(tile["posX"], tile["posZ"], true);
     scene.add(object);
 

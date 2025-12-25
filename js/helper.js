@@ -35,19 +35,24 @@ function openTab(tabname, tabGroup, doubleClickHide = false) {
 }
 
 // remove additional information from tile
-function cleanTileData(tile, resetType = false) {
+function cleanTileData(tile, resetType = false, reZone = false) {
+    let tempZone = tile.zone ? tile.zone : "housing";
+
+    if (tile.occupied) tile.occupied = false;
     if (tile.building) delete tile.building;
     if (tile.zone) delete tile.zone;
     if (tile.foliageType) delete tile.foliageType;
     if (tile.level) delete tile.level;
     if (tile.uuid) delete tile.uuid;
+    if (tile.buildingData) delete tile.buildingData;
+    if (tile.emptyTick) delete tile.emptyTick;
 
     if (Object.keys(citizens).find(item => item == tile.index)) {
         delete citizens[tile.index];
     }
 
     if (resetType & typeof meshLocations[tile.index] != "undefined") {
-        animMove(meshLocations[tile.index], false);
+        animMove(meshLocations[tile.index], false, !reZone);
         setTimeout(() => {
             // update neighboring roads
             Object.values(checkNeighborForRoads(tile["posX"], tile["posZ"], false, true)).forEach(tile => {
@@ -59,6 +64,8 @@ function cleanTileData(tile, resetType = false) {
                 scene.remove(meshLocations[tile.index]);
                 delete meshLocations[tile.index];
             };
+
+            if (reZone != false) placeZone(tile, tempZone);
         }, 500);
     } else {
         setInstanceColor((tile.posX + tile.posZ) % 2 === 0 ? 0x008000 : 0x007000, gridInstance, tile.index);
@@ -79,14 +86,14 @@ function positionTile(connectedRoad, tile, object) {
 }
 
 // building (up) and demolishing (down) animation
-function animMove(target, isUp) {
+function animMove(target, isUp, playSound = true) {
     const startY = target.position.y;
     const height = target.scale.y;
     const startTime = performance.now();
 
     if (!isUp) {
         spawnSmoke(target.position, 3000);
-        (new Audio("assets/audio/829103__squirrel_404__smasheddemolished-brick-wall-crumblingcaving-in.mp3")).play();
+        if (playSound) (new Audio("assets/audio/829103__squirrel_404__smasheddemolished-brick-wall-crumblingcaving-in.mp3")).play();
     };
 
     function lerpAnim() {
@@ -168,7 +175,7 @@ function lerpVehicle(oldPos, targetPosX, targetPosY, targetPosHeight, startTime,
         let lerpHeight = lerp(oldPos.y, targetPosHeight, t);
         try { vehicles[data.uuid].position.set(lerpX, lerpHeight, lerpZ); } catch (e) { } //sometimes broken idk why
         if (t < 1) requestAnimationFrame(lerpAnim);
-    }; 
+    };
     lerpAnim();
 }
 
@@ -225,4 +232,31 @@ function makeUniqueId(array) {
 //random between two values
 function randomIntFromInterval(min, max) {
     return Math.floor(Math.random() * (max - min + 1) + min);
+}
+
+// get majority value from set data
+function getMajorityValue(arr, prop) {
+    if (arr.length === 0) return null;
+
+    const counts = {};
+    let maxCount = 0;
+    let majorityValue = null;
+    const n = arr.length;
+
+    // Count the occurrences of each value
+    for (const item of arr) {
+        const value = item[prop];
+        counts[value] = (counts[value] || 0) + 1;
+    }
+
+    // Find the value with the highest count
+    for (const value in counts) {
+        if (counts[value] > maxCount) {
+            maxCount = counts[value];
+            majorityValue = value;
+        }
+    }
+
+    // Return majority if it exists, otherwise return first value
+    return (maxCount > n / 2) ? majorityValue : arr[0][prop];
 }
