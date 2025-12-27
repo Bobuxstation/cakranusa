@@ -86,7 +86,12 @@ let facility = {
     "hospital": {
         "model": "assets/facility/hospital",
         "type": "medical",
-        "range": 8
+        "slots": 8
+    },
+    "fire department": {
+        "model": "assets/facility/hospital",
+        "type": "firedept",
+        "slots": 8
     },
     "elementary school": {
         "model": "assets/facility/sd",

@@ -46,6 +46,8 @@ function cleanTileData(tile, resetType = false, reZone = false) {
     if (tile.uuid) delete tile.uuid;
     if (tile.buildingData) delete tile.buildingData;
     if (tile.emptyTick) delete tile.emptyTick;
+    if (tile.burning) delete tile.burning;
+    if (tile.burningCount) delete tile.burningCount;
 
     if (Object.keys(citizens).find(item => item == tile.index)) {
         delete citizens[tile.index];

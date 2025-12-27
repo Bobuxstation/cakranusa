@@ -30,9 +30,12 @@ function createNewCitizen(tile) {
 //simulate individual citizen
 let vehicles = {}
 function citizenStep(data) {
+    //if health 0, disappear
+    if (data.health <= 0) { deleteCitizen(data); return; };
+
     //if house is destroyed, disappear
     let checkHome = sceneData.flat().find(item => item.uuid == data.home);
-    if (!checkHome) { delete data; return; }
+    if (!checkHome) { deleteCitizen(data); return; };
 
     //apply new job if there is none or if there is a better job
     let jobTile = findJob(data);
@@ -50,19 +53,35 @@ function citizenStep(data) {
         case "home":
             //find way to work after 10-15 ticks at home
             if (data.sessionTick <= randomIntFromInterval(10, 15)) break;
+            if (data.health <= 95) data.health += randomIntFromInterval(2, 5);
+
+            //go to hospital if health less than 50
+            let hospitalTile = findFacility("medical");
+            if (data.health < 50 && hospitalTile) {
+                pathMap = convertPathfind(sceneData, sceneData[data.location.y][data.location.x], hospitalTile);
+                route = astar(pathMap);
+                if (route == null) break;
+                data.targetDir = "";
+                data.sessionTick = 0;
+                data.status = "moving";
+                data.targetType = "hospital"; // set to work mode when arrived
+                data.targetRoute = route;
+                break;
+            }
+
             if (data.education != facility[highestEducation].education + 1 & data.school != false) {
-                // if education is not high, 50% chance of going to school instead of work
+                // if education is not high, 15% chance of going to school instead of work
                 if (Math.random() > 0.15) {
                     pathMap = convertPathfind(sceneData, sceneData[data.location.y][data.location.x], sceneData.flat().find(item => item.uuid == data.school));
                     route = astar(pathMap);
-                    if (route == null) break;
-
-                    data.targetDir = "";
-                    data.sessionTick = 0;
-                    data.status = "moving";
-                    data.targetType = "learn"; // set to work mode when arrived
-                    data.targetRoute = route;
-                    break;
+                    if (route != null) {
+                        data.targetDir = "";
+                        data.sessionTick = 0;
+                        data.status = "moving";
+                        data.targetType = "learn"; // set to work mode when arrived
+                        data.targetRoute = route;
+                        break;
+                    };
                 }
             }
 
@@ -96,14 +115,23 @@ function citizenStep(data) {
             //steps
             if (currentStep == data.targetRoute.length - 1) {
                 //delete vehicle model (final step)
-                scene.remove(vehicles[data.uuid]);
-                delete vehicles[data.uuid];
+                let finalTarget = data.targetRoute.at(-1);
+                let targetPosX = finalTarget.x - (sceneData[0].length / 2);
+                let targetPosY = sceneData[finalTarget.y][finalTarget.x].height + 0.16;
+                let targetPosZ = finalTarget.y - (sceneData[0].length / 2);
+                lerpVehicle(vehicles[data.uuid].position.clone(), targetPosX, targetPosZ, targetPosY, performance.now(), data);
 
-                //change to target mode
-                data.status = data.targetType;
-                data.targetRoute = [];
-                data.sessionTick = 0;
-                data.targetType = "";
+                //discard vehicle after arrival
+                setTimeout(() => {
+                    scene.remove(vehicles[data.uuid]);
+                    delete vehicles[data.uuid];
+
+                    //change to target mode
+                    data.status = data.targetType;
+                    data.targetRoute = [];
+                    data.sessionTick = 0;
+                    data.targetType = "";
+                }, simulationSpeed);
             } else {
                 //set coordinates for vehicle
                 let targetPos = data.targetRoute[currentStep + 1];
@@ -138,9 +166,9 @@ function citizenStep(data) {
         case "work":
             //after 15-25 ticks find path home
             if (data.sessionTick <= randomIntFromInterval(15, 25)) break;
+
             homePathMap = convertPathfind(sceneData, sceneData[data.location.y][data.location.x], checkHome);
             routeHome = astar(homePathMap);
-
             if (routeHome == null) break;
 
             //set route and change to moving mode
@@ -148,14 +176,15 @@ function citizenStep(data) {
             data.status = "moving";
             data.targetType = "home"; //set mode to home when arrived
             data.targetRoute = routeHome;
+            data.health -= randomIntFromInterval(20, 25)
             data.wallet += sceneData.flat().find(item => item.uuid == data.job) ? sceneData.flat().find(item => item.uuid == data.job).buildingData.pay : 0;
             break;
         case "learn":
             //after 15-25 ticks find path home
             if (data.sessionTick <= randomIntFromInterval(15, 25)) break;
+
             homePathMap = convertPathfind(sceneData, sceneData[data.location.y][data.location.x], checkHome);
             routeHome = astar(homePathMap);
-
             if (routeHome == null) break;
 
             let addition = data.education + 0.1;
@@ -165,7 +194,22 @@ function citizenStep(data) {
             data.status = "moving";
             data.targetType = "home"; //set mode to home when arrived
             data.targetRoute = routeHome;
+            data.health -= randomIntFromInterval(5, 10)
             data.education = parseFloat(addition.toFixed(1));
+            break;
+        case "hospital":
+            //after 15-25 ticks find path home
+            if (data.sessionTick <= randomIntFromInterval(15, 25)) break;
+            homePathMap = convertPathfind(sceneData, sceneData[data.location.y][data.location.x], checkHome);
+            routeHome = astar(homePathMap);
+            if (routeHome == null) break;
+
+            //set route and change to moving mode
+            data.sessionTick = 0;
+            data.status = "moving";
+            data.targetType = "home"; //set mode to home when arrived
+            data.targetRoute = routeHome;
+            data.health = 100;
             break;
         default:
             //if invalid, teleport to home
@@ -190,38 +234,24 @@ async function citizenSimulation(seed) {
     if (housingtile != false & housingDemand >= 25) occupyHouse(housingtile);
     if (housingtile != false & housingDemand < 100) housingDemand += 10;
 
-    // anyone unemployed for job creation
+    // anyone unemployed for job creation or better job needed from citizens
+    let needBetterJob = findOpportunity(true);
     let jobless = typeof Object.values(citizens).flat().find(item => item.job == false) !== "undefined";
     let eligibleWorkplace = [];
 
-    // better job needed from citizens
-    let citizenFlat = Object.values(citizens).flat();
-    let sceneFlat = Object.values(sceneData).flat();
-    let citizenHighest = citizenFlat.length > 0 ? citizenFlat.reduce((maxKey, key) => key.education > maxKey.education ? key : maxKey).education : 0;
-    let jobHighest = sceneFlat.filter(item => (item.zone === "commercial" || item.zone === "industrial" || item.zone === "farm") && item.occupied);
-    jobHighest = (jobHighest.length != 0) ? jobHighest.reduce((maxKey, key) => key.buildingData.level > maxKey.buildingData.level ? key : maxKey).buildingData.level : 0;
+    // pick one work tile to build workplace on if eligible
+    if (commercialtile != false & (jobless || needBetterJob) & commercialDemand >= 25) eligibleWorkplace.push(() => occupyWorkplace(commercialtile, commercial));
+    if ((jobless || needBetterJob) & commercialDemand < 100) commercialDemand += 10;
+    if (industrialtile != false & (jobless || needBetterJob) & IndustrialDemand >= 25) eligibleWorkplace.push(() => occupyWorkplace(industrialtile, industrial));
+    if ((jobless || needBetterJob) & IndustrialDemand < 100) IndustrialDemand += 10;
+    if (farmlandtile != false & (jobless || needBetterJob) & FarmlandDemand >= 25) eligibleWorkplace.push(() => occupyWorkplace(farmlandtile, farm));
+    if ((jobless || needBetterJob) & FarmlandDemand < 100) FarmlandDemand += 10;
+    if (eligibleWorkplace.length != 0) eligibleWorkplace[Math.floor(Math.random() * eligibleWorkplace.length)]();
 
-    //occupy commercial
-    if (commercialtile != false & (jobless || Math.floor(citizenHighest) > jobHighest) & commercialDemand >= 25) eligibleWorkplace.push(() => occupyWorkplace(commercialtile, commercial));
-    if ((jobless || Math.floor(citizenHighest) > jobHighest) & commercialDemand < 100) commercialDemand += 10;
-
-    //occupy industrial
-    if (industrialtile != false & (jobless || Math.floor(citizenHighest) > jobHighest) & IndustrialDemand >= 25) eligibleWorkplace.push(() => occupyWorkplace(industrialtile, industrial));
-    if ((jobless || Math.floor(citizenHighest) > jobHighest) & IndustrialDemand < 100) IndustrialDemand += 10;
-
-    //occupy farmland
-    if (farmlandtile != false & (jobless || Math.floor(citizenHighest) > jobHighest) & FarmlandDemand >= 25) eligibleWorkplace.push(() => occupyWorkplace(farmlandtile, farm));
-    if ((jobless || Math.floor(citizenHighest) > jobHighest) & FarmlandDemand < 100) FarmlandDemand += 10;
-
-    //pick one work tile to build workplace on if eligible
-    if (eligibleWorkplace.length != 0) eligibleWorkplace[Math.floor(Math.random() * eligibleWorkplace.length)]()
-
-    //simulate citizen
+    //simulate citizen and workpalce tiles
+    sceneData.flat().filter(item => item.type == 3 && item.occupied).forEach(workplace => zoneTileTick(workplace));
+    sceneData.flat().filter(item => item.type == 4).forEach(facility => facilityTick(facility));
     Object.values(citizens).flat().forEach(citizen => citizenStep(citizen));
-
-    //workplace tile tick
-    let workplaces = sceneData.flat().filter(item => (item.zone === "commercial" || item.zone === "industrial" || item.zone === "farm") && item.occupied);
-    workplaces.forEach(workplace => workplaceTick(workplace));
 
     //update edu stats
     let educationTab = document.getElementById("education");
@@ -236,171 +266,77 @@ async function citizenSimulation(seed) {
     //update stats
     document.getElementById("populationData").innerText = Object.values(citizens).flat().length;
     document.getElementById("unemployedData").innerText = Object.values(citizens).flat().filter(item => item.job == false).length;
-    setTimeout(citizenSimulation, simulationSpeed);
+    setTimeout(() => requestAnimationFrame(citizenSimulation), simulationSpeed);
 }
 
-//========================
-// Simulation Helpers
-//========================
+//simulation for facility buildings
+async function facilityTick(tile) {
+    if (tile.buildingType == 'firedept') {
+        if (tile.buildingData.working) {
+            if (tile.buildingData.step >= tile.buildingData.route.length - 1) {
+                //arrived at burning building
+                tile.buildingData.working = false;
+                tile.buildingData.step = 0;
+                tile.buildingData.target.burning = false;
+                tile.buildingData.target.burningCount = 0;
+                scene.remove(tile.buildingData.mesh);
+            } else {
+                //driving to burning building
+                let from = tile.buildingData.route[tile.buildingData.step]
+                let to = tile.buildingData.route[tile.buildingData.step + 1];
+                let start = performance.now();
 
-//occupy resizential tile
-async function occupyHouse(tile) {
-    let connectedRoad = checkNeighborForRoads(tile["posX"], tile["posZ"], true);
-    let buildingType = Object.keys(houses)[Math.floor(Math.random() * Object.keys(houses).length)];
-    tile.road = connectedRoad;
-    tile.occupied = true;
-    tile.uuid = makeUniqueId(sceneData.flat());
-    setInstanceColor(0x555555, gridInstance, tile.index);
+                //lerp vehicle
+                function anim() {
+                    let t = Math.min((performance.now() - start) / simulationSpeed, 1);
+                    let lerpX = lerp(from.y - sceneData[0].length / 2, to.y - sceneData[0].length / 2, t);
+                    let lerpY = lerp(sceneData[from.y][from.x].height + 0.16, sceneData[to.y][to.x].height + 0.16, t);
+                    let lerpZ = lerp(from.x - sceneData[0].length / 2, to.x - sceneData[0].length / 2, t);
+                    try { tile.buildingData.mesh.position.set(lerpX, lerpY, lerpZ); } catch (e) { }
+                    if (t < 1) { requestAnimationFrame(anim) } else { tile.buildingData.step++; }
+                }; anim();
+                if (tile.buildingData.step == 0) scene.add(tile.buildingData.mesh);
+            }
+        } else {
+            let burning = sceneData.flat().find(item => item.burning);
+            let route = burning ? astar(convertPathfind(sceneData, tile, burning)) : false;
+            if (!route) return;
 
-    //create new citizens
-    for (let i = 0; i < houses[buildingType]["slots"]; i++) {
-        citizens[tile.index] ??= [];
-        citizens[tile.index].push(createNewCitizen(tile));
-    }
-
-    let object = await loadWMat(buildingType);
-    scene.remove(meshLocations[tile.index]);
-    scene.add(object);
-
-    meshLocations[tile.index] = object;
-    positionTile(connectedRoad, tile, object)
-    animMove(object, true);
-}
-
-//occupy commercial/industrial/farm tile
-async function occupyWorkplace(tile, type) {
-    //find connected road
-    let connectedRoad = checkNeighborForRoads(tile["posX"], tile["posZ"], true);
-    let filterBuildings = Object.keys(type).filter(item => type[item].level == findOpportunity());
-    let buildingType = filterBuildings[Math.floor(Math.random() * Object.keys(filterBuildings).length)];
-    if (filterBuildings.length == 0) return;
-
-    tile.buildingData = type[buildingType];
-    tile.road = connectedRoad;
-    tile.slot = type[buildingType]["slots"];
-    tile.occupied = true;
-    tile.uuid = makeUniqueId(sceneData.flat());
-    setInstanceColor(0x555555, gridInstance, tile.index);
-
-    let object = await loadWMat(buildingType);
-    scene.remove(meshLocations[tile.index]);
-    scene.add(object);
-
-    meshLocations[tile.index] = object;
-    positionTile(connectedRoad, tile, object)
-    animMove(object, true);
-}
-
-//if empty for too long, clear workplace
-function workplaceTick(tile) {
-    if (checkEmployees(tile).length == 0) {
-        if (typeof tile.emptyTick == "undefined") { tile.emptyTick = 0; return; }
-        tile.emptyTick++;
-        if (tile.emptyTick > 30) cleanTileData(tile, true, true)
-    } else {
-        if (tile.emptyTick) delete tile.emptyTick;
-    }
-}
-
-// find zone for citizens
-function findZone(zone, occupied, checkRoad) {
-    //check zones
-    const matches = sceneData.flat().filter(item => item.zone === zone);
-
-    //shuffle results
-    for (let i = matches.length - 1; i > 0; i--) {
-        const j = Math.floor(Math.random() * (i + 1));
-        [matches[i], matches[j]] = [matches[j], matches[i]];
-    }
-
-    //if not occupied, has road connection then return tile
-    for (const match of matches) {
-        if (match.occupied & occupied) continue;
-        if (checkRoad && !checkNeighborForRoads(match.posX, match.posZ, true)) continue;
-        return match;
-    }
-
-    return false;
-}
-
-//find vacant jobs
-function findJob(data) {
-    // find workplace tile
-    let matches = sceneData.flat().filter(item => (item.zone === "commercial" || item.zone === "industrial" || item.zone === "farm") && item.occupied);
-    matches = matches.filter(item => item.buildingData.level <= data.education);
-    matches.sort((a, b) => Math.abs(data.education - a.buildingData.level) - Math.abs(data.education - b.buildingData.level));
-
-    // shuffle matches with same closest level
-    let i = 0;
-    while (i < matches.length) {
-        let j = i + 1;
-        while (j < matches.length && Math.abs(data.education - matches[i].buildingData.level) === Math.abs(data.education - matches[j].buildingData.level)) { j++; }
-        for (let k = j - 1; k > i; k--) {
-            const l = i + Math.floor(Math.random() * (k - i + 1));
-            [matches[k], matches[l]] = [matches[l], matches[k]];
+            //set data
+            let mesh = new THREE.Mesh(new THREE.BoxGeometry(0.22, 0.22, 0.22), new THREE.MeshToonMaterial({ color: 0xff3300 }));
+            tile.buildingData.route = route;
+            tile.buildingData.target = burning;
+            tile.buildingData.working = true;
+            tile.buildingData.step = 0;
+            tile.buildingData.mesh = mesh;
         }
-        i = j;
+    };
+};
+
+//simulation for zoned tiles
+function zoneTileTick(tile) {
+    if (tile.zone == "housing") {
+        //if house is empty, sell tile
+        if (Object.values(citizens).flat().filter(item => item.home == tile.uuid).length == 0) cleanTileData(tile, true, true);
+    } else {
+        if (checkEmployees(tile).length == 0) {
+            // count how long tile is empty, if no employees for 30 ticks, sell tile
+            if (typeof tile.emptyTick == "undefined") { tile.emptyTick = 0; return; } else { tile.emptyTick++; }
+            if (tile.emptyTick > 30) cleanTileData(tile, true, true)
+        } else {
+            // reset counter if there is an employee
+            if (tile.emptyTick) delete tile.emptyTick;
+        }
     }
 
-    // check if not full
-    for (const match of matches) {
-        if (checkEmployees(match).length < match.slot) return match;
+    //random chance of building catching on fire
+    let randomChance = Math.random()
+    if (randomChance < 0.0005 && !tile.burning && citizensInTile(tile) == 0) {
+        tile.burning = true;
+        tile.burningCount = 0;
+    } else if (tile.burning) {
+        tile.burning++;
+        spawnSmoke({ x: tile.posX, y: tile.posY, z: tile.posZ }, 3000);
+        if (tile.burning > 60) cleanTileData(tile, true, true);
     }
-
-    return false;
 }
-
-//find schools
-function findSchool(level) {
-    //find school tile
-    let matches = sceneData.flat().filter(item => (item.type == 4 & item.buildingType == "education" & typeof item.buildingData != "undefined"));
-    matches = matches.filter(item => item.buildingData.education === level);
-
-    //shuffle results
-    for (let i = matches.length - 1; i > 0; i--) {
-        let j = Math.floor(Math.random() * (i + 1));
-        [matches[i], matches[j]] = [matches[j], matches[i]];
-    }
-
-    //check if not full
-    for (let match of matches) {
-        if (match.occupied == true & (checkStudents(match).length < match.buildingData.slots)) return match;
-    }
-
-    return false;
-}
-
-//check students of tile
-function checkStudents(tile) {
-    return Object.values(citizens).flat().filter(citizen => citizen.school === tile.uuid);
-}
-
-//check employees of tile
-function checkEmployees(tile) {
-    return Object.values(citizens).flat().filter(citizen => citizen.job === tile.uuid);
-}
-
-//find unfilled job level
-function findOpportunity() {
-    let citizenFlat = Object.values(citizens).flat();
-    if (citizenFlat.length != 0) {
-        if (citizenFlat.filter(item => item.job != false).length == 0) return 1;
-
-        let citizen = citizenFlat.filter(item => item.job != false).filter(data => sceneData.flat().find(item => item.uuid == data.job).buildingData.level < Math.floor(data.education));
-        let majorityVal = getMajorityValue(citizen, 'education');
-
-        return (majorityVal == null) ? 0 : parseInt(majorityVal);
-    }
-
-    return 1;
-}
-
-//cleanup vehicles not linked to drivers
-function cleanVehicles() {
-    Object.keys(vehicles).forEach(key => {
-        if (Object.values(citizens).flat().filter(citizen => citizen.uuid === key).length != 0) return;
-        scene.remove(vehicles[key]);
-        delete vehicles[key];
-    });
-    requestAnimationFrame(cleanVehicles);
-}; cleanVehicles()
