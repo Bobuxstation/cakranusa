@@ -1,18 +1,3 @@
-// place road on tile and update neighbors
-function placeRoad(tile) {
-    tile.type = 2;
-    cleanTileData(tile)
-
-    let neighbors = checkNeighborForRoads(tile["posX"], tile["posZ"], false, true);
-    setRoadModel(neighbors, tile);
-
-    setTimeout(() => {
-        Object.values(neighbors).forEach(tile => {
-            setRoadModel(checkNeighborForRoads(tile["posX"], tile["posZ"], false, true), tile, true);
-        });
-    }, 500);
-}
-
 // render road model on tile based on neighbors
 async function setRoadModel(directions, tile, isUpdate = false) {
     let object

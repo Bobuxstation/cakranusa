@@ -62,6 +62,7 @@ function citizenStep(data) {
                 route = astar(pathMap);
                 if (route == null) break;
                 data.targetDir = "";
+                data.roadWait = 0;
                 data.sessionTick = 0;
                 data.status = "moving";
                 data.targetType = "hospital"; // set to work mode when arrived
@@ -76,6 +77,7 @@ function citizenStep(data) {
                     route = astar(pathMap);
                     if (route != null) {
                         data.targetDir = "";
+                        data.roadWait = 0;
                         data.sessionTick = 0;
                         data.status = "moving";
                         data.targetType = "learn"; // set to work mode when arrived
@@ -94,6 +96,7 @@ function citizenStep(data) {
 
                 //set route and change to moving mode
                 data.targetDir = "";
+                data.roadWait = 0;
                 data.sessionTick = 0;
                 data.status = "moving";
                 data.targetType = "work"; // set to work mode when arrived
@@ -104,6 +107,7 @@ function citizenStep(data) {
         case "moving":
             //create vehicle if first step
             let currentStep = data.targetRoute.indexOf(data.location) == -1 ? 0 : data.targetRoute.indexOf(data.location);
+            let roadQuality = sceneData[data.targetRoute[currentStep].y][data.targetRoute[currentStep].x].qualityState || 100;
             if (!vehicles[data.uuid]) {
                 let material = new THREE.MeshToonMaterial({ color: 0xffffff });
                 let geometry = new THREE.BoxGeometry(0.20, 0.20, 0.20);
@@ -113,6 +117,7 @@ function citizenStep(data) {
             }
 
             //steps
+            if (data.roadWait != Math.floor((100 - roadQuality) / 5)) { data.roadWait++; break; } else { data.roadWait = 0; };
             if (currentStep == data.targetRoute.length - 1) {
                 //delete vehicle model (final step)
                 let finalTarget = data.targetRoute.at(-1);
@@ -130,6 +135,7 @@ function citizenStep(data) {
                     data.status = data.targetType;
                     data.targetRoute = [];
                     data.sessionTick = 0;
+                    data.roadWait = 0;
                     data.targetType = "";
                 }, simulationSpeed);
             } else {
@@ -173,6 +179,7 @@ function citizenStep(data) {
 
             //set route and change to moving mode
             data.sessionTick = 0;
+            data.roadWait = 0;
             data.status = "moving";
             data.targetType = "home"; //set mode to home when arrived
             data.targetRoute = routeHome;
@@ -191,6 +198,7 @@ function citizenStep(data) {
             if (parseFloat(addition.toFixed(1)) == Math.floor(data.education) + 1) data.school = false;
 
             data.sessionTick = 0;
+            data.roadWait = 0;
             data.status = "moving";
             data.targetType = "home"; //set mode to home when arrived
             data.targetRoute = routeHome;
@@ -206,6 +214,7 @@ function citizenStep(data) {
 
             //set route and change to moving mode
             data.sessionTick = 0;
+            data.roadWait = 0;
             data.status = "moving";
             data.targetType = "home"; //set mode to home when arrived
             data.targetRoute = routeHome;
@@ -249,8 +258,9 @@ async function citizenSimulation(seed) {
     if (eligibleWorkplace.length != 0) eligibleWorkplace[Math.floor(Math.random() * eligibleWorkplace.length)]();
 
     //simulate citizen and workpalce tiles
-    sceneData.flat().filter(item => item.type == 3 && item.occupied).forEach(workplace => zoneTileTick(workplace));
-    sceneData.flat().filter(item => item.type == 4).forEach(facility => facilityTick(facility));
+    sceneData.flat().filter(item => (typeof item.quality != "undefined")).forEach(tile => qualityDegrade(tile));
+    sceneData.flat().filter(item => (item.type == 3 && item.occupied)).forEach(workplace => zoneTileTick(workplace));
+    sceneData.flat().filter(item => (item.type == 4)).forEach(facility => facilityTick(facility));
     Object.values(citizens).flat().forEach(citizen => citizenStep(citizen));
 
     //update edu stats
@@ -312,6 +322,14 @@ async function facilityTick(tile) {
         }
     };
 };
+
+//corruption affects tile
+function qualityDegrade(tile) {
+    if (tile.qualityTick == randomIntFromInterval(35, 95)) {
+        tile.qualityTick = 0;
+        if (tile.qualityState > tile.quality) tile.qualityState--;
+    }; tile.qualityTick++;
+}
 
 //simulation for zoned tiles
 function zoneTileTick(tile) {

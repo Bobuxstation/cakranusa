@@ -48,6 +48,9 @@ function cleanTileData(tile, resetType = false, reZone = false) {
     if (tile.emptyTick) delete tile.emptyTick;
     if (tile.burning) delete tile.burning;
     if (tile.burningCount) delete tile.burningCount;
+    if (tile.quality) delete tile.quality;
+    if (tile.qualityState) delete tile.qualityState;
+    if (tile.qualityTick) delete tile.qualityState;
 
     if (Object.keys(citizens).find(item => item == tile.index)) {
         delete citizens[tile.index];

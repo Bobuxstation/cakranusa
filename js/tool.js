@@ -73,7 +73,7 @@ async function select(event) {
 }
 
 // capture mouse for selection
-renderer.domElement.addEventListener('pointermove', () => {moved = true;});
+renderer.domElement.addEventListener('pointermove', () => { moved = true; });
 renderer.domElement.addEventListener('pointerdown', () => { moved = false; });
 renderer.domElement.addEventListener('pointerup', (e) => { select(e); });
 let moved = false;
@@ -108,9 +108,23 @@ async function placeTransport(tile) {
     }
 }
 
+// place road on tile and update neighbors
+function placeRoad(tile) {
+    cleanTileData(tile);
+    tile.type = 2;
+    tile.qualityState = 100;
+    tile.qualityTick = 0;
+    tile.quality = randomIntFromInterval(50, 100);
+
+    let neighbors = checkNeighborForRoads(tile["posX"], tile["posZ"], false, true);
+    setRoadModel(neighbors, tile);
+    setTimeout(() => Object.values(neighbors).forEach(tile => setRoadModel(checkNeighborForRoads(tile["posX"], tile["posZ"], false, true), tile, true)), 500);
+}
+
 // government facility
 async function placeFacility(tile) {
     if (tile.type == 4 & tile.building == tool.type) return;
+
     cleanTileData(tile);
     tile.type = 4; // pre made buildings
     tile.building = tool.type;
