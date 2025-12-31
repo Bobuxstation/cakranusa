@@ -325,7 +325,7 @@ async function facilityTick(tile) {
 
 //corruption affects tile
 function qualityDegrade(tile) {
-    if (tile.qualityTick == randomIntFromInterval(35, 95)) {
+    if (tile.qualityTick >= randomIntFromInterval(35, 95)) {
         tile.qualityTick = 0;
         if (tile.qualityState > tile.quality) tile.qualityState--;
     }; tile.qualityTick++;

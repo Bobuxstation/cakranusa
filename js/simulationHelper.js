@@ -21,6 +21,7 @@ async function occupyHouse(tile) {
     let buildingType = Object.keys(houses)[Math.floor(Math.random() * Object.keys(houses).length)];
     tile.road = connectedRoad;
     tile.occupied = true;
+    tile.slot = houses[buildingType]["slots"];
     tile.uuid = makeUniqueId(sceneData.flat());
     setInstanceColor(0x555555, gridInstance, tile.index);
 
@@ -162,6 +163,11 @@ function checkStudents(tile) {
 //check employees of tile
 function checkEmployees(tile) {
     return Object.values(citizens).flat().filter(citizen => citizen.job === tile.uuid);
+}
+
+//check residents of tile
+function checkResidents(tile) {
+    return Object.values(citizens).flat().filter(citizen => citizen.home === tile.uuid);
 }
 
 //find unfilled job level

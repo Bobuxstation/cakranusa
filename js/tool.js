@@ -51,8 +51,8 @@ async function select(event) {
     mouse.y = - (event.clientY / renderer.domElement.clientHeight) * 2 + 1;
 
     var raycaster = new THREE.Raycaster();
-    raycaster.setFromCamera(mouse, camera)
-
+    raycaster.setFromCamera(mouse, camera);
+    
     var intersectsGrid = false;
     var intersects = raycaster.intersectObjects(scene.children, true);
     if (intersects.length == 0 || moved) return;
@@ -68,19 +68,40 @@ async function select(event) {
             case "Transport": placeTransport(tile); break;
             case "Facility": placeFacility(tile); break;
             case "demolish": cleanTileData(tile, true); break;
+            default: tileSelection(tile, event); break;
         }
     })
 }
 
 // capture mouse for selection
+controls.addEventListener('change', () => { floatingDiv.style.display = 'none'; outlinePass.selectedObjects = []; });
 renderer.domElement.addEventListener('pointermove', () => { moved = true; });
 renderer.domElement.addEventListener('pointerdown', () => { moved = false; });
 renderer.domElement.addEventListener('pointerup', (e) => { select(e); });
+let floatingDiv = document.getElementById('floatingDiv');
 let moved = false;
 
 //========================
 // Tool Functions
 //========================
+
+function tileSelection(tile, event) {
+    if (meshLocations[tile.index]) {
+        floatingDiv.style.left = `0px`;
+        floatingDiv.style.top = `0px`;
+        floatingDiv.innerText = '';
+
+        floatingDiv.style.left = `${event.clientX + 10}px`;
+        floatingDiv.style.top = `${event.clientY - floatingDiv.offsetHeight - 10}px`;
+        floatingDiv.style.display = 'block';
+
+        tileInfo(tile);
+        outlinePass.selectedObjects = [meshLocations[tile.index]];
+    } else {
+        floatingDiv.style.display = 'none';
+        outlinePass.selectedObjects = [];
+    }
+}
 
 // place tile zone
 async function placeZone(tile, type) {

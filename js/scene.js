@@ -15,6 +15,9 @@ function newBlankScene(terrainSize, seed) {
 
             if (x == Math.floor(terrainSize / 2)) {
                 type = 2; // road
+                additionalData.quality = randomIntFromInterval(90, 100);
+                additionalData.qualityState = 100;
+                additionalData.qualityTick = 0;
             } else {
                 if (random < 0.25) {
                     type = 1; // foliage

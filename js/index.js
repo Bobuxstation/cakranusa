@@ -30,6 +30,15 @@ renderPixelatedPass.depthEdgeStrength = 0.1;
 renderPixelatedPass.normalEdgeStrength = 0.1;
 //composer.addPass(renderPixelatedPass);
 
+//selection outline
+var outlinePass = new THREE.OutlinePass(new THREE.Vector2(window.innerWidth, window.innerHeight), scene, camera);
+outlinePass.pulsePeriod = 2;
+composer.addPass(outlinePass);
+
+//fix colors
+var gamma_correction = new THREE.ShaderPass(THREE.GammaCorrectionShader);
+composer.addPass(gamma_correction);
+
 // Render the scene
 function animate() {
     controls.update()
@@ -49,6 +58,9 @@ function onWindowResize() {
 
     renderer.setSize(window.innerWidth, window.innerHeight);
     composer.setSize(window.innerWidth, window.innerHeight);
+
+    floatingDiv.style.display = 'none';
+    outlinePass.selectedObjects = [];
 }
 
 window.addEventListener('resize', onWindowResize, false);

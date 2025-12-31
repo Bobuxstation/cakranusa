@@ -22,7 +22,8 @@ canvas {
     width: 100dvw !important;
 }
 
-.overlay, #tabs {
+.overlay,
+#tabs {
     position: absolute;
     width: 100dvw;
     height: fit-content;
@@ -168,6 +169,17 @@ button:active {
 
 .innertab {
     display: none;
+}
+
+#floatingDiv {
+    transition: all 0.5s ease;
+    display: none;
+    position: fixed;
+    background: rgba(0, 0, 0, 0.7);
+    color: #fff;
+    padding: 4px 8px;
+    border-radius: 4px;
+    z-index: 1000;
 }
 
 @keyframes bounceInUp {
