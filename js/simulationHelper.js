@@ -195,5 +195,4 @@ function cleanVehicles() {
         scene.remove(vehicles[key]);
         delete vehicles[key];
     });
-    requestAnimationFrame(cleanVehicles);
-}; cleanVehicles();
+};

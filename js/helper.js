@@ -10,10 +10,57 @@ function mulberry32(a) {
     return ((t ^ t >>> 14) >>> 0) / 4294967296;
 }
 
+// Set up lights and sky
+function allOfTheLights(scene, addsky = true) {
+    // create hemisphere light
+    const hemiLight = new THREE.HemisphereLight(0xffffff, 0xffffff, 0.5);
+    hemiLight.color.setHSL(0.6, 1, 0.6);
+    hemiLight.groundColor.setHSL(0.095, 1, 0.75);
+    hemiLight.position.set(0, 50, 0);
+    scene.add(hemiLight);
+
+    // create directional light
+    const dirLight = new THREE.DirectionalLight(0xffffff, 1);
+    dirLight.position.set(-1.5, 1.5, -1.5);
+    dirLight.position.multiplyScalar(30);
+    dirLight.shadow.mapSize.set(8192, 8192);
+    dirLight.castShadow = true;
+    dirLight.shadow.camera.left = -50;
+    dirLight.shadow.camera.right = 50;
+    dirLight.shadow.camera.top = 50;
+    dirLight.shadow.camera.bottom = -50;
+    dirLight.shadow.camera.near = 1;
+    dirLight.shadow.camera.far = 3500;
+    dirLight.shadow.radius = 0;
+    scene.add(dirLight);
+
+    // create ambient light
+    const light = new THREE.AmbientLight(0x404040);
+    scene.add(light);
+
+    // create sky
+    const sky = new THREE.Sky();
+    sky.scale.setScalar(450000);
+    if (addsky) scene.add(sky);
+    Object.assign(sky.material.uniforms, {
+        turbidity: { value: 10 },
+        rayleigh: { value: 3 },
+        mieCoefficient: { value: 0.005 },
+        mieDirectionalG: { value: 0.7 }
+    });
+
+    // create sun on sky
+    const sun = new THREE.Vector3();
+    sun.setFromSphericalCoords(1, THREE.MathUtils.degToRad(90 - 2), THREE.MathUtils.degToRad(180));
+    sky.material.uniforms.sunPosition.value.copy(sun);
+}
+
 // open tab
 var lastTab = {};
 function openTab(tabname, tabGroup, doubleClickHide = false) {
     let tabs = document.getElementsByClassName(tabGroup);
+    floatingDiv.style.display = 'none';
+    outlinePass.selectedObjects = [];
 
     lastTab[tabGroup] = tabname;
     Object.values(tabs).forEach(element => {
@@ -172,9 +219,9 @@ function spawnSmoke(position, duration = 3000) {
 }
 
 //vehicle movement animation
-function lerpVehicle(oldPos, targetPosX, targetPosY, targetPosHeight, startTime, data) {
+function lerpVehicle(oldPos, targetPosX, targetPosY, targetPosHeight, startTime, data, speed = simulationSpeed) {
     function lerpAnim() {
-        let t = Math.min((performance.now() - startTime) / simulationSpeed, 1);
+        let t = Math.min((performance.now() - startTime) / speed, 1);
         let lerpX = lerp(oldPos.x, targetPosY, t);
         let lerpZ = lerp(oldPos.z, targetPosX, t);
         let lerpHeight = lerp(oldPos.y, targetPosHeight, t);
@@ -264,4 +311,17 @@ function getMajorityValue(arr, prop) {
 
     // Return majority if it exists, otherwise return first value
     return (maxCount > n / 2) ? majorityValue : arr[0][prop];
+}
+
+//toggle all model visibility
+var undergroundGroups = {};
+function setModelVisibility(val) {
+    [...Object.values(meshLocations).filter(i => i.visible == !val),
+    ...Object.values(vehicles).filter(i => i.visible == !val)].forEach(item => item.visible = val);
+
+    if (typeof gridInstance != "undefined") gridInstance.material.opacity = val ? 1 : 0.25;
+    if (typeof undergroundGroups[tool.type] != "undefined" && (tool.category == "Dist." || tool.category == "Demolish Underground")) Object.values(undergroundGroups[tool.type]).forEach(element => element.visible = !val);
+
+    let otherUnderground = Object.keys(undergroundGroups).filter(i => i != tool.type);
+    Object.values(otherUnderground).forEach(i => Object.values(undergroundGroups[i]).forEach(element => element.visible = false));
 }

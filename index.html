@@ -24,15 +24,16 @@
     <script type="text/javascript" src="deps/GammaCorrectionShader.js"></script>
 
     <script type="text/javascript" src="js/tileInfo.js" defer></script>
+    <script type="text/javascript" src="js/pipes.js" defer></script>
     <script type="text/javascript" src="js/road.js" defer></script>
     <script type="text/javascript" src="js/helper.js" defer></script>
     <script type="text/javascript" src="js/pathfinding.js" defer></script>
-    <script type="text/javascript" src="js/index.js" defer></script>
-    <script type="text/javascript" src="js/tool.js" defer></script>
-    <script type="text/javascript" src="js/definitions.js" defer></script>
     <script type="text/javascript" src="js/simulations.js" defer></script>
-    <script type="text/javascript" src="js/scene.js" defer></script>
     <script type="text/javascript" src="js/simulationHelper.js" defer></script>
+    <script type="text/javascript" src="js/definitions.js" defer></script>
+    <script type="text/javascript" src="js/index.js" defer></script>
+    <script type="text/javascript" src="js/scene.js" defer></script>
+    <script type="text/javascript" src="js/tool.js" defer></script>
 </head>
 
 <body>
@@ -82,6 +83,10 @@
                 </div>
             </div>
         </div>
+
+        <div class="tab right fitH" id="demolishMenu">
+            <button onclick="setTool('', 'Demolish')">Above ground</button>
+        </div>
     </div>
 
     <div class="navigation overlay">
@@ -102,7 +107,7 @@
 
         <div id="tools">
             <button onclick="openTab('build', 'tab', true)">Build</button>
-            <button onclick="setTool('', 'demolish')">Demolish</button>
+            <button onclick="openTab('demolishMenu', 'tab', true)">Demolish</button>
         </div>
     </div>
 

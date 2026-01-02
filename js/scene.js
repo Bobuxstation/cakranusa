@@ -102,61 +102,19 @@ async function generateGrid(data) {
     return instance;
 };
 
-// Set up lights and sky
-function allOfTheLights() {
-    // create hemisphere light
-    const hemiLight = new THREE.HemisphereLight(0xffffff, 0xffffff, 0.5);
-    hemiLight.color.setHSL(0.6, 1, 0.6);
-    hemiLight.groundColor.setHSL(0.095, 1, 0.75);
-    hemiLight.position.set(0, 50, 0);
-    scene.add(hemiLight);
-
-    // create directional light
-    const dirLight = new THREE.DirectionalLight(0xffffff, 1);
-    dirLight.position.set(-1.5, 1.5, -1.5);
-    dirLight.position.multiplyScalar(30);
-    dirLight.shadow.mapSize.set(8192, 8192);
-    dirLight.castShadow = true;
-    dirLight.shadow.camera.left = -50;
-    dirLight.shadow.camera.right = 50;
-    dirLight.shadow.camera.top = 50;
-    dirLight.shadow.camera.bottom = -50;
-    dirLight.shadow.camera.near = 1;
-    dirLight.shadow.camera.far = 3500;
-    dirLight.shadow.radius = 0;
-    scene.add(dirLight);
-
-    // create ambient light
-    const light = new THREE.AmbientLight(0x404040);
-    scene.add(light);
-
-    // create sky
-    const sky = new THREE.Sky();
-    sky.scale.setScalar(450000);
-    scene.add(sky);
-    Object.assign(sky.material.uniforms, {
-        turbidity: { value: 10 },
-        rayleigh: { value: 3 },
-        mieCoefficient: { value: 0.005 },
-        mieDirectionalG: { value: 0.7 }
-    });
-
-    // create sun on sky
-    const sun = new THREE.Vector3();
-    sun.setFromSphericalCoords(1, THREE.MathUtils.degToRad(90 - 2), THREE.MathUtils.degToRad(180));
-    sky.material.uniforms.sunPosition.value.copy(sun);
-}
-
-let meshLocations, sceneData, gridInstance, worldSeed;
-let citizens = {};
+let meshLocations, gridInstance
+let sceneData, worldSeed, citizens = {};
 let simulationSpeed = 100;
 
 async function initScene() {
     worldSeed = Math.random();
     meshLocations = {};
     sceneData = newBlankScene(64, Math.floor(worldSeed * 100000));
+    
     gridInstance = await generateGrid(sceneData);
-    allOfTheLights();
+    gridInstance.material.transparent = true;
+
+    allOfTheLights(scene);
     citizenSimulation(worldSeed);
 };
 initScene()

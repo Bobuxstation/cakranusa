@@ -52,7 +52,7 @@ async function select(event) {
 
     var raycaster = new THREE.Raycaster();
     raycaster.setFromCamera(mouse, camera);
-    
+
     var intersectsGrid = false;
     var intersects = raycaster.intersectObjects(scene.children, true);
     if (intersects.length == 0 || moved) return;
@@ -67,7 +67,9 @@ async function select(event) {
             case "Zones": placeZone(tile, tool.type); break;
             case "Transport": placeTransport(tile); break;
             case "Facility": placeFacility(tile); break;
-            case "demolish": cleanTileData(tile, true); break;
+            case "Demolish": cleanTileData(tile, true); break;
+            case "Demolish Underground": cleanUnderground(tile); break;
+            case "Dist.": buildUnderground(tile); break;
             default: tileSelection(tile, event); break;
         }
     })
@@ -84,6 +86,25 @@ let moved = false;
 //========================
 // Tool Functions
 //========================
+
+function buildUnderground(tile) {
+    tile[tool.type] = true;
+
+    let neighbors = checkNeighborForPipes(tile["posX"], tile["posZ"], tool.type);
+    setPipeModel(neighbors, tile, tool.type);
+    Object.values(neighbors).forEach(tile => setPipeModel(checkNeighborForPipes(tile["posX"], tile["posZ"], tool.type), tile, tool.type));
+}
+
+function cleanUnderground(tile) {
+    tile[tool.type] = false;
+    if (undergroundGroups[tool.type][tile.index]) {
+        scene.remove(undergroundGroups[tool.type][tile.index]);
+        delete undergroundGroups[tool.type][tile.index];
+    }
+
+    let neighbors = checkNeighborForPipes(tile["posX"], tile["posZ"], tool.type);
+    Object.values(neighbors).forEach(tile => setPipeModel(checkNeighborForPipes(tile["posX"], tile["posZ"], tool.type), tile, tool.type));
+}
 
 function tileSelection(tile, event) {
     if (meshLocations[tile.index]) {

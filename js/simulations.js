@@ -14,6 +14,7 @@ function createNewCitizen(tile) {
         wallet: 100000, // start with 100k
         health: 100,
         education: 1, // basic education
+        moral: randomIntFromInterval(50, 100),
 
         location: findTileCoordinate(sceneData, tile),
         status: "home",
@@ -61,6 +62,7 @@ function citizenStep(data) {
                 pathMap = convertPathfind(sceneData, sceneData[data.location.y][data.location.x], hospitalTile);
                 route = astar(pathMap);
                 if (route == null) break;
+
                 data.targetDir = "";
                 data.roadWait = 0;
                 data.sessionTick = 0;
@@ -70,21 +72,37 @@ function citizenStep(data) {
                 break;
             }
 
+            // if education is not high, 15% chance of going to school instead of work
             if (data.education != facility[highestEducation].education + 1 & data.school != false) {
-                // if education is not high, 15% chance of going to school instead of work
                 if (Math.random() > 0.15) {
                     pathMap = convertPathfind(sceneData, sceneData[data.location.y][data.location.x], sceneData.flat().find(item => item.uuid == data.school));
                     route = astar(pathMap);
-                    if (route != null) {
-                        data.targetDir = "";
-                        data.roadWait = 0;
-                        data.sessionTick = 0;
-                        data.status = "moving";
-                        data.targetType = "learn"; // set to work mode when arrived
-                        data.targetRoute = route;
-                        break;
-                    };
+                    if (route == null) break;
+
+                    data.targetDir = "";
+                    data.roadWait = 0;
+                    data.sessionTick = 0;
+                    data.status = "moving";
+                    data.targetType = "learn"; // set to work mode when arrived
+                    data.targetRoute = route;
+                    break;
                 }
+            }
+
+            // pray
+            let masjidTile = findFacility("religion");
+            if (Math.random() < 0.25 && masjidTile) {
+                pathMap = convertPathfind(sceneData, sceneData[data.location.y][data.location.x], masjidTile);
+                route = astar(pathMap);
+                if (route == null) break;
+
+                data.targetDir = "";
+                data.roadWait = 0;
+                data.sessionTick = 0;
+                data.status = "moving";
+                data.targetType = "pray"; // set to work mode when arrived
+                data.targetRoute = route;
+                break;
             }
 
             //if has job
@@ -117,7 +135,7 @@ function citizenStep(data) {
             }
 
             //steps
-            if (data.roadWait != Math.floor((100 - roadQuality) / 5)) { data.roadWait++; break; } else { data.roadWait = 0; };
+            if (data.roadWait < Math.floor((100 - roadQuality) / 5)) { data.roadWait++; break; } else { data.roadWait = 0; };
             if (currentStep == data.targetRoute.length - 1) {
                 //delete vehicle model (final step)
                 let finalTarget = data.targetRoute.at(-1);
@@ -204,6 +222,7 @@ function citizenStep(data) {
             data.targetRoute = routeHome;
             data.health -= randomIntFromInterval(5, 10)
             data.education = parseFloat(addition.toFixed(1));
+            if (data.moral <= 90) data.moral += 10;
             break;
         case "hospital":
             //after 15-25 ticks find path home
@@ -219,6 +238,21 @@ function citizenStep(data) {
             data.targetType = "home"; //set mode to home when arrived
             data.targetRoute = routeHome;
             data.health = 100;
+            break;
+        case "pray":
+            //after 15-25 ticks find path home
+            if (data.sessionTick <= randomIntFromInterval(15, 25)) break;
+            homePathMap = convertPathfind(sceneData, sceneData[data.location.y][data.location.x], checkHome);
+            routeHome = astar(homePathMap);
+            if (routeHome == null) break;
+
+            //set route and change to moving mode
+            data.sessionTick = 0;
+            data.roadWait = 0;
+            data.status = "moving";
+            data.targetType = "home"; //set mode to home when arrived
+            data.targetRoute = routeHome;
+            if (data.moral <= 90) data.moral += 10;
             break;
         default:
             //if invalid, teleport to home

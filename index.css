@@ -129,9 +129,8 @@ button:active {
 
 .dual button {
     display: block;
-    aspect-ratio: 1/1;
     width: 75px;
-    padding: 5px;
+    padding: 10px;
     margin-top: 5px;
 }
 
@@ -145,12 +144,16 @@ button:active {
 
 .dual .right button {
     display: inline-block;
-    margin-top: 0;
     text-transform: capitalize;
     margin-right: 5px;
-    float: left;
+    width: 100%;
+    text-align: left;
+    background-size: 65%;
+    background-repeat: no-repeat;
+    background-position: calc(326px - 165px) -65px;
 }
 
+#demolishMenu button:first-child,
 #menu button:first-child,
 .dual button:first-child {
     margin-top: 0;
@@ -160,7 +163,8 @@ button:active {
     margin-right: 0;
 }
 
-#menu button {
+#menu button,
+#demolishMenu button {
     width: 25vw;
     text-align: left;
     display: block;

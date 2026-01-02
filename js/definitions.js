@@ -77,7 +77,8 @@ let zones = {
 //transport types
 let transport = {
     "road": {
-        "model": "assets/roads/road"
+        "model": "assets/roads/road",
+        "variableModel": true
     }
 }
 
@@ -87,6 +88,11 @@ let facility = {
         "model": "assets/facility/hospital",
         "type": "medical",
         "slots": 8
+    },
+    "masjid": {
+        "model": "assets/facility/hospital",
+        "type": "religion",
+        "slots": 16
     },
     "fire department": {
         "model": "assets/facility/hospital",
@@ -113,23 +119,129 @@ let facility = {
     }
 }
 
+//govt facility
+let services = {
+    "recycling plant": {
+        "model": "assets/facility/hospital",
+        "type": "waste",
+        "capacity": 2400
+    },
+    "wind turbine": {
+        "model": "assets/facility/hospital",
+        "type": "electricity",
+        "capacity": 150
+    },
+    "solar panel": {
+        "model": "assets/facility/hospital",
+        "type": "firedept",
+        "capacity": 150
+    },
+    "water pump": {
+        "model": "assets/facility/sd",
+        "type": "water",
+        "capacity": 150
+    },
+    "water treatment": {
+        "model": "assets/facility/sd",
+        "type": "wastewater",
+        "capacity": 150
+    }
+}
+
 let highestEducation = Object.keys(facility)
-.filter(key => typeof facility[key].education === "number")
-.reduce((maxKey, key) => facility[key].education > facility[maxKey].education ? key : maxKey);
+    .filter(key => typeof facility[key].education === "number")
+    .reduce((maxKey, key) => facility[key].education > facility[maxKey].education ? key : maxKey);
+
+//========================
+// underground category
+//========================
+
+let underground = {
+    "electric cable": {
+        "model": "assets/pipe/cable",
+        "type": "cable",
+        "capacity": 150,
+        "variableModel": true
+    },
+    "water pipe": {
+        "model": "assets/pipe/pipe",
+        "type": "pipe",
+        "capacity": 150,
+        "variableModel": true
+    },
+    "sewage pipe": {
+        "model": "assets/pipe/sewage",
+        "type": "wastepipe",
+        "capacity": 150,
+        "variableModel": true
+    }
+}
+
+Object.keys(underground).forEach(item => {
+    let button = document.createElement("button");
+    button.innerText = item;
+    button.onclick = () => setTool(item, 'Demolish Underground');
+
+    document.getElementById("demolishMenu").appendChild(button);
+
+    undergroundGroups[item] = {};
+})
+
+//========================
+// Build Menu Definitions
+//========================
 
 //for build menu
 let buildmenu = {
     "Zones": zones,
     "Transport": transport,
-    "Facility": facility
+    "Facility": facility,
+    "Services": services,
+    "Dist.": underground
 }
 
-//policy template
-let policyTemplate = {
+//========================
+// build preview renderer
+//========================
 
+//build menu preview
+var previewRenderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+previewRenderer.setSize(1024, 1024);
+previewRenderer.outputEncoding = THREE.sRGBEncoding;
+previewRenderer.shadowMap.enabled = true;
+previewRenderer.shadowMap.type = THREE.PCFSoftShadowMap;
+
+//build menu preview
+async function renderPreview(model) {
+    var previewScene = new THREE.Scene();
+    var previewCamera = new THREE.PerspectiveCamera(75, 1, 0.1, 700);
+    previewCamera.position.set(-1, 1, -1);
+    previewCamera.rotation.set(-2.2, -0.7, -2.4);
+
+    var model = (await loadWMat(model)).clone();
+    model.scale.setScalar(0.156);
+    model.traverse((child) => {
+        if (child.isMesh && child.material) {
+            child.material = child.material.clone();
+            child.material.transparent = true;
+            child.material.opacity = 0.5;
+            child.material.needsUpdate = true;
+        }
+    });
+
+    previewScene.add(model);
+    allOfTheLights(previewScene, false);
+    return new Promise((resolve) => {
+        setTimeout(() => {
+            previewRenderer.render(previewScene, previewCamera);
+            resolve(previewRenderer.domElement.toDataURL());
+        }, 1000);
+    });
 }
 
-//fill build menu
+//========================
+// fill build menu
+//========================
 Object.keys(buildmenu).forEach((item, i) => {
     const button = document.createElement("button");
     button.innerText = item;
@@ -144,6 +256,9 @@ Object.keys(buildmenu).forEach((item, i) => {
         const subItemButton = document.createElement("button");
         subItemButton.innerText = subItem;
         subItemButton.onclick = () => { setTool(subItem, item) };
+
+        if (buildmenu[item][subItem].variableModel) renderPreview(buildmenu[item][subItem].model + '_straight').then(data => subItemButton.style.backgroundImage = `url(${data})`)
+        else renderPreview(buildmenu[item][subItem].model).then(data => subItemButton.style.backgroundImage = `url(${data})`)
 
         tab.appendChild(subItemButton);
     });
