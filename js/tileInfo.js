@@ -54,6 +54,7 @@ function tileInfo(tile) {
         switch (tile.type) {
             case 4:
                 floatingDiv.appendChild(infoHeading(tile.building));
+                if (!tile.buildingData.slots) break;
                 floatingDiv.appendChild(infoProgress(citizensInTile(tile), tile.buildingData.slots));
                 floatingDiv.appendChild(infoTable({
                     "Citizen(s) using facility": `${citizensInTile(tile)}/${tile.buildingData.slots}`,

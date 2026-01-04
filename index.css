@@ -116,6 +116,7 @@ button:active {
     display: none;
     pointer-events: all;
     animation: bounceInUp 0.5s both;
+    max-height: 260px;
 }
 
 .right,
@@ -169,6 +170,7 @@ button:active {
     text-align: left;
     display: block;
     margin-top: 5px;
+    text-transform: capitalize;
 }
 
 .innertab {

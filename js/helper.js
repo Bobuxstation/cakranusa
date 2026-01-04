@@ -251,7 +251,7 @@ async function loadWMat(location) {
 }
 
 // make unique id from array
-function makeUniqueId(array) {
+function makeUniqueId(array, networkMode = false) {
     let characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
     let maxAttempts = 1000;
     let attempts = 0;
@@ -267,7 +267,8 @@ function makeUniqueId(array) {
     }
 
     function idExists(id) {
-        return array.some(obj => obj["uuid"] === id);
+        if (networkMode) return array.some(obj => obj[`${networkMode}_type`] === id);
+        else return array.some(obj => obj["uuid"] === id);
     }
 
     while (true) {
@@ -320,7 +321,7 @@ function setModelVisibility(val) {
     ...Object.values(vehicles).filter(i => i.visible == !val)].forEach(item => item.visible = val);
 
     if (typeof gridInstance != "undefined") gridInstance.material.opacity = val ? 1 : 0.25;
-    if (typeof undergroundGroups[tool.type] != "undefined" && (tool.category == "Dist." || tool.category == "Demolish Underground")) Object.values(undergroundGroups[tool.type]).forEach(element => element.visible = !val);
+    if (typeof undergroundGroups[tool.type] != "undefined" && (tool.category == "Supply" || tool.category == "Demolish Underground")) Object.values(undergroundGroups[tool.type]).forEach(element => element.visible = !val);
 
     let otherUnderground = Object.keys(undergroundGroups).filter(i => i != tool.type);
     Object.values(otherUnderground).forEach(i => Object.values(undergroundGroups[i]).forEach(element => element.visible = false));

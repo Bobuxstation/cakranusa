@@ -116,5 +116,8 @@ async function initScene() {
 
     allOfTheLights(scene);
     citizenSimulation(worldSeed);
+
+    let calcSupply = calculateSupplied();
+    setSupplyStat(calcSupply, calcSupply)
 };
 initScene()

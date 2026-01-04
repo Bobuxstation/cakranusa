@@ -19,6 +19,8 @@ function deleteCitizen(data) {
 async function occupyHouse(tile) {
     let connectedRoad = checkNeighborForRoads(tile["posX"], tile["posZ"], true);
     let buildingType = Object.keys(houses)[Math.floor(Math.random() * Object.keys(houses).length)];
+    
+    tile.consumption = houses[buildingType]["consumption"];
     tile.road = connectedRoad;
     tile.occupied = true;
     tile.slot = houses[buildingType]["slots"];
@@ -48,6 +50,7 @@ async function occupyWorkplace(tile, type) {
     let buildingType = filterBuildings[Math.floor(Math.random() * Object.keys(filterBuildings).length)];
     if (filterBuildings.length == 0) return;
 
+    tile.consumption = type[buildingType]["consumption"];
     tile.buildingData = type[buildingType];
     tile.road = connectedRoad;
     tile.slot = type[buildingType]["slots"];

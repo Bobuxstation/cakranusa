@@ -292,8 +292,13 @@ async function citizenSimulation(seed) {
     if (eligibleWorkplace.length != 0) eligibleWorkplace[Math.floor(Math.random() * eligibleWorkplace.length)]();
 
     //simulate citizen and workpalce tiles
+    let calcSupply = calculateSupplied();
+    let originalSupply = JSON.parse(JSON.stringify(calcSupply));
+    let zoneTiles = sceneData.flat().filter(item => (item.type == 3 && item.occupied));
+    zoneTiles.forEach((workplace, i) => zoneTileTick(workplace, calcSupply, originalSupply, (zoneTiles.length - 1 == i)));
+
+    //simulate citizen and workpalce tiles
     sceneData.flat().filter(item => (typeof item.quality != "undefined")).forEach(tile => qualityDegrade(tile));
-    sceneData.flat().filter(item => (item.type == 3 && item.occupied)).forEach(workplace => zoneTileTick(workplace));
     sceneData.flat().filter(item => (item.type == 4)).forEach(facility => facilityTick(facility));
     Object.values(citizens).flat().forEach(citizen => citizenStep(citizen));
 
@@ -311,6 +316,23 @@ async function citizenSimulation(seed) {
     document.getElementById("populationData").innerText = Object.values(citizens).flat().length;
     document.getElementById("unemployedData").innerText = Object.values(citizens).flat().filter(item => item.job == false).length;
     setTimeout(() => requestAnimationFrame(citizenSimulation), simulationSpeed);
+}
+
+//calculate total capacity of all supply networks
+function calculateSupplied() {
+    let totalSupplied = {};
+    Object.keys(underground).forEach(key => {
+        totalSupplied[key] ??= {};
+
+        let suppliers = sceneData.flat().filter(item => (item.type == 4));
+        suppliers = suppliers.filter(item => (item.buildingData.type == key && item[key]));
+        suppliers.forEach(item => {
+            totalSupplied[key][item[`${key}_network`]] ??= 0;
+            totalSupplied[key][item[`${key}_network`]] += item.buildingData.capacity;
+        });
+    });
+
+    return totalSupplied;
 }
 
 //simulation for facility buildings
@@ -366,7 +388,7 @@ function qualityDegrade(tile) {
 }
 
 //simulation for zoned tiles
-function zoneTileTick(tile) {
+function zoneTileTick(tile, calcSupply, originalSupply, isLast) {
     if (tile.zone == "housing") {
         //if house is empty, sell tile
         if (Object.values(citizens).flat().filter(item => item.home == tile.uuid).length == 0) cleanTileData(tile, true, true);
@@ -381,6 +403,21 @@ function zoneTileTick(tile) {
         }
     }
 
+    //consume supply
+    Object.keys(tile.consumption).forEach(item => {
+        if (!calcSupply[item]) return;
+        if (!calcSupply[item][tile[`${item}_network`]]) {
+            console.log("not connected"); return
+        };
+
+        //subtract consumption from supply
+        if (calcSupply[item][tile[`${item}_network`]] - tile.consumption[item] >= 0) {
+            calcSupply[item][tile[`${item}_network`]] -= tile.consumption[item];
+        } else {
+            console.log("not supplied")
+        };
+    })
+
     //random chance of building catching on fire
     let randomChance = Math.random()
     if (randomChance < 0.0005 && !tile.burning && citizensInTile(tile) == 0) {
@@ -391,4 +428,31 @@ function zoneTileTick(tile) {
         spawnSmoke({ x: tile.posX, y: tile.posY, z: tile.posZ }, 3000);
         if (tile.burning > 60) cleanTileData(tile, true, true);
     }
+
+    //add to stats
+    if (isLast) setSupplyStat(calcSupply, originalSupply);
+}
+
+function setSupplyStat(calcSupply, originalSupply) {
+    let supplyStat = document.getElementById("supply");
+    supplyStat.innerHTML = '';
+    Object.keys(calcSupply).forEach(key => {
+        let heading = document.createElement("b");
+        heading.innerText = underground[key].label;
+        supplyStat.appendChild(heading);
+        supplyStat.appendChild(document.createElement('br'));
+
+        if (Object.keys(calcSupply[key]).length == 0) {
+            let text = document.createElement("p");
+            text.innerText = `Nothing here!`;
+            supplyStat.appendChild(text);
+        }
+
+        Object.keys(calcSupply[key]).forEach(item => {
+            let usedAmount = originalSupply[key][item] - calcSupply[key][item];
+            let text = document.createElement("p");
+            text.innerText = `${item}: ${usedAmount}/${originalSupply[key][item]}`;
+            supplyStat.appendChild(text);
+        })
+    })
 }

@@ -66,10 +66,11 @@ async function select(event) {
         switch (tool.category) {
             case "Zones": placeZone(tile, tool.type); break;
             case "Transport": placeTransport(tile); break;
-            case "Facility": placeFacility(tile); break;
+            case "Facility": placeFacility(tile, false); break;
+            case "Services": placeFacility(tile, true); break;
             case "Demolish": cleanTileData(tile, true); break;
             case "Demolish Underground": cleanUnderground(tile); break;
-            case "Dist.": buildUnderground(tile); break;
+            case "Supply": buildUnderground(tile); break;
             default: tileSelection(tile, event); break;
         }
     })
@@ -92,18 +93,51 @@ function buildUnderground(tile) {
 
     let neighbors = checkNeighborForPipes(tile["posX"], tile["posZ"], tool.type);
     setPipeModel(neighbors, tile, tool.type);
-    Object.values(neighbors).forEach(tile => setPipeModel(checkNeighborForPipes(tile["posX"], tile["posZ"], tool.type), tile, tool.type));
+    Object.values(neighbors).forEach(tile => setPipeModel(checkNeighborForPipes(tile["posX"], tile["posZ"], tool.type), tile, tool.type, false));
 }
 
 function cleanUnderground(tile) {
-    tile[tool.type] = false;
+    if (tile[tool.type]) delete tile[tool.type];
+    if (tile[`${tool.type}_network`]) delete tile[`${tool.type}_network`];
     if (undergroundGroups[tool.type][tile.index]) {
+        spawnSmoke({ x: tile.posX, y: tile.posY, z: tile.posZ }, 3000);
         scene.remove(undergroundGroups[tool.type][tile.index]);
         delete undergroundGroups[tool.type][tile.index];
     }
 
     let neighbors = checkNeighborForPipes(tile["posX"], tile["posZ"], tool.type);
-    Object.values(neighbors).forEach(tile => setPipeModel(checkNeighborForPipes(tile["posX"], tile["posZ"], tool.type), tile, tool.type));
+    Object.values(neighbors).forEach(tile => setPipeModel(checkNeighborForPipes(tile["posX"], tile["posZ"], tool.type), tile, tool.type, false));
+
+    // Reassign network IDs for disconnected groups
+    let allTiles = sceneData.flat().filter(t => t[tool.type] && t[`${tool.type}_network`] === tile[`${tool.type}_network`]);
+    let visited = new Set();
+    for (let tile of allTiles) {
+        if (!visited.has(tile.index)) {
+            let group = findConnectedTiles(tile, tool.type, visited);
+            let newId = makeUniqueId(sceneData.flat(), tool.type);
+            group.forEach(t => t[`${tool.type}_network`] = newId);
+        }
+    }
+}
+
+// Helper to find all connected tiles in a network using BFS
+function findConnectedTiles(startTile, type, visited) {
+    let queue = [startTile];
+    let connected = [];
+    while (queue.length > 0) {
+        let current = queue.shift();
+        if (visited.has(current.index)) continue;
+        visited.add(current.index);
+        connected.push(current);
+        
+        let neighbors = checkNeighborForPipes(current.posX, current.posZ, type);
+        Object.values(neighbors).forEach(neighbor => {
+            if (neighbor[type] && !visited.has(neighbor.index) && neighbor[`${type}_network`] === startTile[`${type}_network`]) {
+                queue.push(neighbor);
+            }
+        });
+    }
+    return connected;
 }
 
 function tileSelection(tile, event) {
@@ -164,18 +198,25 @@ function placeRoad(tile) {
 }
 
 // government facility
-async function placeFacility(tile) {
+async function placeFacility(tile, isService) {
     if (tile.type == 4 & tile.building == tool.type) return;
 
     cleanTileData(tile);
     tile.type = 4; // pre made buildings
     tile.building = tool.type;
-    tile.buildingType = facility[tool.type].type;
-    tile.buildingData = facility[tool.type];
     tile.occupied = true;
     tile.uuid = makeUniqueId(sceneData.flat());
 
-    let object = await loadWMat(facility[tool.type].model);
+    if (isService) {
+        var object = await loadWMat(services[tool.type].model);
+        tile.buildingType = services[tool.type].type;
+        tile.buildingData = services[tool.type];
+    } else {
+        var object = await loadWMat(facility[tool.type].model);
+        tile.buildingType = facility[tool.type].type;
+        tile.buildingData = facility[tool.type];
+    }
+
     let connectedRoad = checkNeighborForRoads(tile["posX"], tile["posZ"], true);
     scene.add(object);
 

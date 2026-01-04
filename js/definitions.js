@@ -9,10 +9,20 @@ let houses = {
     'assets/residential/house-1': {
         "level": 2,
         "slots": 3,
+        "consumption": {
+            "electric cable": 10,
+            "water pipe": 10,
+            "sewage pipe": 10
+        }
     },
     'assets/residential/house-2': {
         "level": 3,
-        "slots": 4
+        "slots": 4,
+        "consumption": {
+            "electric cable": 15,
+            "water pipe": 15,
+            "sewage pipe": 15
+        }
     }
 };
 
@@ -21,12 +31,22 @@ let commercial = {
     'assets/commercial/shop-1': {
         "level": 2,
         "slots": 3,
-        "pay": 30000
+        "pay": 30000,
+        "consumption": {
+            "electric cable": 15,
+            "water pipe": 15,
+            "sewage pipe": 15
+        }
     },
     'assets/commercial/shop-2': {
         "level": 3,
         "slots": 6,
-        "pay": 30000
+        "pay": 30000,
+        "consumption": {
+            "electric cable": 30,
+            "water pipe": 30,
+            "sewage pipe": 30
+        }
     }
 };
 
@@ -35,7 +55,12 @@ let industrial = {
     'assets/industrial/industrial-1': {
         "level": 4,
         "slots": 6,
-        "pay": 30000
+        "pay": 30000,
+        "consumption": {
+            "electric cable": 30,
+            "water pipe": 30,
+            "sewage pipe": 30
+        }
     }
 };
 
@@ -44,7 +69,12 @@ let farm = {
     'assets/farm/farm-1': {
         "level": 1,
         "slots": 5,
-        "pay": 30000
+        "pay": 30000,
+        "consumption": {
+            "electric cable": 5,
+            "water pipe": 15,
+            "sewage pipe": 5
+        }
     }
 };
 
@@ -128,22 +158,22 @@ let services = {
     },
     "wind turbine": {
         "model": "assets/facility/hospital",
-        "type": "electricity",
+        "type": "electric cable",
         "capacity": 150
     },
     "solar panel": {
         "model": "assets/facility/hospital",
-        "type": "firedept",
+        "type": "electric cable",
         "capacity": 150
     },
     "water pump": {
         "model": "assets/facility/sd",
-        "type": "water",
+        "type": "water pipe",
         "capacity": 150
     },
     "water treatment": {
         "model": "assets/facility/sd",
-        "type": "wastewater",
+        "type": "sewage pipe",
         "capacity": 150
     }
 }
@@ -159,20 +189,20 @@ let highestEducation = Object.keys(facility)
 let underground = {
     "electric cable": {
         "model": "assets/pipe/cable",
-        "type": "cable",
         "capacity": 150,
+        "label": "Electricity",
         "variableModel": true
     },
     "water pipe": {
         "model": "assets/pipe/pipe",
-        "type": "pipe",
         "capacity": 150,
+        "label": "Water",
         "variableModel": true
     },
     "sewage pipe": {
         "model": "assets/pipe/sewage",
-        "type": "wastepipe",
         "capacity": 150,
+        "label": "Sewage",
         "variableModel": true
     }
 }
@@ -183,7 +213,6 @@ Object.keys(underground).forEach(item => {
     button.onclick = () => setTool(item, 'Demolish Underground');
 
     document.getElementById("demolishMenu").appendChild(button);
-
     undergroundGroups[item] = {};
 })
 
@@ -197,7 +226,7 @@ let buildmenu = {
     "Transport": transport,
     "Facility": facility,
     "Services": services,
-    "Dist.": underground
+    "Supply": underground
 }
 
 //========================

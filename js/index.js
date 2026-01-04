@@ -46,7 +46,7 @@ function animate() {
 
     cleanVehicles();
     if (typeof sceneData != 'undefined') tileInfo(sceneData.flat()[updateInfo]);
-    if (typeof tool != "undefined") (tool.category == "Dist." || tool.category == "Demolish Underground") ? setModelVisibility(false) : setModelVisibility(true);
+    if (typeof tool != "undefined") (tool.category == "Supply" || tool.category == "Demolish Underground") ? setModelVisibility(false) : setModelVisibility(true);
 
     requestAnimationFrame(animate);
 }

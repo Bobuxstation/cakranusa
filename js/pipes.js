@@ -1,8 +1,25 @@
 // render pipe model on tile based on neighbors
-async function setPipeModel(directions, tile, type) {
+async function setPipeModel(directions, tile, type, idUpdate) {
     let typeModel = underground[type].model;
-    let object
+    let object;
 
+    //create supply network if no connection
+    if (Object.values(directions).length == 0) {
+        tile[`${type}_network`] = makeUniqueId(sceneData.flat(), type);
+    } else {
+        let neighborNetworks = [];
+        Object.values(directions).forEach(item => neighborNetworks.push(item[`${type}_network`]));
+
+        let largestNeighbor = countNetworkSize(neighborNetworks, type);
+        if (largestNeighbor != null) {
+            if (tile[`${type}_network`] != largestNeighbor) {
+                tile[`${type}_network`] = largestNeighbor;
+                Object.values(directions).forEach(tile => setPipeModel(checkNeighborForPipes(tile["posX"], tile["posZ"], tool.type), tile, type, true));
+            }
+        }
+    }
+
+    if (idUpdate) return;
     if (undergroundGroups[type][tile.index]) scene.remove(undergroundGroups[type][tile.index]);
     if (Object.values(directions).length > 3) {
         // 4 way intersection
@@ -61,6 +78,24 @@ async function setPipeModel(directions, tile, type) {
     undergroundGroups[type][tile.index] = object;
 }
 
+//calculate supply network sizes
+function countNetworkSize(list, type) {
+    let filterNetwork = sceneData.flat().filter(item => list.includes(item[`${type}_network`]));
+    let networkSizes = {};
+    filterNetwork.forEach(item => networkSizes[item[`${type}_network`]] = (networkSizes[item[`${type}_network`]] || 0) + 1);
+
+    let largest = 0;
+    let largestKey = null;
+    for (let key in networkSizes) {
+        if (networkSizes[key] > largest) {
+            largest = networkSizes[key];
+            largestKey = key;
+        }
+    }
+
+    return largestKey;
+}
+
 // check neighbor of tiles for pipes (north, east, south, west)
 function checkNeighborForPipes(x, z, type) {
     const north = sceneData.flat().find(item => item.posX == x && item.posZ == z + 1 && item[type]);
@@ -74,6 +109,6 @@ function checkNeighborForPipes(x, z, type) {
     if (east) directions.east = east;
     if (west) directions.west = west;
 
-    if (directions.length != 0) return directions; 
+    if (directions.length != 0) return directions;
     return false;
 }
