@@ -2,6 +2,33 @@
 // Helper Functions
 //========================
 
+function newNotification(text) {
+    let toast = document.createElement('div');
+    toast.innerText = text;
+    toast.className = 'notification';
+    toast.style.animation = 'bounceInUp 0.5s both';
+
+    document.getElementById("notifications").appendChild(toast);
+    setTimeout(() => {
+        toast.style.animation = 'slideOutDown 0.5s both';
+        setTimeout(() => toast.remove(), 500);
+    }, 2500);
+}
+
+//set hint
+function setHint(image, title, content) {
+    if (image) {
+        document.getElementById("imageSide").style.display = "block";
+        document.getElementById("hintPreview").src = image
+    } else {
+        document.getElementById("imageSide").style.display = "none";
+    };
+
+    document.getElementById("hintTitle").innerText = title;
+    document.getElementById("hintContent").innerText = content;
+    document.getElementById("hint").style.display = "block";
+}
+
 //biased random
 function mulberry32(a) {
     var t = a += 0x6D2B79F5;
@@ -59,6 +86,7 @@ function allOfTheLights(scene, addsky = true) {
 var lastTab = {};
 function openTab(tabname, tabGroup, doubleClickHide = false) {
     let tabs = document.getElementsByClassName(tabGroup);
+    document.getElementById("hint").style.display = "none";
     floatingDiv.style.display = 'none';
     outlinePass.selectedObjects = [];
 
@@ -98,10 +126,14 @@ function cleanTileData(tile, resetType = false, reZone = false) {
     if (tile.quality) delete tile.quality;
     if (tile.qualityState) delete tile.qualityState;
     if (tile.qualityTick) delete tile.qualityState;
+    if (tile.age) delete tile.age;
 
-    if (Object.keys(citizens).find(item => item == tile.index)) {
-        delete citizens[tile.index];
-    }
+    if (Object.keys(citizens).find(item => item == tile.index)) delete citizens[tile.index];
+    if (typeof meshLocations[tile.index] != "undefined" && typeof warningLabels[tile.index] != "undefined") {
+        meshLocations[tile.index].remove(warningLabels[tile.index]);
+        delete warningLabels[tile.index];
+        if (document.getElementById(`tile-${tile.index}`)) document.getElementById(`tile-${tile.index}`).remove();
+    };
 
     if (resetType & typeof meshLocations[tile.index] != "undefined") {
         animMove(meshLocations[tile.index], false, !reZone);

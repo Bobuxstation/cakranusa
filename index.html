@@ -1,13 +1,12 @@
 <!DOCTYPE html>
 
 <head>
-    <title>p</title>
+    <title>Cakranusa</title>
 
-    <link rel="stylesheet" href="index.css">
-    <link rel="stylesheet" href="scroll.css">
+    <link rel="stylesheet" href="assets/index.css">
+    <link rel="stylesheet" href="assets/scroll.css">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-    <script type="text/javascript" src="deps/faker.js"></script>
     <script type="text/javascript" src="deps/three.min.js"></script>
     <script type="text/javascript" src="deps/ImprovedNoise.js"></script>
     <script type="text/javascript" src="deps/OrbitControls.js"></script>
@@ -22,7 +21,10 @@
     <script type="text/javascript" src="deps/OBJLoader.js"></script>
     <script type="text/javascript" src="deps/OutlinePass.js"></script>
     <script type="text/javascript" src="deps/GammaCorrectionShader.js"></script>
+    <script type="text/javascript" src="deps/CSS2DRenderer.js"></script>
+    <script type="text/javascript" src="deps/fa.js"></script>
 
+    <script type="text/javascript" src="js/tutorial.js" defer></script>
     <script type="text/javascript" src="js/tileInfo.js" defer></script>
     <script type="text/javascript" src="js/pipes.js" defer></script>
     <script type="text/javascript" src="js/road.js" defer></script>
@@ -38,54 +40,73 @@
 
 <body>
     <div id="tabs">
-        <div class="tab dual" id="build">
-            <div class="left" id="buildLeft"></div>
-            <div class="right" id="buildRight"></div>
-        </div>
-
-        <div class="tab right fitH" id="menu">
-            <button>Quit</button>
-            <button>Save</button>
-            <button>Load</button>
-            <button>Take Screenshot</button>
-        </div>
-
-        <div class="tab dual" id="stats">
-            <div class="left">
-                <button onclick="openTab('population', 'statsTab')">Population</button>
-                <button onclick="openTab('education', 'statsTab')">Education</button>
-                <button onclick="openTab('supply', 'statsTab')">Supply</button>
-            </div>
-            <div class="right">
-                <div class="statsTab innertab" id="population" style="display: block;">
-                    Population : <span id="populationData"></span><br>
-                    Unemployed : <span id="unemployedData"></span><br>
+        <div>
+            <div id="hint" class="dual">
+                <div class="left" id="imageSide">
+                    <img id="hintPreview">
                 </div>
-                <div class="statsTab innertab" id="education"></div>
-                <div class="statsTab innertab" id="supply"></div>
-            </div>
-        </div>
-
-        <div class="tab dual" id="policies">
-            <div class="left">
-                <button onclick="openTab('taxes', 'policyTab')">Taxes</button>
-            </div>
-            <div class="right">
-                <div class="policyTab innertab" id="taxes" style="display: block;">
-                    <button>Land</button>
-                    <button>Vehicle</button>
+                <div class="right">
+                    <div>
+                        <b id="hintTitle" style="text-transform: capitalize;">Test</b><br>
+                        <span id="hintContent"></span>
+                    </div>
                 </div>
             </div>
-        </div>
 
-        <div class="tab right fitH" id="demolishMenu">
-            <button onclick="setTool('', 'Demolish')">Above ground</button>
+            <div class="tab dual" id="build">
+                <div class="left" id="buildLeft"></div>
+                <div class="right" id="buildRight"></div>
+            </div>
+
+            <div class="tab right fitH" id="menu">
+                <button>Quit</button>
+                <button>Save</button>
+                <button>Load</button>
+                <button>Take Screenshot</button>
+            </div>
+
+            <div class="tab dual" id="stats">
+                <div class="left">
+                    <button onclick="openTab('population', 'statsTab')">Population</button>
+                    <button onclick="openTab('education', 'statsTab')">Education</button>
+                    <button onclick="openTab('supply', 'statsTab')">Supply</button>
+                </div>
+                <div class="right">
+                    <div class="statsTab innertab" id="population" style="display: block;">
+                        Population : <span id="populationData"></span><br>
+                        Unemployed : <span id="unemployedData"></span><br>
+                    </div>
+                    <div class="statsTab innertab" id="education"></div>
+                    <div class="statsTab innertab" id="supply"></div>
+                </div>
+            </div>
+
+            <div class="tab dual" id="policies">
+                <div class="left">
+                    <button onclick="openTab('taxes', 'policyTab')">Taxes</button>
+                </div>
+                <div class="right">
+                    <div class="policyTab innertab" id="taxes" style="display: block;">
+                        <button>Land</button>
+                        <button>Vehicle</button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="tab dual" id="tutorial">
+                <div class="left" id="tutorialLeft"></div>
+                <div class="right" id="tutorialRight"></div>
+            </div>
+
+            <div class="tab right fitH" id="demolishMenu">
+                <button onclick="setTool('', 'Demolish')">Above ground</button>
+            </div>
         </div>
     </div>
 
     <div class="navigation overlay">
         <div id="money">
-            <span>Rp100.000.000,00</span>
+            <span id="money">Rp100.000.000,00</span>
         </div>
         <div id="date">
             <span>Name - 25 Sep 2067</span>
@@ -97,6 +118,10 @@
             <button onclick="openTab('menu', 'tab', true)">Menu</button>
             <button onclick="openTab('stats', 'tab', true)">Stats</button>
             <button onclick="openTab('policies', 'tab', true)">Policies</button>
+        </div>
+
+        <div id="tools">
+            <button onclick="openTab('tutorial', 'tab', true)" style="width: 25px;">?</button>
         </div>
 
         <div id="tools">
@@ -113,4 +138,5 @@
     </div>
 
     <div id="floatingDiv"></div>
+    <div id="notifications"></div>
 </body>

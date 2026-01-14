@@ -1,0 +1,49 @@
+const { autoUpdater, AppUpdater } = require("electron-updater");
+const { app, BrowserWindow, electron } = require("electron");
+autoUpdater.autoDownload = true;
+autoUpdater.autoInstallOnAppQuit = true;
+
+var win
+function createWindow() {
+  win = new BrowserWindow({
+    width: 1000,
+    height: 600,
+    backgroundColor: '#1d1d1d',
+    webPreferences: { nodeIntegration: true, contextIsolation: false }
+  });
+
+  win.loadFile('index.html')
+}
+app.whenReady().then(() => {
+  createWindow()
+
+  autoUpdater.checkForUpdates();
+  console.log(`Checking for updates. Current version ${app.getVersion()}`);
+})
+
+autoUpdater.on("update-available", (info) => {
+  console.log(`Update available. Current version ${app.getVersion()}`);
+  win.webContents.send('update_available');
+});
+
+autoUpdater.on("update-not-available", (info) => {
+  console.log(`No update available. Current version ${app.getVersion()}`);
+  win.webContents.send('no_update_available');
+});
+
+autoUpdater.on("update-downloaded", (info) => {
+  console.log(`Update downloaded. Current version ${app.getVersion()}`);
+  win.webContents.send('update_downloaded');
+});
+
+app.on('window-all-closed', () => {
+  if (process.platform !== 'darwin') {
+    app.quit()
+  }
+})
+
+app.on('activate', () => {
+  if (BrowserWindow.getAllWindows().length === 0) {
+    createWindow()
+  }
+})

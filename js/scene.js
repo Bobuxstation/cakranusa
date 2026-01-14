@@ -105,6 +105,7 @@ async function generateGrid(data) {
 let meshLocations, gridInstance
 let sceneData, worldSeed, citizens = {};
 let simulationSpeed = 100;
+let money = 500_000_000;
 
 async function initScene() {
     worldSeed = Math.random();

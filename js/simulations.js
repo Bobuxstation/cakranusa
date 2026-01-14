@@ -15,6 +15,7 @@ function createNewCitizen(tile) {
         health: 100,
         education: 1, // basic education
         moral: randomIntFromInterval(50, 100),
+        name: faker.person.fullName(),
 
         location: findTileCoordinate(sceneData, tile),
         status: "home",
@@ -134,8 +135,14 @@ function citizenStep(data) {
                 scene.add(mesh);
             }
 
+            //delay step if road quality is low
+            let delayTime = Math.floor((100 - roadQuality) / 10);
+            if (delayTime != 0) {
+                data.roadWait = (data.roadWait < delayTime - 1) ? data.roadWait + 1 : 0;
+                if (data.roadWait < delayTime - 1) break;
+            }
+
             //steps
-            if (data.roadWait < Math.floor((100 - roadQuality) / 5)) { data.roadWait++; break; } else { data.roadWait = 0; };
             if (currentStep == data.targetRoute.length - 1) {
                 //delete vehicle model (final step)
                 let finalTarget = data.targetRoute.at(-1);
@@ -267,54 +274,58 @@ function citizenStep(data) {
 
 //simulate world
 async function citizenSimulation(seed) {
-    // find empty land
-    let housingtile = findZone("housing", true, true);
-    let commercialtile = findZone("commercial", true, true);
-    let industrialtile = findZone("industrial", true, true);
-    let farmlandtile = findZone("farm", true, true);
+    try {
+        // find empty land
+        let housingtile = findZone("housing", true, true);
+        let commercialtile = findZone("commercial", true, true);
+        let industrialtile = findZone("industrial", true, true);
+        let farmlandtile = findZone("farm", true, true);
 
-    // occupy a house
-    if (housingtile != false & housingDemand >= 25) occupyHouse(housingtile);
-    if (housingtile != false & housingDemand < 100) housingDemand += 10;
+        // occupy a house
+        if (housingtile != false & housingDemand >= 25) occupyHouse(housingtile);
+        if (housingtile != false & housingDemand < 100) housingDemand += 10;
 
-    // anyone unemployed for job creation or better job needed from citizens
-    let needBetterJob = findOpportunity(true);
-    let jobless = typeof Object.values(citizens).flat().find(item => item.job == false) !== "undefined";
-    let eligibleWorkplace = [];
+        // anyone unemployed for job creation or better job needed from citizens
+        let needBetterJob = findOpportunity(true);
+        let jobless = typeof Object.values(citizens).flat().find(item => item.job == false) !== "undefined";
+        let eligibleWorkplace = [];
 
-    // pick one work tile to build workplace on if eligible
-    if (commercialtile != false & (jobless || needBetterJob) & commercialDemand >= 25) eligibleWorkplace.push(() => occupyWorkplace(commercialtile, commercial));
-    if ((jobless || needBetterJob) & commercialDemand < 100) commercialDemand += 10;
-    if (industrialtile != false & (jobless || needBetterJob) & IndustrialDemand >= 25) eligibleWorkplace.push(() => occupyWorkplace(industrialtile, industrial));
-    if ((jobless || needBetterJob) & IndustrialDemand < 100) IndustrialDemand += 10;
-    if (farmlandtile != false & (jobless || needBetterJob) & FarmlandDemand >= 25) eligibleWorkplace.push(() => occupyWorkplace(farmlandtile, farm));
-    if ((jobless || needBetterJob) & FarmlandDemand < 100) FarmlandDemand += 10;
-    if (eligibleWorkplace.length != 0) eligibleWorkplace[Math.floor(Math.random() * eligibleWorkplace.length)]();
+        // pick one work tile to build workplace on if eligible
+        if (commercialtile != false & (jobless || needBetterJob) & commercialDemand >= 25) eligibleWorkplace.push(() => occupyWorkplace(commercialtile, commercial));
+        if ((jobless || needBetterJob) & commercialDemand < 100) commercialDemand += 10;
+        if (industrialtile != false & (jobless || needBetterJob) & IndustrialDemand >= 25) eligibleWorkplace.push(() => occupyWorkplace(industrialtile, industrial));
+        if ((jobless || needBetterJob) & IndustrialDemand < 100) IndustrialDemand += 10;
+        if (farmlandtile != false & (jobless || needBetterJob) & FarmlandDemand >= 25) eligibleWorkplace.push(() => occupyWorkplace(farmlandtile, farm));
+        if ((jobless || needBetterJob) & FarmlandDemand < 100) FarmlandDemand += 10;
+        if (eligibleWorkplace.length != 0) eligibleWorkplace[Math.floor(Math.random() * eligibleWorkplace.length)]();
 
-    //simulate citizen and workpalce tiles
-    let calcSupply = calculateSupplied();
-    let originalSupply = JSON.parse(JSON.stringify(calcSupply));
-    let zoneTiles = sceneData.flat().filter(item => (item.type == 3 && item.occupied));
-    zoneTiles.forEach((workplace, i) => zoneTileTick(workplace, calcSupply, originalSupply, (zoneTiles.length - 1 == i)));
+        //simulate citizen and workpalce tiles
+        let calcSupply = calculateSupplied();
+        let originalSupply = JSON.parse(JSON.stringify(calcSupply));
+        let zoneTiles = sceneData.flat().filter(item => (item.type == 3 && item.occupied));
+        zoneTiles.forEach((workplace, i) => zoneTileTick(workplace, calcSupply, originalSupply, (zoneTiles.length - 1 == i)));
 
-    //simulate citizen and workpalce tiles
-    sceneData.flat().filter(item => (typeof item.quality != "undefined")).forEach(tile => qualityDegrade(tile));
-    sceneData.flat().filter(item => (item.type == 4)).forEach(facility => facilityTick(facility));
-    Object.values(citizens).flat().forEach(citizen => citizenStep(citizen));
+        //simulate citizen and workpalce tiles
+        sceneData.flat().filter(item => (typeof item.quality != "undefined")).forEach(tile => qualityDegrade(tile));
+        sceneData.flat().filter(item => (item.type == 4)).forEach(facility => facilityTick(facility));
+        Object.values(citizens).flat().forEach(citizen => citizenStep(citizen));
 
-    //update edu stats
-    let educationTab = document.getElementById("education");
-    educationTab.innerHTML = '';
-    Object.keys(facility).filter(key => facility[key].type == "education").forEach(key => {
-        let item = facility[key];
-        let textElem = document.createElement('span');
-        textElem.innerHTML = `${key}: ${Object.values(citizens).flat().filter(i => i.education >= item.education + 1).length} / ${Object.values(citizens).flat().length}<br>`
-        educationTab.appendChild(textElem);
-    })
+        //update edu stats
+        let educationTab = document.getElementById("education");
+        educationTab.innerHTML = '';
+        Object.keys(facility).filter(key => facility[key].type == "education").forEach(key => {
+            let item = facility[key];
+            let textElem = document.createElement('span');
+            textElem.innerHTML = `${key}: ${Object.values(citizens).flat().filter(i => i.education >= item.education + 1).length} / ${Object.values(citizens).flat().length}<br>`
+            educationTab.appendChild(textElem);
+        })
 
-    //update stats
-    document.getElementById("populationData").innerText = Object.values(citizens).flat().length;
-    document.getElementById("unemployedData").innerText = Object.values(citizens).flat().filter(item => item.job == false).length;
+        //update stats
+        document.getElementById("populationData").innerText = Object.values(citizens).flat().length;
+        document.getElementById("unemployedData").innerText = Object.values(citizens).flat().filter(item => item.job == false).length;
+    } catch (error) { }
+
+    //loop simulation
     setTimeout(() => requestAnimationFrame(citizenSimulation), simulationSpeed);
 }
 
@@ -388,15 +399,31 @@ function qualityDegrade(tile) {
 }
 
 //simulation for zoned tiles
+var warningLabels = {};
 function zoneTileTick(tile, calcSupply, originalSupply, isLast) {
+    let warnings = [];
+    tile.age ??= 0;
+
     if (tile.zone == "housing") {
-        //if house is empty, sell tile
-        if (Object.values(citizens).flat().filter(item => item.home == tile.uuid).length == 0) cleanTileData(tile, true, true);
+        //employment info
+        let tileJobless = citizens[tile.index] ? citizens[tile.index].filter(u => u.job == false).length : 0;
+        if (tileJobless != 0) warnings.push(`${tileJobless} citizen(s) unemployed!`);
+
+        //medical info
+        let tileHealth = citizens[tile.index] ? citizens[tile.index].filter(u => u.health < 50).length : 0;
+        if (tileHealth != 0) warnings.push(`${tileHealth} citizen(s) require medical attention!`);
+
+        // if building is empty, sell tile
+        if (checkResidents(tile).length == 0) {
+            warnings.push("Building abandoned!");
+            cleanTileData(tile, true, true)
+        };
     } else {
         if (checkEmployees(tile).length == 0) {
             // count how long tile is empty, if no employees for 30 ticks, sell tile
             if (typeof tile.emptyTick == "undefined") { tile.emptyTick = 0; return; } else { tile.emptyTick++; }
-            if (tile.emptyTick > 30) cleanTileData(tile, true, true)
+            if (tile.emptyTick > 30) cleanTileData(tile, true, true);
+            warnings.push(`No workers!`);
         } else {
             // reset counter if there is an employee
             if (tile.emptyTick) delete tile.emptyTick;
@@ -407,29 +434,57 @@ function zoneTileTick(tile, calcSupply, originalSupply, isLast) {
     Object.keys(tile.consumption).forEach(item => {
         if (!calcSupply[item]) return;
         if (!calcSupply[item][tile[`${item}_network`]]) {
-            console.log("not connected"); return
+            warnings.push(`Unavailable: ${underground[item].label}`);
+            return;
         };
 
         //subtract consumption from supply
         if (calcSupply[item][tile[`${item}_network`]] - tile.consumption[item] >= 0) {
             calcSupply[item][tile[`${item}_network`]] -= tile.consumption[item];
         } else {
-            console.log("not supplied")
+            calcSupply[item][tile[`${item}_network`]] = 0;
+            warnings.push(`Not Enough: ${underground[item].label}`);
         };
     })
 
     //random chance of building catching on fire
     let randomChance = Math.random()
     if (randomChance < 0.0005 && !tile.burning && citizensInTile(tile) == 0) {
+        warnings.push("Building is on fire!");
         tile.burning = true;
         tile.burningCount = 0;
     } else if (tile.burning) {
+        warnings.push("Building is on fire!");
         tile.burning++;
         spawnSmoke({ x: tile.posX, y: tile.posY, z: tile.posZ }, 3000);
         if (tile.burning > 60) cleanTileData(tile, true, true);
     }
 
+    if (tile.age > 30) {
+        if (warnings.length != 0 && typeof warningLabels[tile.index] == "undefined") {
+            let element = document.createElement('div');
+            element.id = `tile-${tile.index}`;
+            element.innerHTML = `<i class="fa-solid fa-triangle-exclamation"></i>`;
+            element.className = "warningLabel";
+            element.onclick = (event) => { tileSelection(tile, event) };
+
+            if (meshLocations[tile.index]) {
+                let label = new THREE.CSS2DObject(element);
+                meshLocations[tile.index].add(label);
+                warningLabels[tile.index] = label;
+            }
+        } else if (warnings.length == 0 && typeof warningLabels[tile.index] != "undefined") {
+            if (meshLocations[tile.index]) {
+                meshLocations[tile.index].remove(warningLabels[tile.index]);
+                if (document.getElementById(`tile-${tile.index}`)) document.getElementById(`tile-${tile.index}`).remove();
+                delete warningLabels[tile.index];
+            };
+        }
+    }
+
     //add to stats
+    tile.warnings = warnings;
+    tile.age++;
     if (isLast) setSupplyStat(calcSupply, originalSupply);
 }
 

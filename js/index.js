@@ -1,4 +1,5 @@
 // Create a scene
+var faker = require("@faker-js/faker").fakerID_ID;
 var scene = new THREE.Scene();
 
 // isometric camera
@@ -14,6 +15,14 @@ renderer.outputEncoding = THREE.sRGBEncoding;
 renderer.shadowMap.enabled = true;
 renderer.shadowMap.type = THREE.PCFSoftShadowMap;
 document.body.appendChild(renderer.domElement);
+
+//warning and label overlays
+var labelRenderer = new THREE.CSS2DRenderer();
+labelRenderer.setSize(window.innerWidth, window.innerHeight);
+labelRenderer.domElement.style.top = '0';
+labelRenderer.domElement.style.position = 'absolute';
+labelRenderer.domElement.style.pointerEvents = 'none';
+document.body.appendChild(labelRenderer.domElement);
 
 var controls = new THREE.OrbitControls(camera, renderer.domElement);
 controls.mouseButtons.LEFT = 2;
@@ -41,12 +50,14 @@ composer.addPass(gamma_correction);
 
 // Render the scene
 function animate() {
-    controls.update()
+    controls.update();
     composer.render(scene, camera);
+    labelRenderer.render(scene, camera);
 
     cleanVehicles();
     if (typeof sceneData != 'undefined') tileInfo(sceneData.flat()[updateInfo]);
     if (typeof tool != "undefined") (tool.category == "Supply" || tool.category == "Demolish Underground") ? setModelVisibility(false) : setModelVisibility(true);
+    document.getElementById("money").innerText = money.toLocaleString('id-ID', { style: 'currency', currency: 'IDR', maximumFractionDigits: 0 });
 
     requestAnimationFrame(animate);
 }
@@ -63,6 +74,7 @@ function onWindowResize() {
 
     renderer.setSize(window.innerWidth, window.innerHeight);
     composer.setSize(window.innerWidth, window.innerHeight);
+    labelRenderer.setSize(window.innerWidth, window.innerHeight);
 
     floatingDiv.style.display = 'none';
     outlinePass.selectedObjects = [];

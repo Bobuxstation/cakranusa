@@ -20,6 +20,10 @@ function setTool(type, category) {
     tool["type"] = type;
     tool["category"] = category;
 
+    //set price
+    if (buildmenu[category]) tool["price"] = buildmenu[category][type].price || 0;
+    else tool["price"] = 0;
+
     //show selection overlay
     setTimeout(() => {
         selectDiv.style.display = "flex";
@@ -35,6 +39,7 @@ function setTool(type, category) {
         openTab(lastmenu, 'tab', true);
         tool["type"] = '';
         tool["category"] = '';
+        tool["price"] = 0;
 
         setTimeout(() => {
             selectDiv.style.display = "none";
@@ -63,26 +68,88 @@ async function select(event) {
         intersectsGrid = true;
 
         //call corresponding tool function
+        if (tool.category && tool.category != 'Transport') {
+            let categoryWhitelist = !["Demolish", "Demolish Underground", "Supply"].includes(tool.category);
+            let hasRoadConnection = checkNeighborForRoads(tile.posX, tile.posZ, true) == false || !(tile.type == 0 || tile.type == 1);
+            if (categoryWhitelist && hasRoadConnection) {
+                newNotification(!(tile.type == 0 || tile.type == 1) ? errors.occupiedTile : errors.roadConnection);
+                return;
+            };
+        }
+
+        //subtract from money
+        if (tool.category) {
+            if (money - tool.price >= 0) money -= tool.price;
+            else { newNotification(errors.noMoney); return; };
+        }
+
+        //call corresponding tool function
         switch (tool.category) {
             case "Zones": placeZone(tile, tool.type); break;
             case "Transport": placeTransport(tile); break;
             case "Facility": placeFacility(tile, false); break;
             case "Services": placeFacility(tile, true); break;
+            case "Supply": buildUnderground(tile); break;
             case "Demolish": cleanTileData(tile, true); break;
             case "Demolish Underground": cleanUnderground(tile); break;
-            case "Supply": buildUnderground(tile); break;
             default: tileSelection(tile, event); break;
         }
     })
 }
 
 // capture mouse for selection
+let floatingDiv = document.getElementById('floatingDiv');
 controls.addEventListener('change', () => { floatingDiv.style.display = 'none'; outlinePass.selectedObjects = []; });
+
+//canvas events
+let moved = false;
 renderer.domElement.addEventListener('pointermove', () => { moved = true; });
 renderer.domElement.addEventListener('pointerdown', () => { moved = false; });
 renderer.domElement.addEventListener('pointerup', (e) => { select(e); });
-let floatingDiv = document.getElementById('floatingDiv');
-let moved = false;
+renderer.domElement.addEventListener('mousemove', (e) => { hover(e); });
+
+//outline tile if can be built on
+var lastHoverId, lastHoverModel;
+function hover(event) {
+    var mouse = new THREE.Vector2();
+    mouse.x = (event.clientX / renderer.domElement.clientWidth) * 2 - 1;
+    mouse.y = - (event.clientY / renderer.domElement.clientHeight) * 2 + 1;
+
+    var raycaster = new THREE.Raycaster();
+    raycaster.setFromCamera(mouse, camera);
+
+    var intersectsGrid = false;
+    var intersects = raycaster.intersectObjects(scene.children, true);
+
+    intersects.forEach(async item => {
+        if (item.object != gridInstance || !tool.category || intersectsGrid) {
+            if (lastHoverModel && !tool.category) { scene.remove(lastHoverModel); lastHoverModel = null; };
+        } else {
+            intersectsGrid = true;
+
+            let tile = sceneData.flat().find((element) => element.index == item.instanceId);
+            if (tile.index == lastHoverId) return;
+            if (lastHoverModel) { scene.remove(lastHoverModel); lastHoverModel = null; };
+            lastHoverId = tile.index;
+
+            let condition;
+            if (tool.category && !["Demolish", "Demolish Underground", "Supply", "Transport"].includes(tool.category)) {
+                condition = checkNeighborForRoads(tile["posX"], tile["posZ"], true) == false || !(tile.type == 0 || tile.type == 1);
+            } else {
+                condition = false;
+            }
+
+            let selectionColor = condition ? 0xff0000 : 0xffffff;
+            let mesh = new THREE.Mesh(new THREE.BoxGeometry(1, 0.2, 1), new THREE.MeshToonMaterial({ color: selectionColor }));
+            mesh.position.set(tile.posX, tile.posY + 0.16, tile.posZ);
+            mesh.material.transparent = true;
+            mesh.material.opacity = 0.5;
+
+            scene.add(mesh);
+            lastHoverModel = mesh;
+        };
+    })
+}
 
 //========================
 // Tool Functions
@@ -129,7 +196,7 @@ function findConnectedTiles(startTile, type, visited) {
         if (visited.has(current.index)) continue;
         visited.add(current.index);
         connected.push(current);
-        
+
         let neighbors = checkNeighborForPipes(current.posX, current.posZ, type);
         Object.values(neighbors).forEach(neighbor => {
             if (neighbor[type] && !visited.has(neighbor.index) && neighbor[`${type}_network`] === startTile[`${type}_network`]) {

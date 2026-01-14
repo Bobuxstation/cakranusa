@@ -1,6 +1,6 @@
 @font-face {
     font-family: 'ra-inet';
-    src: url('assets/C&C Red Alert [INET].ttf');
+    src: url('C&C Red Alert [INET].ttf');
     font-weight: lighter;
 }
 
@@ -11,6 +11,11 @@
     overflow: hidden;
     font-family: 'ra-inet';
     user-select: none;
+}
+
+.price {
+    float: right;
+    color: #008000;
 }
 
 .fitH {
@@ -31,6 +36,8 @@ canvas {
     display: flex;
     pointer-events: none;
     overflow: visible;
+    z-index: 1000;
+    place-items: center;
 }
 
 #toolOverlay button {
@@ -54,7 +61,8 @@ canvas {
     bottom: 55px;
 }
 
-.navigation div {
+.navigation div,
+#notifications div {
     padding: 5px;
     background: #ffffffbd;
     border: darkgray solid 1px;
@@ -107,7 +115,8 @@ button:active {
     float: right;
 }
 
-.tab {
+.tab,
+#hint {
     border-radius: 5px;
     border: darkgray solid 1px;
     background: #ffffffbd;
@@ -117,6 +126,46 @@ button:active {
     pointer-events: all;
     animation: bounceInUp 0.5s both;
     max-height: 260px;
+}
+
+#notifications {
+    bottom: 55px;
+    position: absolute;
+    width: 100vw;
+    display: flex;
+    overflow: visible;
+    flex-direction: column;
+    align-content: center;
+    flex-wrap: wrap;
+}
+
+.notification {
+    margin-bottom: 0px !important;
+    margin-right: 0px !important;
+    width: 325px !important;
+    text-align: center;
+}
+
+#hint {
+    margin-bottom: 10px;
+    animation: fadeIn 0.25s both;
+}
+
+#hint img {
+    height: 75px;
+}
+
+#hint .left {
+    padding-bottom: 0;
+    height: fit-content;
+}
+
+#hint .right {
+    height: fit-content;
+    display: flex;
+    place-items: center;
+    height: 85px;
+    padding: 15px;
 }
 
 .right,
@@ -136,7 +185,7 @@ button:active {
 }
 
 .dual .right {
-    width: 326px;
+    width: 325px;
 }
 
 .dual .left {
@@ -151,7 +200,7 @@ button:active {
     text-align: left;
     background-size: 65%;
     background-repeat: no-repeat;
-    background-position: calc(326px - 165px) -65px;
+    background-position: calc(325px - 165px) -65px;
 }
 
 #demolishMenu button:first-child,
@@ -175,6 +224,16 @@ button:active {
 
 .innertab {
     display: none;
+}
+
+.warningLabel {
+    background: rgba(0, 0, 0, 0.7);
+    border-radius: 4px;
+    padding: 8px;
+    color: yellow;
+    padding-bottom: 2px;
+    cursor: pointer;
+    pointer-events: visible;
 }
 
 #floatingDiv {
@@ -226,5 +285,15 @@ button:active {
         opacity: 0;
         visibility: hidden;
         transform: translateY(100%);
+    }
+}
+
+@keyframes fadeIn {
+    0% {
+        opacity: 0;
+    }
+
+    100% {
+        opacity: 1;
     }
 }

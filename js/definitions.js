@@ -91,16 +91,20 @@ let foliage = [
 //zone types
 let zones = {
     "housing": {
-        "model": "assets/zoning/housing"
+        "model": "assets/zoning/housing",
+        "description": "Allocate selected land(s) for citizen housing"
     },
     "commercial": {
-        "model": "assets/zoning/commercial"
+        "model": "assets/zoning/commercial",
+        "description": "Allocate selected land(s) for commercial workplaces"
     },
     "industrial": {
-        "model": "assets/zoning/industrial"
+        "model": "assets/zoning/industrial",
+        "description": "Allocate selected land(s) for industrial workplaces, Affects the environment"
     },
     "farm": {
-        "model": "assets/zoning/farm"
+        "model": "assets/zoning/farm",
+        "description": "Allocate selected land(s) for farmland workplaces"
     },
 }
 
@@ -108,7 +112,9 @@ let zones = {
 let transport = {
     "road": {
         "model": "assets/roads/road",
-        "variableModel": true
+        "description": "Connect buildings with each other",
+        "variableModel": true,
+        "price": 1_500_000
     }
 }
 
@@ -116,33 +122,45 @@ let transport = {
 let facility = {
     "hospital": {
         "model": "assets/facility/hospital",
+        "description": "Keeps citizens healthy",
         "type": "medical",
         "slots": 8
     },
+    "police station": {
+        "model": "assets/facility/polisi",
+        "description": "Keeps the city safe",
+        "type": "police",
+        "slots": 8
+    },
     "masjid": {
-        "model": "assets/facility/hospital",
+        "model": "assets/facility/mosque",
+        "description": "Increase religious and moral values",
         "type": "religion",
         "slots": 16
     },
     "fire department": {
-        "model": "assets/facility/hospital",
+        "model": "assets/facility/damkar",
+        "description": "Extinguish any building fires",
         "type": "firedept",
         "slots": 8
     },
     "elementary school": {
         "model": "assets/facility/sd",
+        "description": "Increase citizens education and moral values",
         "type": "education",
         "education": 1,
         "slots": 16
     },
     "middle school": {
         "model": "assets/facility/sd",
+        "description": "Increase citizens education and moral values",
         "type": "education",
         "education": 2,
         "slots": 16
     },
     "high school": {
         "model": "assets/facility/sd",
+        "description": "Increase citizens education and moral values",
         "type": "education",
         "education": 3,
         "slots": 16
@@ -153,26 +171,31 @@ let facility = {
 let services = {
     "recycling plant": {
         "model": "assets/facility/hospital",
+        "description": "Recycle citizens waste and avoid pollution",
         "type": "waste",
         "capacity": 2400
     },
     "wind turbine": {
         "model": "assets/facility/hospital",
+        "description": "Wind turbine for electricity",
         "type": "electric cable",
         "capacity": 150
     },
     "solar panel": {
-        "model": "assets/facility/hospital",
+        "model": "assets/facility/PLTS",
+        "description": "Solar panel for electricity",
         "type": "electric cable",
         "capacity": 150
     },
     "water pump": {
-        "model": "assets/facility/sd",
+        "model": "assets/facility/watertreatment",
+        "description": "Pumps water from underground",
         "type": "water pipe",
         "capacity": 150
     },
-    "water treatment": {
-        "model": "assets/facility/sd",
+    "sewage treatment plant": {
+        "model": "assets/facility/watertreatment",
+        "description": "Recycles sewage back to clean water",
         "type": "sewage pipe",
         "capacity": 150
     }
@@ -189,18 +212,21 @@ let highestEducation = Object.keys(facility)
 let underground = {
     "electric cable": {
         "model": "assets/pipe/cable",
+        "description": "Supplies electricity to buildings",
         "capacity": 150,
         "label": "Electricity",
         "variableModel": true
     },
     "water pipe": {
         "model": "assets/pipe/pipe",
+        "description": "Supplies water to buildings",
         "capacity": 150,
         "label": "Water",
         "variableModel": true
     },
     "sewage pipe": {
         "model": "assets/pipe/sewage",
+        "description": "Moves sewage to treatment plant",
         "capacity": 150,
         "label": "Sewage",
         "variableModel": true
@@ -244,19 +270,12 @@ previewRenderer.shadowMap.type = THREE.PCFSoftShadowMap;
 async function renderPreview(model) {
     var previewScene = new THREE.Scene();
     var previewCamera = new THREE.PerspectiveCamera(75, 1, 0.1, 700);
-    previewCamera.position.set(-1, 1, -1);
-    previewCamera.rotation.set(-2.2, -0.7, -2.4);
+    previewCamera.position.set(0.05, 0.5, -1.77);
+    previewCamera.rotation.set(-3.14, 0, 3.14);
 
     var model = (await loadWMat(model)).clone();
-    model.scale.setScalar(0.156);
-    model.traverse((child) => {
-        if (child.isMesh && child.material) {
-            child.material = child.material.clone();
-            child.material.transparent = true;
-            child.material.opacity = 0.5;
-            child.material.needsUpdate = true;
-        }
-    });
+    model.scale.setScalar(0.30);
+    model.rotation.set(0, -(Math.PI / 2), 0);
 
     previewScene.add(model);
     allOfTheLights(previewScene, false);
@@ -264,8 +283,14 @@ async function renderPreview(model) {
         setTimeout(() => {
             previewRenderer.render(previewScene, previewCamera);
             resolve(previewRenderer.domElement.toDataURL());
-        }, 1000);
+        }, 250);
     });
+}
+
+async function renderThumbnail(item, subItem) {
+    let variableModelStr = buildmenu[item][subItem].variableModel ? '_straight' : '';
+    let result = await renderPreview(buildmenu[item][subItem].model + variableModelStr);
+    return result;
 }
 
 //========================
@@ -281,14 +306,15 @@ Object.keys(buildmenu).forEach((item, i) => {
     tab.id = item;
     if (i == 0) tab.style.display = "block";
 
-    Object.keys(buildmenu[item]).forEach(subItem => {
+    Object.keys(buildmenu[item]).forEach(async (subItem) => {
         const subItemButton = document.createElement("button");
-        subItemButton.innerText = subItem;
+        const thumbnail = await renderThumbnail(item, subItem);
+        const price = buildmenu[item][subItem].price ? `Rp${buildmenu[item][subItem].price}` : "Free";
+
+        subItemButton.innerHTML = `${subItem}<span class="price">${price}</span>`;
         subItemButton.onclick = () => { setTool(subItem, item) };
-
-        if (buildmenu[item][subItem].variableModel) renderPreview(buildmenu[item][subItem].model + '_straight').then(data => subItemButton.style.backgroundImage = `url(${data})`)
-        else renderPreview(buildmenu[item][subItem].model).then(data => subItemButton.style.backgroundImage = `url(${data})`)
-
+        subItemButton.onmouseout = () => { document.getElementById("hint").style.display = "none"; }
+        subItemButton.onmouseover = async () => { setHint(thumbnail, subItem, buildmenu[item][subItem].description || "No Description") }
         tab.appendChild(subItemButton);
     });
 
