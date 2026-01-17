@@ -1,14 +1,14 @@
 // render road model on tile based on neighbors
-async function setRoadModel(directions, tile, isUpdate = false) {
+async function setRoadModel(directions, tile, isUpdate) {
     let object
 
     if (meshLocations[tile.index]) scene.remove(meshLocations[tile.index]);
     if (Object.values(directions).length > 3) {
         // 4 way intersection
-        object = await loadWMat("assets/roads/road_intersection_4");
+        object = await loadWMat(`${tile.model}_intersection_4`);
     } else if (Object.values(directions).length == 3) {
         // 3 way intersection
-        object = await loadWMat("assets/roads/road_intersection_3");
+        object = await loadWMat(`${tile.model}_intersection_3`);
 
         let north = typeof directions.north == "undefined";
         let east = typeof directions.east == "undefined";
@@ -32,7 +32,7 @@ async function setRoadModel(directions, tile, isUpdate = false) {
 
         if (northwest || northeast || southwest || southeast) {
             // turn road
-            object = await loadWMat("assets/roads/road_intersection_turn");
+            object = await loadWMat(`${tile.model}_intersection_turn`);
 
             if (northwest) {
                 object.rotation.set(0, Math.PI * 2, 0);
@@ -45,7 +45,7 @@ async function setRoadModel(directions, tile, isUpdate = false) {
             }
         } else {
             // straight road
-            object = await loadWMat("assets/roads/road_straight");
+            object = await loadWMat(`${tile.model}_straight`);
 
             if (typeof directions.east != "undefined" || typeof directions.west != "undefined") {
                 object.rotation.set(0, Math.PI / 2, 0);
@@ -59,9 +59,7 @@ async function setRoadModel(directions, tile, isUpdate = false) {
 
     meshLocations[tile.index] = object;
     if (isUpdate) return;
-
     animMove(object, true);
-    setInstanceColor(0x111111, gridInstance, tile.index);
 }
 
 // check neighbor of tiles for roads (north, east, south, west)

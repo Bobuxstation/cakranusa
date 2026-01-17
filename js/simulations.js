@@ -30,7 +30,7 @@ function createNewCitizen(tile) {
 }
 
 //simulate individual citizen
-let vehicles = {}
+let vehicles = {};
 function citizenStep(data) {
     //if health 0, disappear
     if (data.health <= 0) { deleteCitizen(data); return; };
@@ -74,7 +74,7 @@ function citizenStep(data) {
             }
 
             // if education is not high, 15% chance of going to school instead of work
-            if (data.education != facility[highestEducation].education + 1 & data.school != false) {
+            if (data.education != education[highestEducation].education + 1 & data.school != false) {
                 if (Math.random() > 0.15) {
                     pathMap = convertPathfind(sceneData, sceneData[data.location.y][data.location.x], sceneData.flat().find(item => item.uuid == data.school));
                     route = astar(pathMap);
@@ -272,9 +272,22 @@ function citizenStep(data) {
     data.sessionTick += 1;
 }
 
+//set game speed
+function setSpeed(speed) {
+    simulationSpeed = speed;
+    Object.values(document.getElementsByClassName("timeButton")).forEach(element => {
+        if (element.value == speed) element.classList.add("selected");
+        else element.classList.remove("selected");
+    });
+}
+
 //simulate world
+var dayTick = 0;
 async function citizenSimulation(seed) {
     try {
+        //skip if paused
+        if (simulationSpeed == 0) { requestAnimationFrame(citizenSimulation); return; };
+
         // find empty land
         let housingtile = findZone("housing", true, true);
         let commercialtile = findZone("commercial", true, true);
@@ -311,18 +324,26 @@ async function citizenSimulation(seed) {
         Object.values(citizens).flat().forEach(citizen => citizenStep(citizen));
 
         //update edu stats
-        let educationTab = document.getElementById("education");
+        let educationTab = document.getElementById("EducationStats");
         educationTab.innerHTML = '';
-        Object.keys(facility).filter(key => facility[key].type == "education").forEach(key => {
-            let item = facility[key];
-            let textElem = document.createElement('span');
+        Object.keys(education).filter(key => education[key].type == "education").forEach(key => {
+            let item = education[key];
+            let textElem = document.createElement('p');
             textElem.innerHTML = `${key}: ${Object.values(citizens).flat().filter(i => i.education >= item.education + 1).length} / ${Object.values(citizens).flat().length}<br>`
             educationTab.appendChild(textElem);
         })
 
         //update stats
         document.getElementById("populationData").innerText = Object.values(citizens).flat().length;
+        document.getElementById("population").innerText = Object.values(citizens).flat().length;
         document.getElementById("unemployedData").innerText = Object.values(citizens).flat().filter(item => item.job == false).length;
+
+        //day cycle
+        document.getElementById("dateProgress").style.width = `${document.getElementById("date").getBoundingClientRect().width}px`;
+        document.getElementById("dateString").innerText = calculateDate(date);
+        document.getElementById("dateProgress").value = dayTick;
+        if (dayTick < 40) dayTick += 1;
+        else { dayTick = 0; date += 1; }
     } catch (error) { }
 
     //loop simulation
@@ -402,7 +423,7 @@ function qualityDegrade(tile) {
 var warningLabels = {};
 function zoneTileTick(tile, calcSupply, originalSupply, isLast) {
     let warnings = [];
-    tile.age ??= 0;
+    if (!tile.age) tile.age = 0;
 
     if (tile.zone == "housing") {
         //employment info
@@ -488,8 +509,9 @@ function zoneTileTick(tile, calcSupply, originalSupply, isLast) {
     if (isLast) setSupplyStat(calcSupply, originalSupply);
 }
 
+//calculate leftover values from supply networks
 function setSupplyStat(calcSupply, originalSupply) {
-    let supplyStat = document.getElementById("supply");
+    let supplyStat = document.getElementById("SupplyStats");
     supplyStat.innerHTML = '';
     Object.keys(calcSupply).forEach(key => {
         let heading = document.createElement("b");

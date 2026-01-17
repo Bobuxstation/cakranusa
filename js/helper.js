@@ -2,9 +2,10 @@
 // Helper Functions
 //========================
 
+//toast notifications
 function newNotification(text) {
     let toast = document.createElement('div');
-    toast.innerText = text;
+    toast.innerHTML = `<span>${text}</span>`;
     toast.className = 'notification';
     toast.style.animation = 'bounceInUp 0.5s both';
 
@@ -13,20 +14,6 @@ function newNotification(text) {
         toast.style.animation = 'slideOutDown 0.5s both';
         setTimeout(() => toast.remove(), 500);
     }, 2500);
-}
-
-//set hint
-function setHint(image, title, content) {
-    if (image) {
-        document.getElementById("imageSide").style.display = "block";
-        document.getElementById("hintPreview").src = image
-    } else {
-        document.getElementById("imageSide").style.display = "none";
-    };
-
-    document.getElementById("hintTitle").innerText = title;
-    document.getElementById("hintContent").innerText = content;
-    document.getElementById("hint").style.display = "block";
 }
 
 //biased random
@@ -47,15 +34,16 @@ function allOfTheLights(scene, addsky = true) {
     scene.add(hemiLight);
 
     // create directional light
+    const dir = 50;
     const dirLight = new THREE.DirectionalLight(0xffffff, 1);
     dirLight.position.set(-1.5, 1.5, -1.5);
     dirLight.position.multiplyScalar(30);
-    dirLight.shadow.mapSize.set(8192, 8192);
+    dirLight.shadow.mapSize.set(4096, 4096);
     dirLight.castShadow = true;
-    dirLight.shadow.camera.left = -50;
-    dirLight.shadow.camera.right = 50;
-    dirLight.shadow.camera.top = 50;
-    dirLight.shadow.camera.bottom = -50;
+    dirLight.shadow.camera.left = -dir;
+    dirLight.shadow.camera.right = dir;
+    dirLight.shadow.camera.top = dir;
+    dirLight.shadow.camera.bottom = -dir;
     dirLight.shadow.camera.near = 1;
     dirLight.shadow.camera.far = 3500;
     dirLight.shadow.radius = 0;
@@ -85,12 +73,19 @@ function allOfTheLights(scene, addsky = true) {
 // open tab
 var lastTab = {};
 function openTab(tabname, tabGroup, doubleClickHide = false) {
-    let tabs = document.getElementsByClassName(tabGroup);
     document.getElementById("hint").style.display = "none";
     floatingDiv.style.display = 'none';
     outlinePass.selectedObjects = [];
-
     lastTab[tabGroup] = tabname;
+
+    let tabButton = document.getElementsByClassName(`${tabGroup}Button`);
+    Object.values(tabButton).forEach(element => {
+        if (element.innerText != tabname) element.classList.remove("selected");
+        else if (doubleClickHide & element.className.includes("selected")) element.classList.remove("selected");
+        else element.classList.add("selected");
+    });
+
+    let tabs = document.getElementsByClassName(tabGroup);
     Object.values(tabs).forEach(element => {
         let action = (element.id == tabname) ? "block" : "none";
         let prev = element.style.display;
@@ -107,59 +102,6 @@ function openTab(tabname, tabGroup, doubleClickHide = false) {
             element.style.display = action;
         }
     });
-}
-
-// remove additional information from tile
-function cleanTileData(tile, resetType = false, reZone = false) {
-    let tempZone = tile.zone ? tile.zone : "housing";
-
-    if (tile.occupied) tile.occupied = false;
-    if (tile.building) delete tile.building;
-    if (tile.zone) delete tile.zone;
-    if (tile.foliageType) delete tile.foliageType;
-    if (tile.level) delete tile.level;
-    if (tile.uuid) delete tile.uuid;
-    if (tile.buildingData) delete tile.buildingData;
-    if (tile.emptyTick) delete tile.emptyTick;
-    if (tile.burning) delete tile.burning;
-    if (tile.burningCount) delete tile.burningCount;
-    if (tile.quality) delete tile.quality;
-    if (tile.qualityState) delete tile.qualityState;
-    if (tile.qualityTick) delete tile.qualityState;
-    if (tile.age) delete tile.age;
-
-    if (Object.keys(citizens).find(item => item == tile.index)) delete citizens[tile.index];
-    if (typeof meshLocations[tile.index] != "undefined" && typeof warningLabels[tile.index] != "undefined") {
-        meshLocations[tile.index].remove(warningLabels[tile.index]);
-        delete warningLabels[tile.index];
-        if (document.getElementById(`tile-${tile.index}`)) document.getElementById(`tile-${tile.index}`).remove();
-    };
-
-    if (resetType & typeof meshLocations[tile.index] != "undefined") {
-        animMove(meshLocations[tile.index], false, !reZone);
-        setTimeout(() => {
-            // update neighboring roads
-            Object.values(checkNeighborForRoads(tile["posX"], tile["posZ"], false, true)).forEach(tile => {
-                setRoadModel(checkNeighborForRoads(tile["posX"], tile["posZ"], false, true), tile, true);
-            });
-
-            setInstanceColor((tile.posX + tile.posZ) % 2 === 0 ? 0x008000 : 0x007000, gridInstance, tile.index);
-            if (meshLocations[tile.index]) {
-                scene.remove(meshLocations[tile.index]);
-                delete meshLocations[tile.index];
-            };
-
-            if (reZone != false) placeZone(tile, tempZone);
-        }, 500);
-    } else {
-        setInstanceColor((tile.posX + tile.posZ) % 2 === 0 ? 0x008000 : 0x007000, gridInstance, tile.index);
-        if (meshLocations[tile.index]) scene.remove(meshLocations[tile.index]);
-    }
-
-    if (resetType) {
-        tile.type = 0; // plains
-        tile.occupied = false;
-    }
 }
 
 //scale, rotate and move building to tile

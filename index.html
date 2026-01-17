@@ -32,10 +32,10 @@
     <script type="text/javascript" src="js/pathfinding.js" defer></script>
     <script type="text/javascript" src="js/simulations.js" defer></script>
     <script type="text/javascript" src="js/simulationHelper.js" defer></script>
-    <script type="text/javascript" src="js/definitions.js" defer></script>
     <script type="text/javascript" src="js/index.js" defer></script>
-    <script type="text/javascript" src="js/scene.js" defer></script>
     <script type="text/javascript" src="js/tool.js" defer></script>
+    <script type="text/javascript" src="js/definitions.js" defer></script>
+    <script type="text/javascript" src="js/scene.js" defer></script>
 </head>
 
 <body>
@@ -47,7 +47,7 @@
                 </div>
                 <div class="right">
                     <div>
-                        <b id="hintTitle" style="text-transform: capitalize;">Test</b><br>
+                        <b id="hintTitle" style="text-transform: capitalize;"></b><br>
                         <span id="hintContent"></span>
                     </div>
                 </div>
@@ -67,23 +67,24 @@
 
             <div class="tab dual" id="stats">
                 <div class="left">
-                    <button onclick="openTab('population', 'statsTab')">Population</button>
-                    <button onclick="openTab('education', 'statsTab')">Education</button>
-                    <button onclick="openTab('supply', 'statsTab')">Supply</button>
+                    <button onclick="openTab('Population', 'statsTab')"
+                        class="statsTabButton selected">Population</button>
+                    <button onclick="openTab('EducationStats', 'statsTab')" class="statsTabButton">Education</button>
+                    <button onclick="openTab('SupplyStats', 'statsTab')" class="statsTabButton">Supply</button>
                 </div>
                 <div class="right">
-                    <div class="statsTab innertab" id="population" style="display: block;">
-                        Population : <span id="populationData"></span><br>
-                        Unemployed : <span id="unemployedData"></span><br>
+                    <div class="statsTab innertab" id="Population" style="display: block;">
+                        <p>Population : <span id="populationData"></span></p>
+                        <p>Unemployed : <span id="unemployedData"></span></p>
                     </div>
-                    <div class="statsTab innertab" id="education"></div>
-                    <div class="statsTab innertab" id="supply"></div>
+                    <div class="statsTab innertab" id="EducationStats"></div>
+                    <div class="statsTab innertab" id="SupplyStats"></div>
                 </div>
             </div>
 
             <div class="tab dual" id="policies">
                 <div class="left">
-                    <button onclick="openTab('taxes', 'policyTab')">Taxes</button>
+                    <button onclick="openTab('taxes', 'policyTab')" class="policyTabButton selected">Taxes</button>
                 </div>
                 <div class="right">
                     <div class="policyTab innertab" id="taxes" style="display: block;">
@@ -93,40 +94,60 @@
                 </div>
             </div>
 
-            <div class="tab dual" id="tutorial">
+            <div class="tab dual" id="?">
                 <div class="left" id="tutorialLeft"></div>
                 <div class="right" id="tutorialRight"></div>
             </div>
 
-            <div class="tab right fitH" id="demolishMenu">
+            <div class="tab right fitH" id="demolish">
                 <button onclick="setTool('', 'Demolish')">Above ground</button>
             </div>
         </div>
     </div>
 
     <div class="navigation overlay">
-        <div id="money">
-            <span id="money">Rp100.000.000,00</span>
+        <div>
+            <span id="money"></span>
+        </div>
+        <div class="populationCounter">
+            <i class="fa-solid fa-people-roof"></i>
+            <span id="population"></span>
         </div>
         <div id="date">
-            <span>Name - 25 Sep 2067</span>
+            <progress id="dateProgress" max="40"></progress>
+            <span id="dateString"></span>
         </div>
     </div>
 
     <div id="tabButtons" class="navigation bottom overlay">
+        <div id="tools">
+            <button onclick="openTab('menu', 'tab', true)" class="tabButton">menu</button>
+            <button onclick="openTab('?', 'tab', true)" style="width: 25px;" class="tabButton">?</button>
+        </div>
+
         <div id="tools2">
-            <button onclick="openTab('menu', 'tab', true)">Menu</button>
-            <button onclick="openTab('stats', 'tab', true)">Stats</button>
-            <button onclick="openTab('policies', 'tab', true)">Policies</button>
+            <button onclick="openTab('stats', 'tab', true)" class="tabButton">stats</button>
+            <button onclick="openTab('policies', 'tab', true)" class="tabButton">policies</button>
         </div>
 
         <div id="tools">
-            <button onclick="openTab('tutorial', 'tab', true)" style="width: 25px;">?</button>
+            <button onclick="openTab('build', 'tab', true)" class="tabButton">build</button>
+            <button onclick="openTab('demolish', 'tab', true)" class="tabButton">demolish</button>
         </div>
 
-        <div id="tools">
-            <button onclick="openTab('build', 'tab', true)">Build</button>
-            <button onclick="openTab('demolishMenu', 'tab', true)">Demolish</button>
+        <div id="tools" class="time">
+            <button onclick="setSpeed(0)" class="timeButton" value="0">
+                <i class="fa-solid fa-pause"></i>
+            </button>
+            <button onclick="setSpeed(1000)" class="timeButton selected" value="1000">
+                <i class="fa-solid fa-play"></i>
+            </button>
+            <button onclick="setSpeed(500)" class="timeButton" value="500">
+                <i class="fa-solid fa-forward"></i>
+            </button>
+            <button onclick="setSpeed(100)" class="timeButton" value="100">
+                <i class="fa-solid fa-forward-fast"></i>
+            </button>
         </div>
     </div>
 

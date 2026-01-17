@@ -13,6 +13,35 @@
     user-select: none;
 }
 
+.innertab p {
+    padding: 5px;
+}
+
+.innertab p:nth-child(even) {
+    background-color: #00000020;
+}
+
+.populationCounter i {
+    float: left;
+    font-size: 12px;
+    padding-top: 2px;
+    padding-right: 5px;
+}
+
+.time button {
+    padding-bottom: 0;
+    font-size: 12px;
+    color: gray;
+    width: 25px;
+}
+
+#dateProgress {
+    position: absolute;
+    height: 12px;
+    margin: -6px;
+    margin-top: -10px;
+}
+
 .price {
     float: right;
     color: #008000;
@@ -62,7 +91,7 @@ canvas {
 }
 
 .navigation div,
-#notifications div {
+#notifications span {
     padding: 5px;
     background: #ffffffbd;
     border: darkgray solid 1px;
@@ -99,8 +128,9 @@ button:hover {
     transition: all 0.10s ease;
 }
 
-button:active {
-    border: gray solid 1px;
+button:active,
+.selected {
+    border: gray solid 1px !important;
     background: lightgray;
     box-shadow: none;
     transition: all 0.10s ease;
@@ -113,6 +143,7 @@ button:active {
 #money,
 #date {
     float: right;
+    padding-bottom: 3px;
 }
 
 .tab,
@@ -137,12 +168,16 @@ button:active {
     flex-direction: column;
     align-content: center;
     flex-wrap: wrap;
+    pointer-events: none;
 }
 
 .notification {
+    overflow: visible;
+}
+
+.notification span {
     margin-bottom: 0px !important;
     margin-right: 0px !important;
-    width: 325px !important;
     text-align: center;
 }
 
@@ -203,7 +238,7 @@ button:active {
     background-position: calc(325px - 165px) -65px;
 }
 
-#demolishMenu button:first-child,
+#demolish button:first-child,
 #menu button:first-child,
 .dual button:first-child {
     margin-top: 0;
@@ -214,7 +249,7 @@ button:active {
 }
 
 #menu button,
-#demolishMenu button {
+#demolish button {
     width: 25vw;
     text-align: left;
     display: block;

@@ -18,6 +18,7 @@ function newBlankScene(terrainSize, seed) {
                 additionalData.quality = randomIntFromInterval(90, 100);
                 additionalData.qualityState = 100;
                 additionalData.qualityTick = 0;
+                additionalData.model = 'assets/roads/plainroad';
             } else {
                 if (random < 0.25) {
                     type = 1; // foliage
@@ -39,11 +40,13 @@ async function generateGrid(data) {
     let material = new THREE.MeshToonMaterial({ color: 0xffffff });
     let geometry = new THREE.BoxGeometry(1, 1, 1);
     let instance = new THREE.InstancedMesh(geometry, material, terrainSize * terrainSize);
+    instance.material.transparent = true;
     instance.castShadow = true;
     instance.receiveShadow = true;
 
     // traverse data
     let index = 0;
+    gridInstance = instance
     for (var x = 0; x < terrainSize; x++) {
         for (var y = 0; y < terrainSize; y++) {
             let itemData = data[x][y];
@@ -82,39 +85,29 @@ async function generateGrid(data) {
 
                 meshLocations[index] = cloned;
                 scene.add(cloned);
-            } else if (itemData.type == 2) {
-                color.set(0x222222);
-                instance.setColorAt(index, color);
-
-                let object = await loadWMat("assets/roads/road_straight");
-                object.position.set(posX, itemData.height + 0.12, posZ);
-                object.scale.setScalar(0.156);
-
-                meshLocations[index] = object;
-                scene.add(object);
-            };
-
+            } else if (itemData.type == 2) placeRoad(itemData, { model: itemData.model });
             index++;
         }
     }
 
     scene.add(instance);
-    return instance;
 };
 
 let meshLocations, gridInstance
 let sceneData, worldSeed, citizens = {};
-let simulationSpeed = 100;
+let simulationSpeed = 1000;
 let money = 500_000_000;
+let date = 0;
+let taxes = {
+
+}
 
 async function initScene() {
     worldSeed = Math.random();
     meshLocations = {};
     sceneData = newBlankScene(64, Math.floor(worldSeed * 100000));
-    
-    gridInstance = await generateGrid(sceneData);
-    gridInstance.material.transparent = true;
 
+    await generateGrid(sceneData);
     allOfTheLights(scene);
     citizenSimulation(worldSeed);
 

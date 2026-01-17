@@ -7,7 +7,6 @@ let loaded = {};
 //residential buildings
 let houses = {
     'assets/residential/house-1': {
-        "level": 2,
         "slots": 3,
         "consumption": {
             "electric cable": 10,
@@ -16,12 +15,27 @@ let houses = {
         }
     },
     'assets/residential/house-2': {
-        "level": 3,
         "slots": 4,
         "consumption": {
             "electric cable": 15,
             "water pipe": 15,
             "sewage pipe": 15
+        }
+    },
+    'assets/residential/house-3': {
+        "slots": 6,
+        "consumption": {
+            "electric cable": 15,
+            "water pipe": 15,
+            "sewage pipe": 15
+        }
+    },
+    'assets/residential/kost-1': {
+        "slots": 12,
+        "consumption": {
+            "electric cable": 35,
+            "water pipe": 35,
+            "sewage pipe": 35
         }
     }
 };
@@ -61,6 +75,26 @@ let industrial = {
             "water pipe": 30,
             "sewage pipe": 30
         }
+    },
+    'assets/industrial/industrial-2': {
+        "level": 3,
+        "slots": 6,
+        "pay": 30000,
+        "consumption": {
+            "electric cable": 30,
+            "water pipe": 30,
+            "sewage pipe": 30
+        }
+    },
+    'assets/industrial/industrial-3': {
+        "level": 1,
+        "slots": 6,
+        "pay": 30000,
+        "consumption": {
+            "electric cable": 30,
+            "water pipe": 30,
+            "sewage pipe": 30
+        }
     }
 };
 
@@ -69,6 +103,36 @@ let farm = {
     'assets/farm/farm-1': {
         "level": 1,
         "slots": 5,
+        "pay": 30000,
+        "consumption": {
+            "electric cable": 5,
+            "water pipe": 15,
+            "sewage pipe": 5
+        }
+    },
+    'assets/farm/farm-2': {
+        "level": 1,
+        "slots": 5,
+        "pay": 30000,
+        "consumption": {
+            "electric cable": 5,
+            "water pipe": 15,
+            "sewage pipe": 5
+        }
+    },
+    'assets/farm/farm-3': {
+        "level": 1,
+        "slots": 5,
+        "pay": 30000,
+        "consumption": {
+            "electric cable": 5,
+            "water pipe": 15,
+            "sewage pipe": 5
+        }
+    },
+    'assets/farm/farm-4': {
+        "level": 1,
+        "slots": 8,
         "pay": 30000,
         "consumption": {
             "electric cable": 5,
@@ -111,10 +175,16 @@ let zones = {
 //transport types
 let transport = {
     "road": {
-        "model": "assets/roads/road",
+        "model": "assets/roads/plainroad",
         "description": "Connect buildings with each other",
         "variableModel": true,
         "price": 1_500_000
+    },
+    "road with sidewalks": {
+        "model": "assets/roads/road",
+        "description": "Connect buildings with each other",
+        "variableModel": true,
+        "price": 3_000_000
     }
 }
 
@@ -132,18 +202,28 @@ let facility = {
         "type": "police",
         "slots": 8
     },
-    "masjid": {
-        "model": "assets/facility/mosque",
-        "description": "Increase religious and moral values",
-        "type": "religion",
-        "slots": 16
-    },
     "fire department": {
         "model": "assets/facility/damkar",
         "description": "Extinguish any building fires",
         "type": "firedept",
         "slots": 8
     },
+    "masjid": {
+        "model": "assets/facility/mosque",
+        "description": "Increase religious and moral values",
+        "type": "religion",
+        "slots": 16
+    },
+    "cathedral": {
+        "model": "assets/facility/katedral",
+        "description": "Increase religious and moral values",
+        "type": "religion",
+        "slots": 16
+    }
+}
+
+//schools and libraries
+let education = {
     "elementary school": {
         "model": "assets/facility/sd",
         "description": "Increase citizens education and moral values",
@@ -170,13 +250,13 @@ let facility = {
 //govt facility
 let services = {
     "recycling plant": {
-        "model": "assets/facility/hospital",
-        "description": "Recycle citizens waste and avoid pollution",
+        "model": "assets/facility/recycle plant",
+        "description": "Recycle citizens waste to avoid pollution",
         "type": "waste",
         "capacity": 2400
     },
     "wind turbine": {
-        "model": "assets/facility/hospital",
+        "model": "assets/facility/kincir",
         "description": "Wind turbine for electricity",
         "type": "electric cable",
         "capacity": 150
@@ -201,9 +281,9 @@ let services = {
     }
 }
 
-let highestEducation = Object.keys(facility)
-    .filter(key => typeof facility[key].education === "number")
-    .reduce((maxKey, key) => facility[key].education > facility[maxKey].education ? key : maxKey);
+let highestEducation = Object.keys(education)
+    .filter(key => typeof education[key].education === "number")
+    .reduce((maxKey, key) => education[key].education > education[maxKey].education ? key : maxKey);
 
 //========================
 // underground category
@@ -238,7 +318,7 @@ Object.keys(underground).forEach(item => {
     button.innerText = item;
     button.onclick = () => setTool(item, 'Demolish Underground');
 
-    document.getElementById("demolishMenu").appendChild(button);
+    document.getElementById("demolish").appendChild(button);
     undergroundGroups[item] = {};
 })
 
@@ -251,8 +331,19 @@ let buildmenu = {
     "Zones": zones,
     "Transport": transport,
     "Facility": facility,
+    "Education": education,
     "Services": services,
     "Supply": underground
+}
+
+//for build menu
+let buildMethod = {
+    "Zones": placeZone,
+    "Transport": placeRoad,
+    "Facility": placeFacility,
+    "Education": placeFacility,
+    "Services": placeFacility,
+    "Supply": buildUnderground
 }
 
 //========================
@@ -267,13 +358,14 @@ previewRenderer.shadowMap.enabled = true;
 previewRenderer.shadowMap.type = THREE.PCFSoftShadowMap;
 
 //build menu preview
-async function renderPreview(model) {
-    var previewScene = new THREE.Scene();
-    var previewCamera = new THREE.PerspectiveCamera(75, 1, 0.1, 700);
+async function renderThumbnail(item, subItem) {
+    let previewScene = new THREE.Scene();
+    let previewCamera = new THREE.PerspectiveCamera(75, 1, 0.1, 700);
     previewCamera.position.set(0.05, 0.5, -1.77);
     previewCamera.rotation.set(-3.14, 0, 3.14);
 
-    var model = (await loadWMat(model)).clone();
+    let variableModelStr = buildmenu[item][subItem].variableModel ? '_straight' : '';
+    let model = (await loadWMat(buildmenu[item][subItem].model + variableModelStr)).clone();
     model.scale.setScalar(0.30);
     model.rotation.set(0, -(Math.PI / 2), 0);
 
@@ -287,24 +379,35 @@ async function renderPreview(model) {
     });
 }
 
-async function renderThumbnail(item, subItem) {
-    let variableModelStr = buildmenu[item][subItem].variableModel ? '_straight' : '';
-    let result = await renderPreview(buildmenu[item][subItem].model + variableModelStr);
-    return result;
-}
-
 //========================
 // fill build menu
 //========================
+
+//set hint
+function setHint(image, title, content) {
+    if (image) {
+        document.getElementById("imageSide").style.display = "block";
+        document.getElementById("hintPreview").src = image;
+    } else {
+        document.getElementById("imageSide").style.display = "none";
+    };
+
+    document.getElementById("hintTitle").innerText = title;
+    document.getElementById("hintContent").innerText = content;
+    document.getElementById("hint").style.display = "block";
+}
+
+//fill build menu
 Object.keys(buildmenu).forEach((item, i) => {
     const button = document.createElement("button");
+    button.className = 'buildTabButton';
     button.innerText = item;
     button.onclick = () => { openTab(`${item}`, 'buildTab') };
 
     const tab = document.createElement("div");
     tab.className = "buildTab innertab";
     tab.id = item;
-    if (i == 0) tab.style.display = "block";
+    if (i == 0) { tab.style.display = "block"; button.classList.add("selected") };
 
     Object.keys(buildmenu[item]).forEach(async (subItem) => {
         const subItemButton = document.createElement("button");

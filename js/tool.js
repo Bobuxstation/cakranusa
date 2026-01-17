@@ -49,7 +49,12 @@ function setTool(type, category) {
     };
 }
 
+// capture mouse for selection
+let floatingDiv = document.getElementById('floatingDiv');
+controls.addEventListener('change', () => { floatingDiv.style.display = 'none'; outlinePass.selectedObjects = []; });
+
 // select tiles
+let moved = false;
 async function select(event) {
     var mouse = new THREE.Vector2();
     mouse.x = (event.clientX / renderer.domElement.clientWidth) * 2 - 1;
@@ -81,32 +86,22 @@ async function select(event) {
         if (tool.category) {
             if (money - tool.price >= 0) money -= tool.price;
             else { newNotification(errors.noMoney); return; };
+            if (tool.price != 0) newNotification(`-${tool.price.toLocaleString('id-ID', { style: 'currency', currency: 'IDR', maximumFractionDigits: 0 })}`);
         }
 
         //call corresponding tool function
         switch (tool.category) {
-            case "Zones": placeZone(tile, tool.type); break;
-            case "Transport": placeTransport(tile); break;
-            case "Facility": placeFacility(tile, false); break;
-            case "Services": placeFacility(tile, true); break;
-            case "Supply": buildUnderground(tile); break;
             case "Demolish": cleanTileData(tile, true); break;
             case "Demolish Underground": cleanUnderground(tile); break;
-            default: tileSelection(tile, event); break;
+            default: if (tool.category) buildMethod[tool.category](tile); else tileSelection(tile, event); break;
         }
     })
 }
 
-// capture mouse for selection
-let floatingDiv = document.getElementById('floatingDiv');
-controls.addEventListener('change', () => { floatingDiv.style.display = 'none'; outlinePass.selectedObjects = []; });
-
 //canvas events
-let moved = false;
 renderer.domElement.addEventListener('pointermove', () => { moved = true; });
 renderer.domElement.addEventListener('pointerdown', () => { moved = false; });
 renderer.domElement.addEventListener('pointerup', (e) => { select(e); });
-renderer.domElement.addEventListener('mousemove', (e) => { hover(e); });
 
 //outline tile if can be built on
 var lastHoverId, lastHoverModel;
@@ -151,18 +146,14 @@ function hover(event) {
     })
 }
 
+//capture hover
+renderer.domElement.addEventListener('mousemove', (e) => { hover(e); });
+
 //========================
-// Tool Functions
+// Tool Functions (Demolition)
 //========================
 
-function buildUnderground(tile) {
-    tile[tool.type] = true;
-
-    let neighbors = checkNeighborForPipes(tile["posX"], tile["posZ"], tool.type);
-    setPipeModel(neighbors, tile, tool.type);
-    Object.values(neighbors).forEach(tile => setPipeModel(checkNeighborForPipes(tile["posX"], tile["posZ"], tool.type), tile, tool.type, false));
-}
-
+//delete underground supplies
 function cleanUnderground(tile) {
     if (tile[tool.type]) delete tile[tool.type];
     if (tile[`${tool.type}_network`]) delete tile[`${tool.type}_network`];
@@ -187,26 +178,65 @@ function cleanUnderground(tile) {
     }
 }
 
-// Helper to find all connected tiles in a network using BFS
-function findConnectedTiles(startTile, type, visited) {
-    let queue = [startTile];
-    let connected = [];
-    while (queue.length > 0) {
-        let current = queue.shift();
-        if (visited.has(current.index)) continue;
-        visited.add(current.index);
-        connected.push(current);
+// demolish tile and clean data
+function cleanTileData(tile, resetType = false, reZone = false) {
+    let tempZone = tile.zone ? tile.zone : "housing";
 
-        let neighbors = checkNeighborForPipes(current.posX, current.posZ, type);
-        Object.values(neighbors).forEach(neighbor => {
-            if (neighbor[type] && !visited.has(neighbor.index) && neighbor[`${type}_network`] === startTile[`${type}_network`]) {
-                queue.push(neighbor);
-            }
-        });
+    if (tile.occupied) tile.occupied = false;
+    if (tile.building) delete tile.building;
+    if (tile.zone) delete tile.zone;
+    if (tile.foliageType) delete tile.foliageType;
+    if (tile.level) delete tile.level;
+    if (tile.uuid) delete tile.uuid;
+    if (tile.buildingData) delete tile.buildingData;
+    if (tile.emptyTick) delete tile.emptyTick;
+    if (tile.burning) delete tile.burning;
+    if (tile.burningCount) delete tile.burningCount;
+    if (tile.quality) delete tile.quality;
+    if (tile.qualityState) delete tile.qualityState;
+    if (tile.qualityTick) delete tile.qualityState;
+    if (tile.age) delete tile.age;
+    if (tile.model) delete tile.model;
+
+    if (Object.keys(citizens).find(item => item == tile.index)) delete citizens[tile.index];
+    if (typeof meshLocations[tile.index] != "undefined" && typeof warningLabels[tile.index] != "undefined") {
+        meshLocations[tile.index].remove(warningLabels[tile.index]);
+        delete warningLabels[tile.index];
+        if (document.getElementById(`tile-${tile.index}`)) document.getElementById(`tile-${tile.index}`).remove();
+    };
+
+    if (resetType & typeof meshLocations[tile.index] != "undefined") {
+        animMove(meshLocations[tile.index], false, !reZone);
+        setTimeout(() => {
+            // update neighboring roads
+            Object.values(checkNeighborForRoads(tile["posX"], tile["posZ"], false, true)).forEach(tile => {
+                setRoadModel(checkNeighborForRoads(tile["posX"], tile["posZ"], false, true), tile, true);
+            });
+
+            setInstanceColor((tile.posX + tile.posZ) % 2 === 0 ? 0x008000 : 0x007000, gridInstance, tile.index);
+            if (meshLocations[tile.index]) {
+                scene.remove(meshLocations[tile.index]);
+                delete meshLocations[tile.index];
+            };
+
+            if (reZone != false) placeZone(tile, tempZone);
+        }, 500);
+    } else {
+        setInstanceColor((tile.posX + tile.posZ) % 2 === 0 ? 0x008000 : 0x007000, gridInstance, tile.index);
+        if (meshLocations[tile.index]) scene.remove(meshLocations[tile.index]);
     }
-    return connected;
+
+    if (resetType) {
+        tile.type = 0; // plains
+        tile.occupied = false;
+    }
 }
 
+//========================
+// Tool Functions
+//========================
+
+//click to show tile info
 function tileSelection(tile, event) {
     if (meshLocations[tile.index]) {
         floatingDiv.style.left = `0px`;
@@ -226,15 +256,15 @@ function tileSelection(tile, event) {
 }
 
 // place tile zone
-async function placeZone(tile, type) {
+async function placeZone(tile) {
     // remove foliage
-    if (tile.type == 3 & tile.zone == type) return;
+    if (tile.type == 3 & tile.zone == tool.type) return;
     cleanTileData(tile)
     tile.type = 3; //zoned for buildings
-    tile.zone = type;
+    tile.zone = tool.type;
 
     // add billboard to tile
-    let object = await loadWMat(zones[type].model);
+    let object = await loadWMat(zones[tool.type].model);
     let connectedRoad = checkNeighborForRoads(tile["posX"], tile["posZ"], true);
     scene.add(object);
 
@@ -244,28 +274,22 @@ async function placeZone(tile, type) {
     meshLocations[tile.index] = object;
 }
 
-// place transport
-async function placeTransport(tile) {
-    switch (tool.type) {
-        case "road": placeRoad(tile); break;
-    }
-}
-
 // place road on tile and update neighbors
-function placeRoad(tile) {
+function placeRoad(tile, data = { model: buildmenu[tool.category][tool.type].model }) {
     cleanTileData(tile);
     tile.type = 2;
     tile.qualityState = 100;
     tile.qualityTick = 0;
+    tile.model = data.model;
     tile.quality = randomIntFromInterval(50, 100);
 
     let neighbors = checkNeighborForRoads(tile["posX"], tile["posZ"], false, true);
-    setRoadModel(neighbors, tile);
+    setRoadModel(neighbors, tile, false);
     setTimeout(() => Object.values(neighbors).forEach(tile => setRoadModel(checkNeighborForRoads(tile["posX"], tile["posZ"], false, true), tile, true)), 500);
 }
 
 // government facility
-async function placeFacility(tile, isService) {
+async function placeFacility(tile) {
     if (tile.type == 4 & tile.building == tool.type) return;
 
     cleanTileData(tile);
@@ -274,15 +298,9 @@ async function placeFacility(tile, isService) {
     tile.occupied = true;
     tile.uuid = makeUniqueId(sceneData.flat());
 
-    if (isService) {
-        var object = await loadWMat(services[tool.type].model);
-        tile.buildingType = services[tool.type].type;
-        tile.buildingData = services[tool.type];
-    } else {
-        var object = await loadWMat(facility[tool.type].model);
-        tile.buildingType = facility[tool.type].type;
-        tile.buildingData = facility[tool.type];
-    }
+    var object = await loadWMat(buildmenu[tool.category][tool.type].model);
+    tile.buildingType = buildmenu[tool.category][tool.type].type;
+    tile.buildingData = buildmenu[tool.category][tool.type];
 
     let connectedRoad = checkNeighborForRoads(tile["posX"], tile["posZ"], true);
     scene.add(object);
@@ -292,4 +310,33 @@ async function placeFacility(tile, isService) {
     setInstanceColor(0x555555, gridInstance, tile.index);
 
     meshLocations[tile.index] = object;
+}
+
+//build underground supplies
+function buildUnderground(tile) {
+    tile[tool.type] = true;
+
+    let neighbors = checkNeighborForPipes(tile["posX"], tile["posZ"], tool.type);
+    setPipeModel(neighbors, tile, tool.type);
+    Object.values(neighbors).forEach(tile => setPipeModel(checkNeighborForPipes(tile["posX"], tile["posZ"], tool.type), tile, tool.type, false));
+}
+
+// Helper to find all connected tiles in a network using BFS
+function findConnectedTiles(startTile, type, visited) {
+    let queue = [startTile];
+    let connected = [];
+    while (queue.length > 0) {
+        let current = queue.shift();
+        if (visited.has(current.index)) continue;
+        visited.add(current.index);
+        connected.push(current);
+
+        let neighbors = checkNeighborForPipes(current.posX, current.posZ, type);
+        Object.values(neighbors).forEach(neighbor => {
+            if (neighbor[type] && !visited.has(neighbor.index) && neighbor[`${type}_network`] === startTile[`${type}_network`]) {
+                queue.push(neighbor);
+            }
+        });
+    }
+    return connected;
 }

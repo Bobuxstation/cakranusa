@@ -199,3 +199,15 @@ function cleanVehicles() {
         delete vehicles[key];
     });
 };
+
+
+//calculate days for date counter
+function calculateDate(days) {
+  const date = new Date(Date.UTC(2026, 0, 1)); // game lore starts in January 1 2026
+  date.setUTCDate(date.getUTCDate() + days);
+
+  const dd = String(date.getUTCDate()).padStart(2, '0');
+  const mm = String(date.getUTCMonth() + 1).padStart(2, '0');
+  const yyyy = date.getUTCFullYear();
+  return `${dd}/${mm}/${yyyy}`;
+}
