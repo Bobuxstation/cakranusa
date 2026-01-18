@@ -15,13 +15,16 @@ function createNewCitizen(tile) {
         health: 100,
         education: 1, // basic education
         moral: randomIntFromInterval(50, 100),
+
         name: faker.person.fullName(),
+        bio: faker.person.bio(),
 
         location: findTileCoordinate(sceneData, tile),
         status: "home",
         targetType: "",
         targetDir: "",
         targetRoute: [],
+        vehicle: vehicleModels[Math.floor(Math.random() * vehicleModels.length)],
 
         sessionTick: 0
     }
@@ -31,7 +34,7 @@ function createNewCitizen(tile) {
 
 //simulate individual citizen
 let vehicles = {};
-function citizenStep(data) {
+async function citizenStep(data) {
     //if health 0, disappear
     if (data.health <= 0) { deleteCitizen(data); return; };
 
@@ -74,20 +77,18 @@ function citizenStep(data) {
             }
 
             // if education is not high, 15% chance of going to school instead of work
-            if (data.education != education[highestEducation].education + 1 & data.school != false) {
-                if (Math.random() > 0.15) {
-                    pathMap = convertPathfind(sceneData, sceneData[data.location.y][data.location.x], sceneData.flat().find(item => item.uuid == data.school));
-                    route = astar(pathMap);
-                    if (route == null) break;
+            if ((data.education != education[highestEducation].education + 1 & data.school != false) && (Math.random() > 0.15)) {
+                pathMap = convertPathfind(sceneData, sceneData[data.location.y][data.location.x], sceneData.flat().find(item => item.uuid == data.school));
+                route = astar(pathMap);
+                if (route == null) break;
 
-                    data.targetDir = "";
-                    data.roadWait = 0;
-                    data.sessionTick = 0;
-                    data.status = "moving";
-                    data.targetType = "learn"; // set to work mode when arrived
-                    data.targetRoute = route;
-                    break;
-                }
+                data.targetDir = "";
+                data.roadWait = 0;
+                data.sessionTick = 0;
+                data.status = "moving";
+                data.targetType = "learn"; // set to work mode when arrived
+                data.targetRoute = route;
+                break;
             }
 
             // pray
@@ -127,29 +128,16 @@ function citizenStep(data) {
             //create vehicle if first step
             let currentStep = data.targetRoute.indexOf(data.location) == -1 ? 0 : data.targetRoute.indexOf(data.location);
             let roadQuality = sceneData[data.targetRoute[currentStep].y][data.targetRoute[currentStep].x].qualityState || 100;
-            if (!vehicles[data.uuid]) {
-                let material = new THREE.MeshToonMaterial({ color: 0xffffff });
-                let geometry = new THREE.BoxGeometry(0.20, 0.20, 0.20);
-                let mesh = new THREE.Mesh(geometry, material);
-                vehicles[data.uuid] = mesh;
-                scene.add(mesh);
-            }
+            if (!vehicles[data.uuid]) { let mesh = await loadWMat(data.vehicle); mesh.scale.setScalar(0.156); scene.add(mesh); vehicles[data.uuid] = mesh; }
 
-            //delay step if road quality is low
+            //steps (delay step if road quality is low)
             let delayTime = Math.floor((100 - roadQuality) / 10);
-            if (delayTime != 0) {
-                data.roadWait = (data.roadWait < delayTime - 1) ? data.roadWait + 1 : 0;
-                if (data.roadWait < delayTime - 1) break;
-            }
-
-            //steps
+            if (delayTime != 0) { data.roadWait = (data.roadWait < delayTime - 1) ? data.roadWait + 1 : 0; if (data.roadWait < delayTime - 1) break; }
             if (currentStep == data.targetRoute.length - 1) {
                 //delete vehicle model (final step)
                 let finalTarget = data.targetRoute.at(-1);
-                let targetPosX = finalTarget.x - (sceneData[0].length / 2);
-                let targetPosY = sceneData[finalTarget.y][finalTarget.x].height + 0.16;
-                let targetPosZ = finalTarget.y - (sceneData[0].length / 2);
-                lerpVehicle(vehicles[data.uuid].position.clone(), targetPosX, targetPosZ, targetPosY, performance.now(), data);
+                let changePos = { x: finalTarget.y - (sceneData[0].length / 2), y: sceneData[finalTarget.y][finalTarget.x].height + 0.125, z: finalTarget.x - (sceneData[0].length / 2) };
+                lerpVehicle(vehicles[data.uuid].position.clone(), changePos, finalTarget.rot, data);
 
                 //discard vehicle after arrival
                 setTimeout(() => {
@@ -175,34 +163,27 @@ function citizenStep(data) {
                 let vehicleInTarget = citizensUnsorted.some(item => item.location.x === targetPos.x && item.location.y === targetPos.y && item.location.direction === targetPos.direction);
                 if (vehicleInTarget && !isFinalTarget && !isHome) break;
 
-                //shift to correct lane
-                let targetPosY = data.location.y - (sceneData[0].length / 2);
-                if (targetPos.direction == "left") targetPosY -= 0.10;
-                if (targetPos.direction == "right") targetPosY += 0.10;
-
-                //shift to correct lane
-                let targetPosX = data.location.x - (sceneData[0].length / 2);
-                if (targetPos.direction == "down") targetPosX -= 0.10;
-                if (targetPos.direction == "up") targetPosX += 0.10;
-
-                //shift to road height
-                let targetPosHeight = sceneData[data.location.y][data.location.x].height + 0.16;
+                //set target position & shift to correct lane
+                let changePos = { x: data.location.y - (sceneData[0].length / 2), y: sceneData[data.location.y][data.location.x].height + 0.125, z: data.location.x - (sceneData[0].length / 2) };
+                if (targetPos.direction == "left") changePos.x -= 0.15;
+                if (targetPos.direction == "right") changePos.x += 0.15;
+                if (targetPos.direction == "down") changePos.z -= 0.15;
+                if (targetPos.direction == "up") changePos.z += 0.15;
                 data.location = targetPos;
 
                 //set vehicle position (first step) or animate movement
-                if (currentStep == 0) { vehicles[data.uuid].position.set(targetPosY, targetPosHeight, targetPosX); break; }
-                else { lerpVehicle(vehicles[data.uuid].position.clone(), targetPosX, targetPosY, targetPosHeight, performance.now(), data); }
+                if (currentStep == 0) { vehicles[data.uuid].position.set(changePos.x, changePos.y, changePos.z); break; }
+                else { lerpVehicle(vehicles[data.uuid].position.clone(), changePos, data.targetRoute[currentStep].rot, data); }
             }
             break;
         case "work":
             //after 15-25 ticks find path home
             if (data.sessionTick <= randomIntFromInterval(15, 25)) break;
-
             homePathMap = convertPathfind(sceneData, sceneData[data.location.y][data.location.x], checkHome);
             routeHome = astar(homePathMap);
-            if (routeHome == null) break;
 
             //set route and change to moving mode
+            if (routeHome == null) break;
             data.sessionTick = 0;
             data.roadWait = 0;
             data.status = "moving";
@@ -214,14 +195,13 @@ function citizenStep(data) {
         case "learn":
             //after 15-25 ticks find path home
             if (data.sessionTick <= randomIntFromInterval(15, 25)) break;
-
             homePathMap = convertPathfind(sceneData, sceneData[data.location.y][data.location.x], checkHome);
             routeHome = astar(homePathMap);
-            if (routeHome == null) break;
 
             let addition = data.education + 0.1;
             if (parseFloat(addition.toFixed(1)) == Math.floor(data.education) + 1) data.school = false;
 
+            if (routeHome == null) break;
             data.sessionTick = 0;
             data.roadWait = 0;
             data.status = "moving";
@@ -236,9 +216,9 @@ function citizenStep(data) {
             if (data.sessionTick <= randomIntFromInterval(15, 25)) break;
             homePathMap = convertPathfind(sceneData, sceneData[data.location.y][data.location.x], checkHome);
             routeHome = astar(homePathMap);
-            if (routeHome == null) break;
 
             //set route and change to moving mode
+            if (routeHome == null) break;
             data.sessionTick = 0;
             data.roadWait = 0;
             data.status = "moving";
@@ -251,9 +231,9 @@ function citizenStep(data) {
             if (data.sessionTick <= randomIntFromInterval(15, 25)) break;
             homePathMap = convertPathfind(sceneData, sceneData[data.location.y][data.location.x], checkHome);
             routeHome = astar(homePathMap);
-            if (routeHome == null) break;
 
             //set route and change to moving mode
+            if (routeHome == null) break;
             data.sessionTick = 0;
             data.roadWait = 0;
             data.status = "moving";
@@ -387,13 +367,12 @@ async function facilityTick(tile) {
                 //lerp vehicle
                 function anim() {
                     let t = Math.min((performance.now() - start) / simulationSpeed, 1);
-                    let lerpX = lerp(from.y - sceneData[0].length / 2, to.y - sceneData[0].length / 2, t);
-                    let lerpY = lerp(sceneData[from.y][from.x].height + 0.16, sceneData[to.y][to.x].height + 0.16, t);
-                    let lerpZ = lerp(from.x - sceneData[0].length / 2, to.x - sceneData[0].length / 2, t);
-                    try { tile.buildingData.mesh.position.set(lerpX, lerpY, lerpZ); } catch (e) { }
+                    try {
+                        tile.buildingData.mesh.position.set(lerp(from.y - sceneData[0].length / 2, to.y - sceneData[0].length / 2, t), lerp(sceneData[from.y][from.x].height + 0.16, sceneData[to.y][to.x].height + 0.16, t), lerp(from.x - sceneData[0].length / 2, to.x - sceneData[0].length / 2, t));
+                        tile.buildingData.mesh.rotation.set(0, to.rot, 0);
+                    } catch (e) { } //sometimes broken idk why
                     if (t < 1) { requestAnimationFrame(anim) } else { tile.buildingData.step++; }
                 }; anim();
-                if (tile.buildingData.step == 0) scene.add(tile.buildingData.mesh);
             }
         } else {
             let burning = sceneData.flat().find(item => item.burning);
@@ -401,7 +380,11 @@ async function facilityTick(tile) {
             if (!route) return;
 
             //set data
-            let mesh = new THREE.Mesh(new THREE.BoxGeometry(0.22, 0.22, 0.22), new THREE.MeshToonMaterial({ color: 0xff3300 }));
+            let mesh = await loadWMat('assets/vehicles/FIRETRUCK');
+            mesh.scale.setScalar(0.156);
+            scene.add(mesh);
+
+            //set data
             tile.buildingData.route = route;
             tile.buildingData.target = burning;
             tile.buildingData.working = true;

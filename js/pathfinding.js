@@ -1,17 +1,17 @@
 function findPoints(grid) {
-    let start, end;
+  let start, end;
 
-    for (let y = 0; y < grid.length; y++) {
-        for (let x = 0; x < grid[y].length; x++) {
-            if (grid[y][x] === 2) start = { x, y };
-            if (grid[y][x] === 3) end = { x, y };
-        }
+  for (let y = 0; y < grid.length; y++) {
+    for (let x = 0; x < grid[y].length; x++) {
+      if (grid[y][x] === 2) start = { x, y };
+      if (grid[y][x] === 3) end = { x, y };
     }
-    return { start, end };
+  }
+  return { start, end };
 }
 
 function heuristic(a, b) {
-    return Math.abs(a.x - b.x) + Math.abs(a.y - b.y);
+  return Math.abs(a.x - b.x) + Math.abs(a.y - b.y);
 }
 
 // a-star pathfinding
@@ -35,10 +35,10 @@ function astar(grid) {
     Math.abs(a.x - b.x) + Math.abs(a.y - b.y);
 
   const directions = [
-    { x: 0, y: -1, dir: "up" },
-    { x: 0, y: 1,  dir: "down" },
-    { x: -1, y: 0, dir: "left" },
-    { x: 1, y: 0,  dir: "right" }
+    { x: 0, y: -1, dir: "up", rot: -(Math.PI / 2) },
+    { x: 0, y: 1, dir: "down", rot: (Math.PI / 2) },
+    { x: -1, y: 0, dir: "left", rot: -Math.PI },
+    { x: 1, y: 0, dir: "right", rot: Math.PI * 2 }
   ];
 
   const openSet = [];
@@ -70,7 +70,8 @@ function astar(grid) {
         path.push({
           x: node.x,
           y: node.y,
-          direction: node.direction
+          direction: node.direction,
+          rot: node.rot
         });
         node = node.parent;
       }
@@ -106,7 +107,8 @@ function astar(grid) {
           h,
           f,
           parent: current,
-          direction: d.dir
+          direction: d.dir,
+          rot: d.rot
         };
 
         if (existing) {
@@ -123,30 +125,30 @@ function astar(grid) {
 
 //find coordinate of tile
 function findTileCoordinate(map, tile) {
-    let posY = map.find(item => (item.indexOf(tile) != -1));
-    let posX = posY.indexOf(tile);
-    posY = map.indexOf(posY);
+  let posY = map.find(item => (item.indexOf(tile) != -1));
+  let posX = posY.indexOf(tile);
+  posY = map.indexOf(posY);
 
-    return { x: posX, y: posY };
+  return { x: posX, y: posY };
 }
 
 //convert map for pathfinder
 function convertPathfind(map, origin, target) {
-    //get coordinates of origin and target
-    let originPos = findTileCoordinate(map, origin);
-    let targetPos = findTileCoordinate(map, target);
-    let newMap = []
+  //get coordinates of origin and target
+  let originPos = findTileCoordinate(map, origin);
+  let targetPos = findTileCoordinate(map, target);
+  let newMap = []
 
-    //make suitable map for pathfinder
-    for (var y = 0; y < map[0].length; y++) {
-        newMap[y] = newMap[y] ? newMap[y] : [];
-        for (var x = 0; x < map.length; x++) {
-            if (map[y][x].type == 2) newMap[y][x] = 1;
-            else if (y == originPos.y & x == originPos.x) newMap[y][x] = 2;
-            else if (y == targetPos.y & x == targetPos.x) newMap[y][x] = 3;
-            else newMap[y][x] = 0;
-        }
+  //make suitable map for pathfinder
+  for (var y = 0; y < map[0].length; y++) {
+    newMap[y] = newMap[y] ? newMap[y] : [];
+    for (var x = 0; x < map.length; x++) {
+      if (map[y][x].type == 2) newMap[y][x] = 1;
+      else if (y == originPos.y & x == originPos.x) newMap[y][x] = 2;
+      else if (y == targetPos.y & x == targetPos.x) newMap[y][x] = 3;
+      else newMap[y][x] = 0;
     }
+  }
 
-    return newMap;
+  return newMap;
 }

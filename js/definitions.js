@@ -1,12 +1,23 @@
 let loaded = {};
 
 //========================
+// Vehicles preset
+//========================
+
+let vehicleModels = [
+    'assets/vehicles/CAR1',
+    'assets/vehicles/CAR2',
+    'assets/vehicles/CAR3',
+    'assets/vehicles/CAR4'
+];
+
+//========================
 // Zoned buildings preset
 //========================
 
 //residential buildings
 let houses = {
-    'assets/residential/house-1': {
+    'assets/zoning/residential/house-1': {
         "slots": 3,
         "consumption": {
             "electric cable": 10,
@@ -14,7 +25,7 @@ let houses = {
             "sewage pipe": 10
         }
     },
-    'assets/residential/house-2': {
+    'assets/zoning/residential/house-2': {
         "slots": 4,
         "consumption": {
             "electric cable": 15,
@@ -22,7 +33,7 @@ let houses = {
             "sewage pipe": 15
         }
     },
-    'assets/residential/house-3': {
+    'assets/zoning/residential/house-3': {
         "slots": 6,
         "consumption": {
             "electric cable": 15,
@@ -30,7 +41,7 @@ let houses = {
             "sewage pipe": 15
         }
     },
-    'assets/residential/kost-1': {
+    'assets/zoning/residential/kost-1': {
         "slots": 12,
         "consumption": {
             "electric cable": 35,
@@ -42,7 +53,7 @@ let houses = {
 
 //commercial buildings
 let commercial = {
-    'assets/commercial/shop-1': {
+    'assets/zoning/commercial/shop-1': {
         "level": 2,
         "slots": 3,
         "pay": 30000,
@@ -52,10 +63,30 @@ let commercial = {
             "sewage pipe": 15
         }
     },
-    'assets/commercial/shop-2': {
+    'assets/zoning/commercial/shop-2': {
         "level": 3,
         "slots": 6,
         "pay": 30000,
+        "consumption": {
+            "electric cable": 30,
+            "water pipe": 30,
+            "sewage pipe": 30
+        }
+    },
+    'assets/zoning/commercial/shop-3': {
+        "level": 1,
+        "slots": 12,
+        "pay": 60000,
+        "consumption": {
+            "electric cable": 30,
+            "water pipe": 30,
+            "sewage pipe": 30
+        }
+    },
+    'assets/zoning/commercial/shop-4': {
+        "level": 3,
+        "slots": 12,
+        "pay": 60000,
         "consumption": {
             "electric cable": 30,
             "water pipe": 30,
@@ -66,7 +97,7 @@ let commercial = {
 
 //industrial buildings
 let industrial = {
-    'assets/industrial/industrial-1': {
+    'assets/zoning/industrial/industrial-1': {
         "level": 4,
         "slots": 6,
         "pay": 30000,
@@ -76,7 +107,7 @@ let industrial = {
             "sewage pipe": 30
         }
     },
-    'assets/industrial/industrial-2': {
+    'assets/zoning/industrial/industrial-2': {
         "level": 3,
         "slots": 6,
         "pay": 30000,
@@ -86,7 +117,7 @@ let industrial = {
             "sewage pipe": 30
         }
     },
-    'assets/industrial/industrial-3': {
+    'assets/zoning/industrial/industrial-3': {
         "level": 1,
         "slots": 6,
         "pay": 30000,
@@ -100,7 +131,7 @@ let industrial = {
 
 //farm buildings
 let farm = {
-    'assets/farm/farm-1': {
+    'assets/zoning/farm/farm-1': {
         "level": 1,
         "slots": 5,
         "pay": 30000,
@@ -110,7 +141,7 @@ let farm = {
             "sewage pipe": 5
         }
     },
-    'assets/farm/farm-2': {
+    'assets/zoning/farm/farm-2': {
         "level": 1,
         "slots": 5,
         "pay": 30000,
@@ -120,7 +151,7 @@ let farm = {
             "sewage pipe": 5
         }
     },
-    'assets/farm/farm-3': {
+    'assets/zoning/farm/farm-3': {
         "level": 1,
         "slots": 5,
         "pay": 30000,
@@ -130,7 +161,7 @@ let farm = {
             "sewage pipe": 5
         }
     },
-    'assets/farm/farm-4': {
+    'assets/zoning/farm/farm-4': {
         "level": 1,
         "slots": 8,
         "pay": 30000,

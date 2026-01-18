@@ -145,11 +145,6 @@ function animMove(target, isUp, playSound = true) {
     lerpAnim();
 }
 
-// lerp animation function (ease)
-function lerp(a, b, t) {
-    return a + (b - a) * t;
-}
-
 // set color of tile
 function setInstanceColor(color, instance, index) {
     instance.setColorAt(index, (new THREE.Color()).set(color));
@@ -193,16 +188,21 @@ function spawnSmoke(position, duration = 3000) {
 }
 
 //vehicle movement animation
-function lerpVehicle(oldPos, targetPosX, targetPosY, targetPosHeight, startTime, data, speed = simulationSpeed) {
+function lerpVehicle(oldPos, targetPos, targetRot, data) {
+    let startTime = performance.now();
     function lerpAnim() {
-        let t = Math.min((performance.now() - startTime) / speed, 1);
-        let lerpX = lerp(oldPos.x, targetPosY, t);
-        let lerpZ = lerp(oldPos.z, targetPosX, t);
-        let lerpHeight = lerp(oldPos.y, targetPosHeight, t);
-        try { vehicles[data.uuid].position.set(lerpX, lerpHeight, lerpZ); } catch (e) { } //sometimes broken idk why
+        let t = Math.min((performance.now() - startTime) / simulationSpeed, 1);
+        try {
+            vehicles[data.uuid].position.set(lerp(oldPos.x, targetPos.x, t), lerp(oldPos.y, targetPos.y, t), lerp(oldPos.z, targetPos.z, t));
+            vehicles[data.uuid].rotation.y = targetRot;
+        } catch (e) { } //sometimes broken idk why
         if (t < 1) requestAnimationFrame(lerpAnim);
-    };
-    lerpAnim();
+    }; lerpAnim();
+}
+
+// lerp animation function (ease)
+function lerp(a, b, t) {
+    return a + (b - a) * t;
 }
 
 // load obj building models

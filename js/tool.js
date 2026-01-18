@@ -256,15 +256,15 @@ function tileSelection(tile, event) {
 }
 
 // place tile zone
-async function placeZone(tile) {
+async function placeZone(tile, zone = tool.type) {
     // remove foliage
-    if (tile.type == 3 & tile.zone == tool.type) return;
+    if (tile.type == 3 & tile.zone == zone) return;
     cleanTileData(tile)
     tile.type = 3; //zoned for buildings
-    tile.zone = tool.type;
+    tile.zone = zone;
 
     // add billboard to tile
-    let object = await loadWMat(zones[tool.type].model);
+    let object = await loadWMat(zones[zone].model);
     let connectedRoad = checkNeighborForRoads(tile["posX"], tile["posZ"], true);
     scene.add(object);
 
