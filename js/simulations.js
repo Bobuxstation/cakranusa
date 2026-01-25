@@ -24,9 +24,10 @@ function createNewCitizen(tile) {
         targetType: "",
         targetDir: "",
         targetRoute: [],
-        vehicle: vehicleModels[Math.floor(Math.random() * vehicleModels.length)],
+        vehicle: Object.keys(vehicleModels)[Math.floor(Math.random() * Object.keys(vehicleModels).length)],
 
-        sessionTick: 0
+        sessionTick: 0,
+        lastPaid: calculateDate(date, true)
     }
 
     return data;
@@ -53,6 +54,18 @@ async function citizenStep(data) {
     if (schoolTile != false & data.school == false) data.school = schoolTile.uuid;
     if (!sceneData.flat().find(item => item.uuid == data.school)) data.school = false;
 
+    //pay taxes
+    if (data.lastPaid != calculateDate(date, true)) {
+        data.lastPaid = calculateDate(date, true);
+
+        let transportTax = (vehicleModels[data.vehicle] || 0) * taxes.transportation;
+        let landTax = ((houses[checkHome.buildingModel].price / houses[checkHome.buildingModel].slots) || 0) * taxes.land;
+        if (findFacility("taxoffice")) {
+            money += transportTax + landTax;
+            data.money -= transportTax + landTax;
+        }
+    }
+
     //simulation steps
     switch (data.status) {
         case "home":
@@ -63,104 +76,51 @@ async function citizenStep(data) {
             //go to hospital if health less than 50
             let hospitalTile = findFacility("medical");
             if (data.health < 50 && hospitalTile) {
-                pathMap = convertPathfind(sceneData, sceneData[data.location.y][data.location.x], hospitalTile);
-                route = astar(pathMap);
-                if (route == null) break;
-
-                data.targetDir = "";
-                data.roadWait = 0;
-                data.sessionTick = 0;
-                data.status = "moving";
-                data.targetType = "hospital"; // set to work mode when arrived
-                data.targetRoute = route;
-                break;
+                route = astar(convertPathfind(sceneData, sceneData[data.location.y][data.location.x], hospitalTile));
+                if (route != null) startMoving("hospital", route, data); break;
             }
 
             // if education is not high, 15% chance of going to school instead of work
             if ((data.education != education[highestEducation].education + 1 & data.school != false) && (Math.random() > 0.15)) {
-                pathMap = convertPathfind(sceneData, sceneData[data.location.y][data.location.x], sceneData.flat().find(item => item.uuid == data.school));
-                route = astar(pathMap);
-                if (route == null) break;
-
-                data.targetDir = "";
-                data.roadWait = 0;
-                data.sessionTick = 0;
-                data.status = "moving";
-                data.targetType = "learn"; // set to work mode when arrived
-                data.targetRoute = route;
-                break;
+                route = astar(convertPathfind(sceneData, sceneData[data.location.y][data.location.x], sceneData.flat().find(item => item.uuid == data.school)));
+                if (route != null) startMoving("learn", route, data); break;
             }
 
             // pray
             let masjidTile = findFacility("religion");
             if (Math.random() < 0.25 && masjidTile) {
-                pathMap = convertPathfind(sceneData, sceneData[data.location.y][data.location.x], masjidTile);
-                route = astar(pathMap);
-                if (route == null) break;
-
-                data.targetDir = "";
-                data.roadWait = 0;
-                data.sessionTick = 0;
-                data.status = "moving";
-                data.targetType = "pray"; // set to work mode when arrived
-                data.targetRoute = route;
-                break;
+                route = astar(convertPathfind(sceneData, sceneData[data.location.y][data.location.x], masjidTile));
+                if (route != null) startMoving("pray", route, data); break;
             }
 
-            //if has job
+            //go to work if employed
             if (data.job != false) {
-                //generate route to work
-                pathMap = convertPathfind(sceneData, sceneData[data.location.y][data.location.x], sceneData.flat().find(item => item.uuid == data.job));
-                route = astar(pathMap);
-                if (route == null) break;
-
-                //set route and change to moving mode
-                data.targetDir = "";
-                data.roadWait = 0;
-                data.sessionTick = 0;
-                data.status = "moving";
-                data.targetType = "work"; // set to work mode when arrived
-                data.targetRoute = route;
-                break;
+                route = astar(convertPathfind(sceneData, sceneData[data.location.y][data.location.x], sceneData.flat().find(item => item.uuid == data.job)));
+                if (route != null) startMoving("work", route, data); break;
             }
             break;
         case "moving":
             //create vehicle if first step
             let currentStep = data.targetRoute.indexOf(data.location) == -1 ? 0 : data.targetRoute.indexOf(data.location);
-            let roadQuality = sceneData[data.targetRoute[currentStep].y][data.targetRoute[currentStep].x].qualityState || 100;
             if (!vehicles[data.uuid]) { let mesh = await loadWMat(data.vehicle); mesh.scale.setScalar(0.156); scene.add(mesh); vehicles[data.uuid] = mesh; }
 
-            //steps (delay step if road quality is low)
-            let delayTime = Math.floor((100 - roadQuality) / 10);
-            if (delayTime != 0) { data.roadWait = (data.roadWait < delayTime - 1) ? data.roadWait + 1 : 0; if (data.roadWait < delayTime - 1) break; }
-            if (currentStep == data.targetRoute.length - 1) {
+            //delay step if road quality is low
+            let hasArrived = data.location.x === data.targetRoute.at(-1).x && data.location.y === data.targetRoute.at(-1).y;
+            let delayTime = Math.floor((100 - sceneData[data.targetRoute[currentStep].y][data.targetRoute[currentStep].x].qualityState || 100) / 10);
+            if (delayTime != 0 && !hasArrived) { data.roadWait = (data.roadWait < delayTime - 1) ? data.roadWait + 1 : 0; if (data.roadWait < delayTime - 1) break; }
+
+            //steps
+            if (hasArrived) {
                 //delete vehicle model (final step)
-                let finalTarget = data.targetRoute.at(-1);
-                let changePos = { x: finalTarget.y - (sceneData[0].length / 2), y: sceneData[finalTarget.y][finalTarget.x].height + 0.125, z: finalTarget.x - (sceneData[0].length / 2) };
-                lerpVehicle(vehicles[data.uuid].position.clone(), changePos, finalTarget.rot, data);
-
-                //discard vehicle after arrival
-                setTimeout(() => {
-                    scene.remove(vehicles[data.uuid]);
-                    delete vehicles[data.uuid];
-
-                    //change to target mode
-                    data.status = data.targetType;
-                    data.targetRoute = [];
-                    data.sessionTick = 0;
-                    data.roadWait = 0;
-                    data.targetType = "";
-                }, simulationSpeed);
+                data.status = data.targetType;
+                scene.remove(vehicles[data.uuid]);
+                delete vehicles[data.uuid];
             } else {
-                //set coordinates for vehicle
-                let targetPos = data.targetRoute[currentStep + 1];
-                let finalTarget = data.targetRoute.at(-1);
-                let citizensUnsorted = Object.values(citizens).flat()
-
                 //move conditions (is home, is final target or vehicle obstructing path)
+                let targetPos = data.targetRoute[currentStep + 1];
                 let isHome = (data.location.x === data.targetRoute[0].x && data.location.y === data.targetRoute[0].y);
-                let isFinalTarget = (targetPos.x === finalTarget.x && targetPos.y === finalTarget.y);
-                let vehicleInTarget = citizensUnsorted.some(item => item.location.x === targetPos.x && item.location.y === targetPos.y && item.location.direction === targetPos.direction);
+                let isFinalTarget = (targetPos.x === data.targetRoute.at(-1).x && targetPos.y === data.targetRoute.at(-1).y);
+                let vehicleInTarget = Object.values(citizens).flat().some(item => item.location.x === targetPos.x && item.location.y === targetPos.y && item.location.direction === targetPos.direction);
                 if (vehicleInTarget && !isFinalTarget && !isHome) break;
 
                 //set target position & shift to correct lane
@@ -179,67 +139,46 @@ async function citizenStep(data) {
         case "work":
             //after 15-25 ticks find path home
             if (data.sessionTick <= randomIntFromInterval(15, 25)) break;
-            homePathMap = convertPathfind(sceneData, sceneData[data.location.y][data.location.x], checkHome);
-            routeHome = astar(homePathMap);
 
-            //set route and change to moving mode
-            if (routeHome == null) break;
-            data.sessionTick = 0;
-            data.roadWait = 0;
-            data.status = "moving";
-            data.targetType = "home"; //set mode to home when arrived
-            data.targetRoute = routeHome;
-            data.health -= randomIntFromInterval(20, 25)
-            data.wallet += sceneData.flat().find(item => item.uuid == data.job) ? sceneData.flat().find(item => item.uuid == data.job).buildingData.pay : 0;
+            //find route and change to moving mode
+            routeHome = astar(convertPathfind(sceneData, sceneData[data.location.y][data.location.x], checkHome));
+            if (routeHome != null) startMoving("home", routeHome, data); else break;
+
+            //tiredness and paycheck
+            let paycheck = sceneData.flat().find(item => item.uuid == data.job) ? sceneData.flat().find(item => item.uuid == data.job).buildingData.pay : 0;
+            data.health -= randomIntFromInterval(20, 25);
+            data.wallet += Math.floor(paycheck * (1 - taxes.salary));
+            money += Math.floor(paycheck * taxes.salary);
             break;
         case "learn":
             //after 15-25 ticks find path home
             if (data.sessionTick <= randomIntFromInterval(15, 25)) break;
-            homePathMap = convertPathfind(sceneData, sceneData[data.location.y][data.location.x], checkHome);
-            routeHome = astar(homePathMap);
 
-            let addition = data.education + 0.1;
-            if (parseFloat(addition.toFixed(1)) == Math.floor(data.education) + 1) data.school = false;
-
-            if (routeHome == null) break;
-            data.sessionTick = 0;
-            data.roadWait = 0;
-            data.status = "moving";
-            data.targetType = "home"; //set mode to home when arrived
-            data.targetRoute = routeHome;
-            data.health -= randomIntFromInterval(5, 10)
-            data.education = parseFloat(addition.toFixed(1));
-            if (data.moral <= 90) data.moral += 10;
+            //find route and change to moving mode
+            let addition = data.education + calculateFacilityAddition(data.location.y, data.location.x);
+            routeHome = astar(convertPathfind(sceneData, sceneData[data.location.y][data.location.x], checkHome));
+            if (routeHome != null) startMoving("home", routeHome, data); else break;
+            if (data.moral <= 90) data.moral += calculateFacilityAddition(data.location.y, data.location.x, true);
+            if (data.health > 0) data.health -= randomIntFromInterval(5, 10);
+            if (addition >= Math.floor(data.education) + 1) { data.school = false; data.education = Math.floor(data.education) + 1 } else { data.education = addition; };
             break;
         case "hospital":
             //after 15-25 ticks find path home
             if (data.sessionTick <= randomIntFromInterval(15, 25)) break;
-            homePathMap = convertPathfind(sceneData, sceneData[data.location.y][data.location.x], checkHome);
-            routeHome = astar(homePathMap);
 
-            //set route and change to moving mode
-            if (routeHome == null) break;
-            data.sessionTick = 0;
-            data.roadWait = 0;
-            data.status = "moving";
-            data.targetType = "home"; //set mode to home when arrived
-            data.targetRoute = routeHome;
-            data.health = 100;
+            //find route and change to moving mode
+            routeHome = astar(convertPathfind(sceneData, sceneData[data.location.y][data.location.x], checkHome));
+            if (routeHome != null) startMoving("home", routeHome, data); else break;
+            if (data.health < 100) data.health = 100;
             break;
         case "pray":
             //after 15-25 ticks find path home
             if (data.sessionTick <= randomIntFromInterval(15, 25)) break;
-            homePathMap = convertPathfind(sceneData, sceneData[data.location.y][data.location.x], checkHome);
-            routeHome = astar(homePathMap);
 
-            //set route and change to moving mode
-            if (routeHome == null) break;
-            data.sessionTick = 0;
-            data.roadWait = 0;
-            data.status = "moving";
-            data.targetType = "home"; //set mode to home when arrived
-            data.targetRoute = routeHome;
-            if (data.moral <= 90) data.moral += 10;
+            //find route and change to moving mode
+            routeHome = astar(convertPathfind(sceneData, sceneData[data.location.y][data.location.x], checkHome));
+            if (routeHome != null) startMoving("home", routeHome, data); else break;
+            if (data.moral <= 90) data.moral += calculateFacilityAddition(data.location.y, data.location.x, true);
             break;
         default:
             //if invalid, teleport to home
@@ -303,20 +242,15 @@ async function citizenSimulation(seed) {
         sceneData.flat().filter(item => (item.type == 4)).forEach(facility => facilityTick(facility));
         Object.values(citizens).flat().forEach(citizen => citizenStep(citizen));
 
-        //update edu stats
-        let educationTab = document.getElementById("EducationStats");
-        educationTab.innerHTML = '';
-        Object.keys(education).filter(key => education[key].type == "education").forEach(key => {
-            let item = education[key];
-            let textElem = document.createElement('p');
-            textElem.innerHTML = `${key}: ${Object.values(citizens).flat().filter(i => i.education >= item.education + 1).length} / ${Object.values(citizens).flat().length}<br>`
-            educationTab.appendChild(textElem);
-        })
-
         //update stats
-        document.getElementById("populationData").innerText = Object.values(citizens).flat().length;
-        document.getElementById("population").innerText = Object.values(citizens).flat().length;
-        document.getElementById("unemployedData").innerText = Object.values(citizens).flat().filter(item => item.job == false).length;
+        let citizensFlat = Object.values(citizens).flat();
+        document.getElementById("populationData").innerText = citizensFlat.length;
+        document.getElementById("population").innerText = citizensFlat.length;
+        document.getElementById("unemployedData").innerText = citizensFlat.filter(item => item.job == false).length;
+        document.getElementById("unemploymentVal").innerText = `${Math.floor(((citizensFlat.filter(item => item.job == false).length / citizensFlat.length) || 0) * 100)}%`;
+        document.getElementById("unemploymentRate").value = ((citizensFlat.filter(item => item.job == false).length / citizensFlat.length) || 0) * 100;
+        updateEducationStats();
+        summarizeBuilt();
 
         //day cycle
         document.getElementById("dateProgress").style.width = `${document.getElementById("date").getBoundingClientRect().width}px`;
@@ -494,13 +428,12 @@ function zoneTileTick(tile, calcSupply, originalSupply, isLast) {
 
 //calculate leftover values from supply networks
 function setSupplyStat(calcSupply, originalSupply) {
-    let supplyStat = document.getElementById("SupplyStats");
+    let supplyStat = document.getElementById("supply");
     supplyStat.innerHTML = '';
     Object.keys(calcSupply).forEach(key => {
-        let heading = document.createElement("b");
-        heading.innerText = underground[key].label;
+        let heading = document.createElement("p");
+        heading.innerHTML = `<b>${underground[key].label}</b>`;
         supplyStat.appendChild(heading);
-        supplyStat.appendChild(document.createElement('br'));
 
         if (Object.keys(calcSupply[key]).length == 0) {
             let text = document.createElement("p");
@@ -511,8 +444,18 @@ function setSupplyStat(calcSupply, originalSupply) {
         Object.keys(calcSupply[key]).forEach(item => {
             let usedAmount = originalSupply[key][item] - calcSupply[key][item];
             let text = document.createElement("p");
-            text.innerText = `${item}: ${usedAmount}/${originalSupply[key][item]}`;
+            text.innerText = item;
             supplyStat.appendChild(text);
+
+            let percentageProgress = document.createElement("progress");
+            percentageProgress.max = 100;
+            percentageProgress.value = ((usedAmount / originalSupply[key][item]) || 0) * 100;
+            text.appendChild(percentageProgress);
+
+            let percentageSpan = document.createElement("span");
+            percentageSpan.className = 'price';
+            percentageSpan.innerText = `${Math.floor(((usedAmount / originalSupply[key][item]) || 0) * 100)}%`
+            text.appendChild(percentageSpan);
         })
     })
 }

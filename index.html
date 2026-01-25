@@ -69,28 +69,33 @@
                 <div class="left">
                     <button onclick="openTab('Population', 'statsTab')"
                         class="statsTabButton selected">Population</button>
-                    <button onclick="openTab('EducationStats', 'statsTab')" class="statsTabButton">Education</button>
-                    <button onclick="openTab('SupplyStats', 'statsTab')" class="statsTabButton">Supply</button>
+                    <button onclick="openTab('education', 'statsTab')" class="statsTabButton">education</button>
+                    <button onclick="openTab('supply', 'statsTab')" class="statsTabButton">supply</button>
+                    <button onclick="openTab('built', 'statsTab')" class="statsTabButton">built</button>
                 </div>
                 <div class="right">
                     <div class="statsTab innertab" id="Population" style="display: block;">
-                        <p>Population : <span id="populationData"></span></p>
-                        <p>Unemployed : <span id="unemployedData"></span></p>
+                        <p><i class="fa-solid fa-circle-info"></i> Invite more people to your city by building housing zones.</p>
+                        <p>Population <span id="populationData" class="price"></span></p>
+                        <p>Unemployed <span id="unemployedData" class="price"></span></p>
+                        <p>
+                            Unemployment rate 
+                            <progress id="unemploymentRate" max="100"></progress>
+                            <span class="price" id="unemploymentVal"></span>
+                        </p>
                     </div>
-                    <div class="statsTab innertab" id="EducationStats"></div>
-                    <div class="statsTab innertab" id="SupplyStats"></div>
+                    <div class="statsTab innertab" id="education"></div>
+                    <div class="statsTab innertab" id="supply"></div>
+                    <div class="statsTab innertab" id="built"></div>
                 </div>
             </div>
 
-            <div class="tab dual" id="policies">
+            <div class="tab dual" id="manage">
                 <div class="left">
                     <button onclick="openTab('taxes', 'policyTab')" class="policyTabButton selected">Taxes</button>
                 </div>
                 <div class="right">
-                    <div class="policyTab innertab" id="taxes" style="display: block;">
-                        <button>Land</button>
-                        <button>Vehicle</button>
-                    </div>
+                    <div class="policyTab innertab" id="taxes" style="display: block;"></div>
                 </div>
             </div>
 
@@ -127,7 +132,7 @@
 
         <div id="tools2">
             <button onclick="openTab('stats', 'tab', true)" class="tabButton">stats</button>
-            <button onclick="openTab('policies', 'tab', true)" class="tabButton">policies</button>
+            <button onclick="openTab('manage', 'tab', true)" class="tabButton">manage</button>
         </div>
 
         <div id="tools">

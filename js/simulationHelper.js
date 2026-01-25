@@ -19,7 +19,8 @@ function deleteCitizen(data) {
 async function occupyHouse(tile) {
     let connectedRoad = checkNeighborForRoads(tile["posX"], tile["posZ"], true);
     let buildingType = Object.keys(houses)[Math.floor(Math.random() * Object.keys(houses).length)];
-    
+
+    tile.buildingModel = buildingType;
     tile.consumption = houses[buildingType]["consumption"];
     tile.road = connectedRoad;
     tile.occupied = true;
@@ -50,6 +51,7 @@ async function occupyWorkplace(tile, type) {
     let buildingType = filterBuildings[Math.floor(Math.random() * Object.keys(filterBuildings).length)];
     if (filterBuildings.length == 0) return;
 
+    tile.buildingModel = buildingType;
     tile.consumption = type[buildingType]["consumption"];
     tile.buildingData = type[buildingType];
     tile.road = connectedRoad;
@@ -200,14 +202,40 @@ function cleanVehicles() {
     });
 };
 
-
 //calculate days for date counter
-function calculateDate(days) {
-  const date = new Date(Date.UTC(2026, 0, 1)); // game lore starts in January 1 2026
-  date.setUTCDate(date.getUTCDate() + days);
+function calculateDate(days, noDate = false) {
+    const date = new Date(Date.UTC(2026, 0, 1)); // game lore starts in January 1 2026
+    date.setUTCDate(date.getUTCDate() + days);
 
-  const dd = String(date.getUTCDate()).padStart(2, '0');
-  const mm = String(date.getUTCMonth() + 1).padStart(2, '0');
-  const yyyy = date.getUTCFullYear();
-  return `${dd}/${mm}/${yyyy}`;
+    const dd = String(date.getUTCDate()).padStart(2, '0');
+    const mm = String(date.getUTCMonth() + 1).padStart(2, '0');
+    const yyyy = date.getUTCFullYear();
+    return noDate ? `${mm}/${yyyy}` : `${dd}/${mm}/${yyyy}`;
+}
+
+//calculate facility benefits from neighbors
+function calculateFacilityAddition(y, x, moralMode = false) {
+    let directions = moralMode ? 10 : 0.1;
+    let addition = moralMode ? 2 : 0.02;
+
+    if (sceneData[y + 1][x].buildingType == 'leisure') directions += addition;
+    if (sceneData[y - 1][x].buildingType == 'leisure') directions += addition;
+    if (sceneData[y][x + 1].buildingType == 'leisure') directions += addition;
+    if (sceneData[y][x - 1].buildingType == 'leisure') directions += addition;
+    if (sceneData[y + 1][x + 1].buildingType == 'leisure') directions += addition;
+    if (sceneData[y + 1][x - 1].buildingType == 'leisure') directions += addition;
+    if (sceneData[y - 1][x + 1].buildingType == 'leisure') directions += addition;
+    if (sceneData[y - 1][x - 1].buildingType == 'leisure') directions += addition;
+
+    return parseFloat(directions.toFixed(2));
+}
+
+//set citizen into moving mode
+function startMoving(type, route, data) {
+    data.targetDir = "";
+    data.roadWait = 0;
+    data.sessionTick = 0;
+    data.status = "moving";
+    data.targetType = type; // set to work mode when arrived
+    data.targetRoute = route;
 }

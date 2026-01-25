@@ -213,7 +213,6 @@ function cleanTileData(tile, resetType = false, reZone = false) {
                 setRoadModel(checkNeighborForRoads(tile["posX"], tile["posZ"], false, true), tile, true);
             });
 
-            setInstanceColor((tile.posX + tile.posZ) % 2 === 0 ? 0x008000 : 0x007000, gridInstance, tile.index);
             if (meshLocations[tile.index]) {
                 scene.remove(meshLocations[tile.index]);
                 delete meshLocations[tile.index];
@@ -222,10 +221,10 @@ function cleanTileData(tile, resetType = false, reZone = false) {
             if (reZone != false) placeZone(tile, tempZone);
         }, 500);
     } else {
-        setInstanceColor((tile.posX + tile.posZ) % 2 === 0 ? 0x008000 : 0x007000, gridInstance, tile.index);
         if (meshLocations[tile.index]) scene.remove(meshLocations[tile.index]);
     }
 
+    setInstanceColor((tile.posX + tile.posZ) % 2 === 0 ? 0x005000 : 0x004000, gridInstance, tile.index);
     if (resetType) {
         tile.type = 0; // plains
         tile.occupied = false;

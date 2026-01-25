@@ -11,7 +11,7 @@ function newBlankScene(terrainSize, seed) {
             let random2 = mulberry32(parseInt(`${index}${seed}`));
             let type = 0; // plains
             let additionalData = {};
-            let height = parseFloat(ImprovedNoise.noise(x / 20, seed, y / 20).toFixed(3));
+            let height = 0// parseFloat(ImprovedNoise.noise(x / 20, seed, y / 20).toFixed(3));
 
             if (x == Math.floor(terrainSize / 2)) {
                 type = 2; // road
@@ -59,7 +59,7 @@ async function generateGrid(data) {
 
             //checkerboard color
             let color = new THREE.Color();
-            color.set((x + y) % 2 === 0 ? 0x008000 : 0x007000);
+            color.set((x + y) % 2 === 0 ? 0x005000 : 0x004000);
             instance.setColorAt(index, color);
 
             //spawn things above it
@@ -93,25 +93,30 @@ async function generateGrid(data) {
     scene.add(instance);
 };
 
-let meshLocations, gridInstance
-let sceneData, worldSeed, citizens = {};
+//will not be on the save file
+let meshLocations, gridInstance;
 let simulationSpeed = 1000;
-let money = 500_000_000;
+
+//will be on the save file
+let sceneData, worldSeed, citizens = {};
+let money = 100_000_000;
 let date = 0;
 let taxes = {
-
+    salary: 0.10,
+    land: 0.05,
+    transportation: 0.05
 }
 
 async function initScene() {
     worldSeed = Math.random();
     meshLocations = {};
-    sceneData = newBlankScene(64, Math.floor(worldSeed * 100000));
+    sceneData = newBlankScene(32, Math.floor(worldSeed * 100000));
 
     await generateGrid(sceneData);
     allOfTheLights(scene);
     citizenSimulation(worldSeed);
+    setTaxes();
 
     let calcSupply = calculateSupplied();
     setSupplyStat(calcSupply, calcSupply)
-};
-initScene()
+}; initScene()

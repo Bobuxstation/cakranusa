@@ -4,12 +4,13 @@ let loaded = {};
 // Vehicles preset
 //========================
 
-let vehicleModels = [
-    'assets/vehicles/CAR1',
-    'assets/vehicles/CAR2',
-    'assets/vehicles/CAR3',
-    'assets/vehicles/CAR4'
-];
+let vehicleModels = {
+    'assets/vehicles/CAR1': 85_000_000,
+    'assets/vehicles/CAR2': 98_000_000,
+    'assets/vehicles/CAR3': 67_000_000,
+    'assets/vehicles/CAR4': 100_000_000,
+    'assets/vehicles/BIKE1': 15_000_000
+};
 
 //========================
 // Zoned buildings preset
@@ -19,6 +20,7 @@ let vehicleModels = [
 let houses = {
     'assets/zoning/residential/house-1': {
         "slots": 3,
+        "price": 850_000_000,
         "consumption": {
             "electric cable": 10,
             "water pipe": 10,
@@ -27,6 +29,7 @@ let houses = {
     },
     'assets/zoning/residential/house-2': {
         "slots": 4,
+        "price": 900_000_000,
         "consumption": {
             "electric cable": 15,
             "water pipe": 15,
@@ -35,6 +38,7 @@ let houses = {
     },
     'assets/zoning/residential/house-3': {
         "slots": 6,
+        "price": 1_200_000,
         "consumption": {
             "electric cable": 15,
             "water pipe": 15,
@@ -43,6 +47,7 @@ let houses = {
     },
     'assets/zoning/residential/kost-1': {
         "slots": 12,
+        "price": 4_000_000_000,
         "consumption": {
             "electric cable": 35,
             "water pipe": 35,
@@ -74,7 +79,7 @@ let commercial = {
         }
     },
     'assets/zoning/commercial/shop-3': {
-        "level": 1,
+        "level": 3,
         "slots": 12,
         "pay": 60000,
         "consumption": {
@@ -187,20 +192,24 @@ let foliage = [
 let zones = {
     "housing": {
         "model": "assets/zoning/housing",
-        "description": "Allocate selected land(s) for citizen housing"
+        "description": "Allocate selected land(s) for citizen housing",
+        "price": 100_000
     },
     "commercial": {
         "model": "assets/zoning/commercial",
-        "description": "Allocate selected land(s) for commercial workplaces"
+        "description": "Allocate selected land(s) for commercial workplaces",
+        "price": 100_000
     },
     "industrial": {
         "model": "assets/zoning/industrial",
-        "description": "Allocate selected land(s) for industrial workplaces, Affects the environment"
+        "description": "Allocate selected land(s) for industrial workplaces, Affects the environment",
+        "price": 100_000
     },
     "farm": {
         "model": "assets/zoning/farm",
-        "description": "Allocate selected land(s) for farmland workplaces"
-    },
+        "description": "Allocate selected land(s) for farmland workplaces",
+        "price": 100_000
+    }
 }
 
 //transport types
@@ -239,6 +248,12 @@ let facility = {
         "type": "firedept",
         "slots": 8
     },
+    "tax office": {
+        "model": "assets/facility/polisi",
+        "description": "Collects taxes from citizens",
+        "type": "taxoffice",
+        "slots": 8
+    },
     "masjid": {
         "model": "assets/facility/mosque",
         "description": "Increase religious and moral values",
@@ -275,6 +290,25 @@ let education = {
         "type": "education",
         "education": 3,
         "slots": 16
+    }
+}
+
+//schools and libraries
+let leisure = {
+    "Bus stop": {
+        "model": "assets/facility/halte",
+        "description": "Reduces traffic (max. 10 tile range)",
+        "type": "leisure",
+    },
+    "Football field": {
+        "model": "assets/facility/football",
+        "description": "Field for playing football",
+        "type": "leisure",
+    },
+    "Padel Field": {
+        "model": "assets/facility/padel",
+        "description": "Field for playing padel",
+        "type": "leisure",
     }
 }
 
@@ -363,6 +397,7 @@ let buildmenu = {
     "Transport": transport,
     "Facility": facility,
     "Education": education,
+    "Leisure": leisure,
     "Services": services,
     "Supply": underground
 }
@@ -373,6 +408,7 @@ let buildMethod = {
     "Transport": placeRoad,
     "Facility": placeFacility,
     "Education": placeFacility,
+    "Leisure": placeFacility,
     "Services": placeFacility,
     "Supply": buildUnderground
 }
@@ -443,7 +479,7 @@ Object.keys(buildmenu).forEach((item, i) => {
     Object.keys(buildmenu[item]).forEach(async (subItem) => {
         const subItemButton = document.createElement("button");
         const thumbnail = await renderThumbnail(item, subItem);
-        const price = buildmenu[item][subItem].price ? `Rp${buildmenu[item][subItem].price}` : "Free";
+        const price = buildmenu[item][subItem].price ? buildmenu[item][subItem].price.toLocaleString('id-ID', { style: 'currency', currency: 'IDR', maximumFractionDigits: 0 }) : "Free";
 
         subItemButton.innerHTML = `${subItem}<span class="price">${price}</span>`;
         subItemButton.onclick = () => { setTool(subItem, item) };

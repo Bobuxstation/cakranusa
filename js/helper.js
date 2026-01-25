@@ -300,3 +300,117 @@ function setModelVisibility(val) {
     let otherUnderground = Object.keys(undergroundGroups).filter(i => i != tool.type);
     Object.values(otherUnderground).forEach(i => Object.values(undergroundGroups[i]).forEach(element => element.visible = false));
 }
+
+//set taxes approval rates
+function setApproval() {
+    let total = Object.values(taxes).reduce((sum, val) => { return sum + val }, 0);
+    document.getElementById('taxesApproval').value = (1 - total) * 100;
+    document.getElementById('taxesApprovalLabel').innerText = `${Math.floor((1 - total) * 100)}%`;
+}
+
+//update education stats
+function updateEducationStats() {
+    let educationTab = document.getElementById("education");
+    educationTab.innerHTML = '';
+
+    Object.keys(education).filter(key => education[key].type == "education").forEach(key => {
+        let item = education[key];
+        let citizensFlat = Object.values(citizens).flat();
+
+        let textElem = document.createElement('p');
+        textElem.innerHTML = `Graduated ${key} <span class="price">${citizensFlat.filter(i => i.education >= item.education + 1).length} / ${citizensFlat.length}</span>`
+        educationTab.appendChild(textElem);
+
+        let percentageLabel = document.createElement("p");
+        educationTab.appendChild(percentageLabel);
+
+        let percentageProgress = document.createElement("progress");
+        percentageProgress.max = 100;
+        percentageProgress.value = ((citizensFlat.filter(i => i.education >= item.education + 1).length / citizensFlat.length) || 0) * 100;
+        percentageLabel.appendChild(percentageProgress);
+
+        let percentageSpan = document.createElement("span");
+        percentageSpan.className = 'price';
+        percentageSpan.innerText = `${Math.floor(((citizensFlat.filter(i => i.education >= item.education + 1).length / citizensFlat.length) || 0) * 100)}%`
+        percentageLabel.appendChild(percentageSpan);
+    })
+}
+
+function summarizeBuilt() {
+    let tiles = sceneData.flat().filter(item => item.type != 0 && item.type !== 1);
+    let sum = {};
+
+    tiles.forEach((tile, i) => {
+        switch (tile.type) {
+            case 3:
+                sum[`${tile.zone} (zone)`] = (sum[`${tile.zone} (zone)`] || 0) + 1;
+                break;
+            case 4:
+                sum[tile.building] = (sum[tile.building] || 0) + 1;
+                break;
+            case 2:
+                sum['road'] = (sum['road'] || 0) + 1;
+                break;
+        }
+
+        if (i == tiles.length - 1) {
+            document.getElementById('built').innerHTML = '';
+            Object.keys(sum).forEach(type => {
+                let label = document.createElement('p');
+                label.innerHTML = `${type}<span class="price">${sum[type]}</span>`;
+                document.getElementById('built').appendChild(label);
+            });
+        }
+    });
+}
+
+//sync taxes with ui
+function setTaxes() {
+    document.getElementById("taxes").innerHTML = '';
+
+    //tax office notice
+    let info = document.createElement("p");
+    info.innerHTML = '<i class="fa-solid fa-circle-info"></i> To collect land and vehicle taxes, build a tax office.';
+    document.getElementById("taxes").appendChild(info);
+
+    //add input
+    Object.keys(taxes).forEach(item => {
+        let elem = document.createElement("p");
+        elem.innerText = item;
+
+        let label = document.createElement("span");
+        label.innerText = `${(taxes[item] * 100).toFixed(1)}%`;
+        label.className = "price";
+
+        let input = document.createElement("input");
+        input.type = "range";
+        input.value = taxes[item] * 100;
+        input.max = 20;
+        input.step = 0.5;
+        input.oninput = (e) => {
+            taxes[item] = parseFloat(e.target.value) / 100;
+            label.innerText = `${(taxes[item] * 100).toFixed(1)}%`;
+            setApproval();
+        };
+
+        elem.appendChild(input);
+        elem.appendChild(label);
+        document.getElementById("taxes").appendChild(elem);
+    });
+
+    //approval rates label
+    let approval = document.createElement("p");
+    approval.innerHTML = 'Approval rate';
+    let approvalSpan = document.createElement("span");
+    approvalSpan.className = 'price';
+    approvalSpan.id = 'taxesApprovalLabel';
+    let approvalProgress = document.createElement("progress");
+    approvalProgress.id = 'taxesApproval';
+    approvalProgress.max = 100;
+
+    //set approval
+    document.getElementById("taxes").appendChild(approval);
+    approval.appendChild(approvalProgress);
+    approval.appendChild(approvalSpan);
+    setApproval()
+}
