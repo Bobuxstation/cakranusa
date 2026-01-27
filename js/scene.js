@@ -1,3 +1,4 @@
+//create new game (blank scene)
 function newBlankScene(terrainSize, seed) {
     let ImprovedNoise = new THREE.ImprovedNoise();
     let scene = [];
@@ -7,11 +8,9 @@ function newBlankScene(terrainSize, seed) {
     for (var x = 0; x < terrainSize; x++) {
         scene[x] = scene[x] ? scene[x] : [];
         for (var y = 0; y < terrainSize; y++) {
-            let random = mulberry32(parseInt(`${x}${y}${seed}`));
-            let random2 = mulberry32(parseInt(`${index}${seed}`));
+            let random = worley01Seeded(x, y, 10, seed);
             let type = 0; // plains
             let additionalData = {};
-            let height = 0// parseFloat(ImprovedNoise.noise(x / 20, seed, y / 20).toFixed(3));
 
             if (x == Math.floor(terrainSize / 2)) {
                 type = 2; // road
@@ -19,14 +18,12 @@ function newBlankScene(terrainSize, seed) {
                 additionalData.qualityState = 100;
                 additionalData.qualityTick = 0;
                 additionalData.model = 'assets/roads/plainroad';
-            } else {
-                if (random < 0.25) {
-                    type = 1; // foliage
-                    additionalData["foliageType"] = foliage[Math.floor(random2 * foliage.length)];
-                }
+            } else if (random < 0.25) {
+                type = 1; // foliage
+                additionalData["foliageType"] = foliage[Math.floor(worley01Seeded(x, y, 1, seed) * foliage.length)];
             }
 
-            scene[x][y] = { type: type, index: index, height: height, ...additionalData };
+            scene[x][y] = { type: type, index: index, height: 0, ...additionalData };
             index++;
         }
     }
@@ -34,6 +31,7 @@ function newBlankScene(terrainSize, seed) {
     return scene;
 };
 
+//generate grass grid
 async function generateGrid(data) {
     // instance for checkerboard grid
     let terrainSize = data.length;
@@ -73,18 +71,10 @@ async function generateGrid(data) {
             itemData["posZ"] = posZ;
 
             if (itemData.type == 1) {
-                loaded[itemData.foliageType] ??= await gltfloader.loadAsync(itemData.foliageType);
-
-                let cloned = loaded[itemData.foliageType].scene.clone();
-                cloned.position.set(posX, itemData.height, posZ);
-                cloned.traverse((child) => {
-                    if (!child.isMesh) return;
-                    child.castShadow = true;
-                    child.receiveShadow = true;
-                })
-
-                meshLocations[index] = cloned;
-                scene.add(cloned);
+                let object = await loadWMat(itemData.foliageType);
+                positionTile({}, itemData, object)
+                meshLocations[index] = object;
+                scene.add(object);
             } else if (itemData.type == 2) placeRoad(itemData, { model: itemData.model });
             index++;
         }
@@ -96,16 +86,28 @@ async function generateGrid(data) {
 //will not be on the save file
 let meshLocations, gridInstance;
 let simulationSpeed = 1000;
+let worldSeed;
 
 //will be on the save file
-let sceneData, worldSeed, citizens = {};
-let money = 100_000_000;
-let date = 0;
+let sceneData, citizens = {}, money = 100_000_000, date = 0;
+let officials = {
+    transport: false,
+    facility: false,
+    education: false,
+    police: false
+};
+let budget = {
+    healthcare: 0.75,
+    police: 0.75,
+    firefighter: 0.75,
+    education: 0.75,
+    transportation: 0.75
+}
 let taxes = {
     salary: 0.10,
     land: 0.05,
-    transportation: 0.05
-}
+    transportation: 0.05,
+};
 
 async function initScene() {
     worldSeed = Math.random();
@@ -115,7 +117,11 @@ async function initScene() {
     await generateGrid(sceneData);
     allOfTheLights(scene);
     citizenSimulation(worldSeed);
-    setTaxes();
+    valueSliders(taxes, "taxes", "To collect land and vehicle taxes, build a tax office.", 20, true);
+    valueSliders(budget, "Budget", "High budgets will consume funds, While low budgets will encourage corruption and bribery.", 150, false);
+    
+    document.getElementById("posts").innerHTML = '';
+    newPost(sosmedPosts.intro, 'cakranusa', 'For tutorials, check the help menu', "Cakranusa", false);
 
     let calcSupply = calculateSupplied();
     setSupplyStat(calcSupply, calcSupply)

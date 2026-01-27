@@ -77,7 +77,7 @@ async function select(event) {
             let categoryWhitelist = !["Demolish", "Demolish Underground", "Supply"].includes(tool.category);
             let hasRoadConnection = checkNeighborForRoads(tile.posX, tile.posZ, true) == false || !(tile.type == 0 || tile.type == 1);
             if (categoryWhitelist && hasRoadConnection) {
-                newNotification(!(tile.type == 0 || tile.type == 1) ? errors.occupiedTile : errors.roadConnection);
+                newNotification(!(tile.type == 0 || tile.type == 1) ? "Cannot build here: Tile already occupied!" : "Cannot build here: Missing road connection!");
                 return;
             };
         }
@@ -85,7 +85,7 @@ async function select(event) {
         //subtract from money
         if (tool.category) {
             if (money - tool.price >= 0) money -= tool.price;
-            else { newNotification(errors.noMoney); return; };
+            else { newNotification("Cannot build here: Insufficient funds"); return; };
             if (tool.price != 0) newNotification(`-${tool.price.toLocaleString('id-ID', { style: 'currency', currency: 'IDR', maximumFractionDigits: 0 })}`);
         }
 

@@ -6,6 +6,13 @@ let housingDemand = 0, commercialDemand = 0, IndustrialDemand = 0, FarmlandDeman
 
 //create new citizen data
 function createNewCitizen(tile) {
+    let seed = Math.floor(Math.random() * 100000);
+
+    faker.seed(seed);
+    let username = faker.internet.username();
+    let fullName = faker.person.fullName();
+    let bio = faker.person.bio();
+
     let data = {
         home: tile.uuid,
         uuid: makeUniqueId(Object.values(citizens).flat()),
@@ -16,8 +23,9 @@ function createNewCitizen(tile) {
         education: 1, // basic education
         moral: randomIntFromInterval(50, 100),
 
-        name: faker.person.fullName(),
-        bio: faker.person.bio(),
+        username: username,
+        name: fullName,
+        bio: bio,
 
         location: findTileCoordinate(sceneData, tile),
         status: "home",
@@ -257,7 +265,7 @@ async function citizenSimulation(seed) {
         document.getElementById("dateString").innerText = calculateDate(date);
         document.getElementById("dateProgress").value = dayTick;
         if (dayTick < 40) dayTick += 1;
-        else { dayTick = 0; date += 1; }
+        else { dayTick = 0; date += 1; pickMessage(); }
     } catch (error) { }
 
     //loop simulation

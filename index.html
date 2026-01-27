@@ -24,6 +24,7 @@
     <script type="text/javascript" src="deps/CSS2DRenderer.js"></script>
     <script type="text/javascript" src="deps/fa.js"></script>
 
+    <script type="text/javascript" src="js/biome.js" defer></script>
     <script type="text/javascript" src="js/tutorial.js" defer></script>
     <script type="text/javascript" src="js/tileInfo.js" defer></script>
     <script type="text/javascript" src="js/pipes.js" defer></script>
@@ -36,6 +37,7 @@
     <script type="text/javascript" src="js/tool.js" defer></script>
     <script type="text/javascript" src="js/definitions.js" defer></script>
     <script type="text/javascript" src="js/scene.js" defer></script>
+    <script type="text/javascript" src="js/sosmed.js" defer></script>
 </head>
 
 <body>
@@ -65,7 +67,7 @@
                 <button>Take Screenshot</button>
             </div>
 
-            <div class="tab dual" id="stats">
+            <div class="tab dual" id="statistics">
                 <div class="left">
                     <button onclick="openTab('Population', 'statsTab')"
                         class="statsTabButton selected">Population</button>
@@ -75,14 +77,12 @@
                 </div>
                 <div class="right">
                     <div class="statsTab innertab" id="Population" style="display: block;">
-                        <p><i class="fa-solid fa-circle-info"></i> Invite more people to your city by building housing zones.</p>
+                        <p><i class="fa-solid fa-circle-info"></i> Invite more people to your city by building housing
+                            zones.</p>
                         <p>Population <span id="populationData" class="price"></span></p>
                         <p>Unemployed <span id="unemployedData" class="price"></span></p>
-                        <p>
-                            Unemployment rate 
-                            <progress id="unemploymentRate" max="100"></progress>
-                            <span class="price" id="unemploymentVal"></span>
-                        </p>
+                        <p>Unemployment rate <progress id="unemploymentRate" max="100"></progress><span class="price"
+                                id="unemploymentVal"></span></p>
                     </div>
                     <div class="statsTab innertab" id="education"></div>
                     <div class="statsTab innertab" id="supply"></div>
@@ -92,11 +92,20 @@
 
             <div class="tab dual" id="manage">
                 <div class="left">
-                    <button onclick="openTab('taxes', 'policyTab')" class="policyTabButton selected">Taxes</button>
+                    <button onclick="openTab('taxes', 'policyTab')" class="policyTabButton selected">taxes</button>
+                    <button onclick="openTab('Budget', 'policyTab')" class="policyTabButton">Budget</button>
+                    <button onclick="openTab('Officials', 'policyTab')" class="policyTabButton">Officials</button>
                 </div>
                 <div class="right">
                     <div class="policyTab innertab" id="taxes" style="display: block;"></div>
+                    <div class="policyTab innertab" id="Budget"></div>
+                    <div class="policyTab innertab" id="Officials"></div>
                 </div>
+            </div>
+
+            <div class="tab dual" id="Help">
+                <div class="left" id="tutorialLeft"></div>
+                <div class="right" id="tutorialRight"></div>
             </div>
 
             <div class="tab dual" id="?">
@@ -107,10 +116,23 @@
             <div class="tab right fitH" id="demolish">
                 <button onclick="setTool('', 'Demolish')">Above ground</button>
             </div>
+
+            <div class="tab right fitH" id="sosmed">
+                <div class="sosmedHeader">
+                    <button>sosmed</button>
+                    <button onclick='openTab("sosmed", "tab", true, "slideInDown", "slideOutUp")'
+                        style="width: 25px; float: right;">X</button>
+                    <button style="float: right;">@ahmad.sutrisno</button>
+                </div>
+                <div id="posts"></div>
+            </div>
         </div>
     </div>
 
-    <div class="navigation overlay">
+    <div id="newsDetails"></div>
+    <div class="overlay news" id="newsContent">&nbsp;</div>
+
+    <div class="navigation overlay top">
         <div>
             <span id="money"></span>
         </div>
@@ -127,11 +149,11 @@
     <div id="tabButtons" class="navigation bottom overlay">
         <div id="tools">
             <button onclick="openTab('menu', 'tab', true)" class="tabButton">menu</button>
-            <button onclick="openTab('?', 'tab', true)" style="width: 25px;" class="tabButton">?</button>
+            <button onclick="openTab('Help', 'tab', true)" class="tabButton">Help</button>
         </div>
 
         <div id="tools2">
-            <button onclick="openTab('stats', 'tab', true)" class="tabButton">stats</button>
+            <button onclick="openTab('statistics', 'tab', true)" class="tabButton">statistics</button>
             <button onclick="openTab('manage', 'tab', true)" class="tabButton">manage</button>
         </div>
 
@@ -158,8 +180,9 @@
 
     <div id="toolOverlay" class="navigation bottom overlay">
         <div>
-            <button id="hideTool">X</button>&nbsp;
-            <span id="toolname">tool</span>
+            <button id="hideTool">
+                < Return</button>&nbsp;
+                    <span id="toolname">tool</span>
         </div>
     </div>
 

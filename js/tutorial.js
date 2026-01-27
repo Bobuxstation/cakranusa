@@ -16,12 +16,6 @@ var tutorial = {
     `
 }
 
-var errors = {
-    "occupiedTile": "Cannot build here: Tile already occupied!",
-    "roadConnection": "Cannot build here: Missing road connection!",
-    "noMoney": "Cannot build here: Insufficient funds"
-}
-
 Object.keys(tutorial).forEach((item, i) => {
     const button = document.createElement("button");
     button.className = 'tutorialTabButton'

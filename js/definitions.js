@@ -97,6 +97,16 @@ let commercial = {
             "water pipe": 30,
             "sewage pipe": 30
         }
+    },
+    'assets/zoning/commercial/shop-5': {
+        "level": 3,
+        "slots": 12,
+        "pay": 60000,
+        "consumption": {
+            "electric cable": 30,
+            "water pipe": 30,
+            "sewage pipe": 30
+        }
     }
 };
 
@@ -183,9 +193,11 @@ let farm = {
 //========================
 
 let foliage = [
-    //'assets/Tree.glb',
-    //'assets/Tree2.glb',
-    'assets/Tree3.glb'
+    'assets/trees/j1',
+    'assets/trees/j2',
+    'assets/trees/j3',
+    'assets/trees/j4',
+    'assets/trees/j5',
 ];
 
 //zone types
