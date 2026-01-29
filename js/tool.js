@@ -197,6 +197,7 @@ function cleanTileData(tile, resetType = false, reZone = false) {
     if (tile.qualityTick) delete tile.qualityState;
     if (tile.age) delete tile.age;
     if (tile.model) delete tile.model;
+    if (tile.warnings) delete tile.warnings;
 
     if (Object.keys(citizens).find(item => item == tile.index)) delete citizens[tile.index];
     if (typeof meshLocations[tile.index] != "undefined" && typeof warningLabels[tile.index] != "undefined") {
@@ -240,14 +241,14 @@ function tileSelection(tile, event) {
     if (meshLocations[tile.index]) {
         floatingDiv.style.left = `0px`;
         floatingDiv.style.top = `0px`;
-        floatingDiv.innerText = '';
+        floatingDiv.innerText = '...';
 
         floatingDiv.style.left = `${event.clientX + 10}px`;
         floatingDiv.style.top = `${event.clientY - floatingDiv.offsetHeight - 10}px`;
         floatingDiv.style.display = 'block';
 
-        tileInfo(tile);
         outlinePass.selectedObjects = [meshLocations[tile.index]];
+        tileInfo(tile);
     } else {
         floatingDiv.style.display = 'none';
         outlinePass.selectedObjects = [];
@@ -259,6 +260,7 @@ async function placeZone(tile, zone = tool.type) {
     // remove foliage
     if (tile.type == 3 & tile.zone == zone) return;
     cleanTileData(tile)
+
     tile.type = 3; //zoned for buildings
     tile.zone = zone;
 
@@ -268,6 +270,25 @@ async function placeZone(tile, zone = tool.type) {
     scene.add(object);
 
     positionTile(connectedRoad, tile, object)
+    animMove(object, true);
+
+    meshLocations[tile.index] = object;
+}
+
+// place foliage
+async function placeFoliage(tile, type = tool.type) {
+    if (tile.type == 1 & tile.foliageType == type & meshLocations[tile.index]) return;
+    cleanTileData(tile);
+
+    tile.type = 1; //zoned for buildings
+    tile.zone = type;
+    tile.foliageType = type;
+
+    // add billboard to tile
+    let object = await loadWMat(foliage[type].model);
+    scene.add(object);
+
+    positionTile({}, tile, object)
     animMove(object, true);
 
     meshLocations[tile.index] = object;

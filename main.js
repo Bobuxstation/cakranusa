@@ -10,8 +10,10 @@ function createWindow() {
     height: 600,
     backgroundColor: '#1d1d1d',
     autoHideMenuBar: true,
-    webPreferences: { nodeIntegration: true, contextIsolation: false }
+    webPreferences: { nodeIntegration: true, contextIsolation: false, enableRemoteModule: true }
   });
+  require('@electron/remote/main').initialize()
+  require('@electron/remote/main').enable(win.webContents)
 
   win.loadFile('index.html')
 }

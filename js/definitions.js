@@ -23,8 +23,7 @@ let houses = {
         "price": 850_000_000,
         "consumption": {
             "electric cable": 10,
-            "water pipe": 10,
-            "sewage pipe": 10
+            "water pipe": 10
         }
     },
     'assets/zoning/residential/house-2': {
@@ -32,17 +31,31 @@ let houses = {
         "price": 900_000_000,
         "consumption": {
             "electric cable": 15,
-            "water pipe": 15,
-            "sewage pipe": 15
+            "water pipe": 15
         }
     },
     'assets/zoning/residential/house-3': {
         "slots": 6,
-        "price": 1_200_000,
+        "price": 1_200_000_000,
         "consumption": {
             "electric cable": 15,
-            "water pipe": 15,
-            "sewage pipe": 15
+            "water pipe": 15
+        }
+    },
+    'assets/zoning/residential/house-4': {
+        "slots": 4,
+        "price": 900_000_000,
+        "consumption": {
+            "electric cable": 15,
+            "water pipe": 15
+        }
+    },
+    'assets/zoning/residential/house-5': {
+        "slots": 6,
+        "price": 1_200_000_000,
+        "consumption": {
+            "electric cable": 15,
+            "water pipe": 15
         }
     },
     'assets/zoning/residential/kost-1': {
@@ -50,8 +63,7 @@ let houses = {
         "price": 4_000_000_000,
         "consumption": {
             "electric cable": 35,
-            "water pipe": 35,
-            "sewage pipe": 35
+            "water pipe": 35
         }
     }
 };
@@ -64,8 +76,7 @@ let commercial = {
         "pay": 30000,
         "consumption": {
             "electric cable": 15,
-            "water pipe": 15,
-            "sewage pipe": 15
+            "water pipe": 15
         }
     },
     'assets/zoning/commercial/shop-2': {
@@ -74,8 +85,7 @@ let commercial = {
         "pay": 30000,
         "consumption": {
             "electric cable": 30,
-            "water pipe": 30,
-            "sewage pipe": 30
+            "water pipe": 30
         }
     },
     'assets/zoning/commercial/shop-3': {
@@ -84,8 +94,7 @@ let commercial = {
         "pay": 60000,
         "consumption": {
             "electric cable": 30,
-            "water pipe": 30,
-            "sewage pipe": 30
+            "water pipe": 30
         }
     },
     'assets/zoning/commercial/shop-4': {
@@ -94,8 +103,7 @@ let commercial = {
         "pay": 60000,
         "consumption": {
             "electric cable": 30,
-            "water pipe": 30,
-            "sewage pipe": 30
+            "water pipe": 30
         }
     },
     'assets/zoning/commercial/shop-5': {
@@ -104,8 +112,7 @@ let commercial = {
         "pay": 60000,
         "consumption": {
             "electric cable": 30,
-            "water pipe": 30,
-            "sewage pipe": 30
+            "water pipe": 30
         }
     }
 };
@@ -118,8 +125,7 @@ let industrial = {
         "pay": 30000,
         "consumption": {
             "electric cable": 30,
-            "water pipe": 30,
-            "sewage pipe": 30
+            "water pipe": 30
         }
     },
     'assets/zoning/industrial/industrial-2': {
@@ -128,8 +134,7 @@ let industrial = {
         "pay": 30000,
         "consumption": {
             "electric cable": 30,
-            "water pipe": 30,
-            "sewage pipe": 30
+            "water pipe": 30
         }
     },
     'assets/zoning/industrial/industrial-3': {
@@ -138,8 +143,7 @@ let industrial = {
         "pay": 30000,
         "consumption": {
             "electric cable": 30,
-            "water pipe": 30,
-            "sewage pipe": 30
+            "water pipe": 30
         }
     }
 };
@@ -152,8 +156,7 @@ let farm = {
         "pay": 30000,
         "consumption": {
             "electric cable": 5,
-            "water pipe": 15,
-            "sewage pipe": 5
+            "water pipe": 15
         }
     },
     'assets/zoning/farm/farm-2': {
@@ -162,8 +165,7 @@ let farm = {
         "pay": 30000,
         "consumption": {
             "electric cable": 5,
-            "water pipe": 15,
-            "sewage pipe": 5
+            "water pipe": 15
         }
     },
     'assets/zoning/farm/farm-3': {
@@ -172,8 +174,7 @@ let farm = {
         "pay": 30000,
         "consumption": {
             "electric cable": 5,
-            "water pipe": 15,
-            "sewage pipe": 5
+            "water pipe": 15
         }
     },
     'assets/zoning/farm/farm-4': {
@@ -182,8 +183,7 @@ let farm = {
         "pay": 30000,
         "consumption": {
             "electric cable": 5,
-            "water pipe": 15,
-            "sewage pipe": 5
+            "water pipe": 15
         }
     }
 };
@@ -192,13 +192,33 @@ let farm = {
 // Build Menu
 //========================
 
-let foliage = [
-    'assets/trees/j1',
-    'assets/trees/j2',
-    'assets/trees/j3',
-    'assets/trees/j4',
-    'assets/trees/j5',
-];
+let foliage = {
+    'Forest': {
+        "model": "assets/trees/j1",
+        "description": "Trees for the environment and rainwater absorption",
+        price: 150_000
+    },
+    'Oak Forest': {
+        "model": "assets/trees/j2",
+        "description": "Trees for the environment and rainwater absorption",
+        price: 150_000
+    },
+    'Acacia Forest': {
+        "model": "assets/trees/j3",
+        "description": "Trees for the environment and rainwater absorption",
+        price: 150_000
+    },
+    'Pine Forest': {
+        "model": "assets/trees/j4",
+        "description": "Trees for the environment and rainwater absorption",
+        price: 150_000
+    },
+    'Swamp forest': {
+        "model": "assets/trees/j5",
+        "description": "Trees for the environment and rainwater absorption",
+        price: 150_000
+    }
+};
 
 //zone types
 let zones = {
@@ -349,12 +369,15 @@ let services = {
         "description": "Pumps water from underground",
         "type": "water pipe",
         "capacity": 150
-    },
-    "sewage treatment plant": {
-        "model": "assets/facility/watertreatment",
-        "description": "Recycles sewage back to clean water",
-        "type": "sewage pipe",
-        "capacity": 150
+    }
+}
+
+//tourism
+let tourism = {
+    "Football field": {
+        "model": "assets/facility/football",
+        "description": "Field for playing football",
+        "type": "tourism",
     }
 }
 
@@ -380,24 +403,20 @@ let underground = {
         "capacity": 150,
         "label": "Water",
         "variableModel": true
-    },
-    "sewage pipe": {
-        "model": "assets/pipe/sewage",
-        "description": "Moves sewage to treatment plant",
-        "capacity": 150,
-        "label": "Sewage",
-        "variableModel": true
     }
 }
 
-Object.keys(underground).forEach(item => {
-    let button = document.createElement("button");
-    button.innerText = item;
-    button.onclick = () => setTool(item, 'Demolish Underground');
+function loadUnderground() {
+    document.getElementById("demolishUnderground").innerHTML = '';
+    Object.keys(underground).forEach(item => {
+        let button = document.createElement("button");
+        button.innerText = item;
+        button.onclick = () => setTool(item, 'Demolish Underground');
 
-    document.getElementById("demolish").appendChild(button);
-    undergroundGroups[item] = {};
-})
+        document.getElementById("demolishUnderground").appendChild(button);
+        undergroundGroups[item] = {};
+    })
+};
 
 //========================
 // Build Menu Definitions
@@ -408,10 +427,12 @@ let buildmenu = {
     "Zones": zones,
     "Transport": transport,
     "Facility": facility,
+    "Services": services,
+    "Supply": underground,
     "Education": education,
     "Leisure": leisure,
-    "Services": services,
-    "Supply": underground
+    "Foliage": foliage,
+    "Tourism": tourism
 }
 
 //for build menu
@@ -421,8 +442,10 @@ let buildMethod = {
     "Facility": placeFacility,
     "Education": placeFacility,
     "Leisure": placeFacility,
+    "Foliage": placeFoliage,
     "Services": placeFacility,
-    "Supply": buildUnderground
+    "Supply": buildUnderground,
+    "Tourism": placeFacility
 }
 
 //========================

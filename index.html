@@ -24,6 +24,8 @@
     <script type="text/javascript" src="deps/CSS2DRenderer.js"></script>
     <script type="text/javascript" src="deps/fa.js"></script>
 
+    <script type="text/javascript" src="js/rain.js" defer></script>
+    <script type="text/javascript" src="js/sosmed.js" defer></script>
     <script type="text/javascript" src="js/biome.js" defer></script>
     <script type="text/javascript" src="js/tutorial.js" defer></script>
     <script type="text/javascript" src="js/tileInfo.js" defer></script>
@@ -37,7 +39,7 @@
     <script type="text/javascript" src="js/tool.js" defer></script>
     <script type="text/javascript" src="js/definitions.js" defer></script>
     <script type="text/javascript" src="js/scene.js" defer></script>
-    <script type="text/javascript" src="js/sosmed.js" defer></script>
+    <script type="text/javascript" src="js/savefile.js" defer></script>
 </head>
 
 <body>
@@ -61,9 +63,8 @@
             </div>
 
             <div class="tab right fitH" id="menu">
-                <button>Quit</button>
+                <button onclick="quitGame()">Quit</button>
                 <button>Save</button>
-                <button>Load</button>
                 <button>Take Screenshot</button>
             </div>
 
@@ -115,30 +116,44 @@
 
             <div class="tab right fitH" id="demolish">
                 <button onclick="setTool('', 'Demolish')">Above ground</button>
+                <hr>
+                <div id="demolishUnderground"></div>
             </div>
 
             <div class="tab right fitH" id="sosmed">
                 <div class="sosmedHeader">
-                    <button>sosmed</button>
+                    sosmed
+                    <button onclick='openTab("Posts", "socialTab")' class="selected socialTabButton">Posts</button>
+                    <button
+                        onclick='openTab("Profile", "socialTab"); document.getElementById("Profile").innerHTML = "<center><p>To check a user profile here, select it from the post or origin building.</p></center>"'
+                        class="socialTabButton">Profile</button>
                     <button onclick='openTab("sosmed", "tab", true, "slideInDown", "slideOutUp")'
                         style="width: 25px; float: right;">X</button>
-                    <button style="float: right;">@ahmad.sutrisno</button>
                 </div>
-                <div id="posts"></div>
+                <div id="Posts" class="socialTab"></div>
+                <div id="Profile" class="socialTab" style="display: none;">
+                    <center>
+                        <p>To check a user profile here, select it from the post or origin building.</p>
+                    </center>
+                </div>
             </div>
+
+            <div class="tab right fitH" id="saves"></div>
         </div>
     </div>
 
-    <div id="newsDetails"></div>
-    <div class="overlay news" id="newsContent">&nbsp;</div>
+    <div id="newsDetails" style="display: none;"></div>
+    <div class="overlay news" id="newsContent" style="display: none;">&nbsp;</div>
 
-    <div class="navigation overlay top">
+    <div class="navigation overlay top" id="topNav" style="display: none;">
         <div>
             <span id="money"></span>
         </div>
-        <div class="populationCounter">
-            <i class="fa-solid fa-people-roof"></i>
+        <div>
             <span id="population"></span>
+        </div>
+        <div>
+            <span id="airquality"></span>
         </div>
         <div id="date">
             <progress id="dateProgress" max="40"></progress>
@@ -146,10 +161,10 @@
         </div>
     </div>
 
-    <div id="tabButtons" class="navigation bottom overlay">
+    <div id="tabButtons" class="navigation bottom overlay" style="display: none;">
         <div id="tools">
             <button onclick="openTab('menu', 'tab', true)" class="tabButton">menu</button>
-            <button onclick="openTab('Help', 'tab', true)" class="tabButton">Help</button>
+            <button onclick="openTab('Help', 'tab', true)" class="tabButton" style="display: none;">Help</button>
         </div>
 
         <div id="tools2">
@@ -186,6 +201,24 @@
         </div>
     </div>
 
+    <div id="titleOverlay" class="navigation bottom overlay" style="display: none;">
+        <div id="titleButtons">
+            <button id="hideTool" onclick="newGame();">New Game</button>
+            <button id="hideTool" onclick="openTab('saves', 'tab', true)">saves</button>
+            <button id="hideTool">About</button>
+            <button id="hideTool">Quit</button>
+        </div>
+        <div id="titleLoad" style="display: none;">
+            Loading...
+        </div>
+    </div>
+
+    <div id="intro">
+            <img id="logoImage" src="assets/studio.png"><br>
+    </div>
+
     <div id="floatingDiv"></div>
     <div id="notifications"></div>
+
+    <canvas id="rainOverlay" style="display: none;"></canvas>
 </body>

@@ -14,6 +14,8 @@ renderer.setPixelRatio(window.devicePixelRatio);
 renderer.outputEncoding = THREE.sRGBEncoding;
 renderer.shadowMap.enabled = true;
 renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+renderer.domElement.style.pointerEvents = 'none';
+renderer.domElement.style.filter = 'blur(2px)';
 document.body.appendChild(renderer.domElement);
 
 //warning and label overlays
@@ -48,6 +50,9 @@ composer.addPass(outlinePass);
 var gamma_correction = new THREE.ShaderPass(THREE.GammaCorrectionShader);
 composer.addPass(gamma_correction);
 
+//pollution fog 
+scene.fog = new THREE.FogExp2(0xcccccc, 0.01);
+
 // Render the scene
 function animate() {
     controls.update();
@@ -55,11 +60,10 @@ function animate() {
     labelRenderer.render(scene, camera);
 
     cleanVehicles();
-    if (typeof sceneData != 'undefined') tileInfo(sceneData.flat()[updateInfo]);
     if (typeof tool != "undefined") (tool.category == "Supply" || tool.category == "Demolish Underground") ? setModelVisibility(false) : setModelVisibility(true);
-    document.getElementById("money").innerText = money.toLocaleString('id-ID', { style: 'currency', currency: 'IDR', maximumFractionDigits: 0 });
 
     requestAnimationFrame(animate);
+    drawRain();
 }
 
 animate();
@@ -78,6 +82,10 @@ function onWindowResize() {
 
     floatingDiv.style.display = 'none';
     outlinePass.selectedObjects = [];
+
+    rainCanvas.width = window.innerWidth;
+    rainCanvas.height = window.innerHeight;
+    resizeRain();
 }
 
 window.addEventListener('resize', onWindowResize, false);

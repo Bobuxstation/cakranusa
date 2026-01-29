@@ -43,7 +43,7 @@ function createNewCitizen(tile) {
 
 //simulate individual citizen
 let vehicles = {};
-async function citizenStep(data) {
+async function citizenStep(data, index) {
     //if health 0, disappear
     if (data.health <= 0) { deleteCitizen(data); return; };
 
@@ -71,6 +71,14 @@ async function citizenStep(data) {
         if (findFacility("taxoffice")) {
             money += transportTax + landTax;
             data.money -= transportTax + landTax;
+        }
+
+        //pay budgets
+        if (index == Object.values(citizens).flat().length - 1) {
+            Object.values(budget).forEach(i => {
+                if (money - i * 1_000_000 <= 0) return;
+                money -= i * 1_000_000;
+            })
         }
     }
 
@@ -109,13 +117,21 @@ async function citizenStep(data) {
             break;
         case "moving":
             //create vehicle if first step
-            let currentStep = data.targetRoute.indexOf(data.location) == -1 ? 0 : data.targetRoute.indexOf(data.location);
-            if (!vehicles[data.uuid]) { let mesh = await loadWMat(data.vehicle); mesh.scale.setScalar(0.156); scene.add(mesh); vehicles[data.uuid] = mesh; }
+            let vehicleIsNew = false;
+            let findPos = data.targetRoute.find(item => item.x == data.location.x && item.y == data.location.y);
+            let currentStep = data.targetRoute.indexOf(findPos) == -1 ? 0 : data.targetRoute.indexOf(findPos);
+            if (!vehicles[data.uuid]) {
+                vehicleIsNew = true;
+                let mesh = await loadWMat(data.vehicle);
+                mesh.scale.setScalar(0.156);
+                scene.add(mesh);
+                vehicles[data.uuid] = mesh;
+            }
 
             //delay step if road quality is low
             let hasArrived = data.location.x === data.targetRoute.at(-1).x && data.location.y === data.targetRoute.at(-1).y;
             let delayTime = Math.floor((100 - sceneData[data.targetRoute[currentStep].y][data.targetRoute[currentStep].x].qualityState || 100) / 10);
-            if (delayTime != 0 && !hasArrived) { data.roadWait = (data.roadWait < delayTime - 1) ? data.roadWait + 1 : 0; if (data.roadWait < delayTime - 1) break; }
+            if (delayTime != 0 && !hasArrived && !vehicleIsNew) { data.roadWait = (data.roadWait < delayTime - 1) ? data.roadWait + 1 : 0; if (data.roadWait < delayTime - 1) break; }
 
             //steps
             if (hasArrived) {
@@ -140,8 +156,11 @@ async function citizenStep(data) {
                 data.location = targetPos;
 
                 //set vehicle position (first step) or animate movement
-                if (currentStep == 0) { vehicles[data.uuid].position.set(changePos.x, changePos.y, changePos.z); break; }
-                else { lerpVehicle(vehicles[data.uuid].position.clone(), changePos, data.targetRoute[currentStep].rot, data); }
+                if (vehicleIsNew) {
+                    vehicles[data.uuid].position.set(changePos.x, changePos.y, changePos.z);
+                } else {
+                    lerpVehicle(vehicles[data.uuid].position.clone(), changePos, data.targetRoute[currentStep].rot, data);
+                }
             }
             break;
         case "work":
@@ -163,7 +182,7 @@ async function citizenStep(data) {
             if (data.sessionTick <= randomIntFromInterval(15, 25)) break;
 
             //find route and change to moving mode
-            let addition = data.education + calculateFacilityAddition(data.location.y, data.location.x);
+            let addition = data.education + calculateFacilityAddition(data.location.y, data.location.x) * budget.education;
             routeHome = astar(convertPathfind(sceneData, sceneData[data.location.y][data.location.x], checkHome));
             if (routeHome != null) startMoving("home", routeHome, data); else break;
             if (data.moral <= 90) data.moral += calculateFacilityAddition(data.location.y, data.location.x, true);
@@ -177,7 +196,7 @@ async function citizenStep(data) {
             //find route and change to moving mode
             routeHome = astar(convertPathfind(sceneData, sceneData[data.location.y][data.location.x], checkHome));
             if (routeHome != null) startMoving("home", routeHome, data); else break;
-            if (data.health < 100) data.health = 100;
+            if (data.health < 100) data.health = budget.healthcare * 100;
             break;
         case "pray":
             //after 15-25 ticks find path home
@@ -210,10 +229,12 @@ function setSpeed(speed) {
 
 //simulate world
 var dayTick = 0;
-async function citizenSimulation(seed) {
+var simulationRunning = true;
+function citizenSimulation(seed) {
+    if (!simulationRunning) return;
     try {
         //skip if paused
-        if (simulationSpeed == 0) { requestAnimationFrame(citizenSimulation); return; };
+        if (simulationSpeed == 0 && simulationRunning) { requestAnimationFrame(citizenSimulation); return; };
 
         // find empty land
         let housingtile = findZone("housing", true, true);
@@ -248,28 +269,44 @@ async function citizenSimulation(seed) {
         //simulate citizen and workpalce tiles
         sceneData.flat().filter(item => (typeof item.quality != "undefined")).forEach(tile => qualityDegrade(tile));
         sceneData.flat().filter(item => (item.type == 4)).forEach(facility => facilityTick(facility));
-        Object.values(citizens).flat().forEach(citizen => citizenStep(citizen));
+        Object.values(citizens).flat().forEach((citizen, i) => citizenStep(citizen, i));
 
         //update stats
         let citizensFlat = Object.values(citizens).flat();
+        document.getElementById("money").innerText = money.toLocaleString('id-ID', { style: 'currency', currency: 'IDR', maximumFractionDigits: 0 });
         document.getElementById("populationData").innerText = citizensFlat.length;
-        document.getElementById("population").innerText = citizensFlat.length;
+        document.getElementById("airquality").innerText = `Air Quality: ${((1 - calculatePollution()) * 100).toFixed(1)}%`;
+        document.getElementById("population").innerText = `Population: ${citizensFlat.length}`;
         document.getElementById("unemployedData").innerText = citizensFlat.filter(item => item.job == false).length;
         document.getElementById("unemploymentVal").innerText = `${Math.floor(((citizensFlat.filter(item => item.job == false).length / citizensFlat.length) || 0) * 100)}%`;
         document.getElementById("unemploymentRate").value = ((citizensFlat.filter(item => item.job == false).length / citizensFlat.length) || 0) * 100;
+
+        //stats menu
         updateEducationStats();
         summarizeBuilt();
+
+        //pollution
+        scene.fog.density = 0.001 * (calculatePollution() * 25);
 
         //day cycle
         document.getElementById("dateProgress").style.width = `${document.getElementById("date").getBoundingClientRect().width}px`;
         document.getElementById("dateString").innerText = calculateDate(date);
         document.getElementById("dateProgress").value = dayTick;
         if (dayTick < 40) dayTick += 1;
-        else { dayTick = 0; date += 1; pickMessage(); }
-    } catch (error) { }
+        else {
+            dayTick = 0;
+            date += 1;
+            pickMessage();
+
+            //weather for that day
+            rainCanvas.style.display = isRaining(seed, date) ? "block" : "none";
+        }
+    } catch (error) {
+        console.log(error)
+    }
 
     //loop simulation
-    setTimeout(() => requestAnimationFrame(citizenSimulation), simulationSpeed);
+    if (simulationRunning) setTimeout(() => requestAnimationFrame(citizenSimulation), simulationSpeed);
 }
 
 //calculate total capacity of all supply networks
@@ -354,10 +391,6 @@ function zoneTileTick(tile, calcSupply, originalSupply, isLast) {
         //employment info
         let tileJobless = citizens[tile.index] ? citizens[tile.index].filter(u => u.job == false).length : 0;
         if (tileJobless != 0) warnings.push(`${tileJobless} citizen(s) unemployed!`);
-
-        //medical info
-        let tileHealth = citizens[tile.index] ? citizens[tile.index].filter(u => u.health < 50).length : 0;
-        if (tileHealth != 0) warnings.push(`${tileHealth} citizen(s) require medical attention!`);
 
         // if building is empty, sell tile
         if (checkResidents(tile).length == 0) {

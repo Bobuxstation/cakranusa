@@ -73,9 +73,9 @@ async function setPipeModel(directions, tile, type, idUpdate) {
 
     object.position.set(tile["posX"], tile["posY"] + 0.12, tile["posZ"]);
     object.scale.setScalar(0.1565);
-    scene.add(object);
 
     undergroundGroups[type][tile.index] = object;
+    scene.add(object);
 }
 
 //calculate supply network sizes

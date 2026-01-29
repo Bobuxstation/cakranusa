@@ -44,6 +44,20 @@ function infoTable(array) {
     return elem;
 }
 
+//citizen profile
+function profileShortcut(citizen) {
+    let elem = document.createElement("u");
+    elem.innerText = citizen.name;
+    elem.className = 'profileShortcut';
+    elem.style.cursor = "pointer";
+    elem.onclick = () => { profilePage(citizen); }
+
+    let br = document.createElement("br");
+    elem.appendChild(br);
+
+    return elem;
+}
+
 //parse tile data for popup
 let updateInfo = 0;
 function tileInfo(tile) {
@@ -51,14 +65,15 @@ function tileInfo(tile) {
         updateInfo = tile.index;
     } else if (floatingDiv.style.display == 'block') {
         floatingDiv.innerText = '';
+
         switch (tile.type) {
             case 4:
                 floatingDiv.appendChild(infoHeading(tile.building));
                 if (!tile.buildingData.slots) break;
+
                 floatingDiv.appendChild(infoProgress(citizensInTile(tile), tile.buildingData.slots));
-                floatingDiv.appendChild(infoTable({
-                    "Citizen(s) using facility": `${citizensInTile(tile)}/${tile.buildingData.slots}`,
-                }));
+                floatingDiv.appendChild(infoTable({ "Citizen(s) using facility": `${citizensInTile(tile)}/${tile.buildingData.slots}`, }));
+                citizensInTile(tile, true).forEach(citizen => { floatingDiv.appendChild(profileShortcut(citizen)) });
                 break;
             case 3:
                 if (!tile.occupied) {
@@ -68,21 +83,21 @@ function tileInfo(tile) {
                 } else {
                     //occupied zone
                     floatingDiv.appendChild(infoHeading(`${tile.zone}`));
-                    let tableData = {};
 
                     //resident info and warning labels
                     tile.warnings.forEach(e => floatingDiv.appendChild(infoWarning(e)));
                     if (tile.zone == "housing") {
-                        tableData["Residents"] = `${checkResidents(tile).length}/${tile.slot}`;
                         floatingDiv.appendChild(infoProgress(checkResidents(tile).length, tile.slot));
+                        floatingDiv.appendChild(infoTable({ "Residents": `${checkResidents(tile).length}/${tile.slot}` }))
+                        checkResidents(tile).forEach(citizen => { floatingDiv.appendChild(profileShortcut(citizen)) });
                     } else {
-                        tableData["Workers"] = `${checkEmployees(tile).length}/${tile.slot}`;
-                        tableData["Min. education level"] = `${tile.buildingData.level}`;
                         floatingDiv.appendChild(infoProgress(checkEmployees(tile).length, tile.slot));
+                        floatingDiv.appendChild(infoTable({
+                            "Workers": `${checkEmployees(tile).length}/${tile.slot}`,
+                            "Min. education level": `${Object.keys(education).find(item => education[item].education == tile.buildingData.level - 1) || "basic education"}`
+                        }))
+                        checkEmployees(tile).forEach(citizen => { floatingDiv.appendChild(profileShortcut(citizen)) });
                     }
-
-                    //add table data
-                    floatingDiv.appendChild(infoTable(tableData));
                 };
                 break;
             case 2:

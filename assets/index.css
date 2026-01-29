@@ -4,6 +4,21 @@
     font-weight: lighter;
 }
 
+#intro {
+    z-index: 999;
+    position: absolute;
+    display: flex;
+    justify-content: center;
+    place-items: center;
+    height: 100dvh;
+    width: 100dvw;
+}
+
+#intro img {
+    width: 25vw;
+    border-radius: 5px;
+}
+
 * {
     margin: 0;
     padding: 0;
@@ -14,25 +29,35 @@
     outline: none;
 }
 
+html, body {
+    background: black;
+}
+
 #sosmed {
     max-height: none;
     height: calc(-155px + 100vh) !important;
-    width: 50vw;
+    width: 40vw;
     animation: slideInDown 0.25s both;
 }
 
 .sosmedHeader {
     margin-bottom: 0;
-    background: #00000015;
+    background: #00000020;
     padding: 5px;
+}
+
+#Profile {
+    padding: 10px;
 }
 
 .post {
     width: calc(100% - 10px) !important;
+    cursor: auto !important;
 }
 
 .postTop {
     margin-bottom: 5px;
+    cursor: pointer;
 }
 
 .postTop img {
@@ -42,6 +67,10 @@
 
 .postTop span, .postTop b {
     margin-left: 5px;
+}
+
+.postDate {
+    opacity: 0.5;
 }
 
 #newsDetails {
@@ -63,6 +92,7 @@
     background: none !important;
     backdrop-filter: none !important;
     bottom: 65px;
+    pointer-events: none;
 }
 
 .innertab p {
@@ -71,13 +101,6 @@
 
 .innertab p:nth-child(even) {
     background-color: #00000015;
-}
-
-.populationCounter i {
-    float: left;
-    font-size: 12px;
-    padding-top: 2px;
-    padding-right: 5px;
 }
 
 .time button {
@@ -129,6 +152,7 @@
 
 .fitH {
     height: fit-content !important;
+    padding-bottom: 0 !important;
 }
 
 canvas {
@@ -143,7 +167,6 @@ canvas {
     height: fit-content;
     justify-content: center;
     display: flex;
-    pointer-events: none;
     overflow: visible;
     z-index: 1000;
     place-items: center;
@@ -232,8 +255,7 @@ button:active,
     margin-left: 10px;
 }
 
-#money,
-#date {
+.top span {
     float: right;
     padding-bottom: 3px;
 }
@@ -297,9 +319,10 @@ button:active,
 .right,
 .left {
     width: fit-content;
-    height: 25dvw;
+    height: 325px;
     float: left;
     overflow: auto;
+    padding-bottom: 20px;
 }
 
 .dual button {
@@ -331,6 +354,7 @@ button:active,
 
 #menu button,
 #demolish button,
+#saves button,
 .post {
     width: 25vw;
     text-align: left;
@@ -365,6 +389,13 @@ button:active,
 input[type=number]::-webkit-inner-spin-button,
 input[type=number]::-webkit-outer-spin-button {
     opacity: 1;
+}
+
+#rainOverlay {
+    position: absolute;
+    z-index: 999;
+    top: 0;
+    pointer-events: none;
 }
 
 @keyframes slideInUp {

@@ -24,8 +24,17 @@ function typewrite(target, text) {
     function type() {
         if (i >= text.length) return;
         target.innerHTML += text.charAt(i);
-        i++; setTimeout(type, 50);
+        i++; 
+        if (simulationRunning && document.getElementById("newsContent").style.display != "none") setTimeout(type, 15);
     }; type();
+}
+
+function calculateLowestQuality(citizen, budget) {
+    let taxRate = (1 - Object.values(taxes).reduce((sum, val) => { return sum + val }, 0)); //tax rate & department budgets affects official
+
+    education[highestEducation].education
+    citizen.education
+    citizen.moral
 }
 
 // open tab
@@ -190,6 +199,12 @@ function mulberry32(a) {
     return ((t ^ t >>> 14) >>> 0) / 4294967296;
 }
 
+//check if raining for today
+function isRaining(worldSeed, day) {
+  const r = mulberry32(parseInt(`${worldSeed}${day}`));
+  return r < 0.3;
+}
+
 // lerp animation function (ease)
 function lerp(a, b, t) {
     return a + (b - a) * t;
@@ -257,6 +272,30 @@ function getMajorityValue(arr, prop) {
 
     // Return majority if it exists, otherwise return first value
     return (maxCount > n / 2) ? majorityValue : arr[0][prop];
+}
+
+function areObjectsEqual(obj1, obj2) {
+    const keys1 = Object.keys(obj1);
+    const keys2 = Object.keys(obj2);
+
+    if (keys1.length !== keys2.length) {
+        return false;
+    }
+
+    for (const key of keys1) {
+        const val1 = obj1[key];
+        const val2 = obj2[key];
+
+        if (typeof val1 === 'object' && val1 !== null && typeof val2 === 'object' && val2 !== null) {
+            if (!areObjectsEqual(val1, val2)) {
+                return false;
+            }
+        } else if (val1 !== val2) {
+            return false;
+        }
+    }
+
+    return true;
 }
 
 //========================

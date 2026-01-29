@@ -118,7 +118,7 @@ function findJob(data) {
 }
 
 //find schools
-function findSchool(level) {
+function findSchool(level, checkNews = false) {
     //find school tile
     let matches = sceneData.flat().filter(item => (item.type == 4 & item.buildingType == "education" & typeof item.buildingData != "undefined"));
     matches = matches.filter(item => item.buildingData.education === level);
@@ -131,7 +131,7 @@ function findSchool(level) {
 
     //check if not full
     for (let match of matches) {
-        if (match.occupied == true & (checkStudents(match).length < match.buildingData.slots)) return match;
+        if (match.occupied == true & (checkNews ? true : (checkStudents(match).length < match.buildingData.slots))) return match;
     }
 
     return false;
@@ -154,10 +154,18 @@ function findFacility(type) {
     return false;
 }
 
+//calculate pollution rates
+function calculatePollution() {
+    let factories = sceneData.flat().filter(item => item.zone == 'industrial' && item.type == 3 && item.occupied == true).length;
+    let pollutionRate = factories / 64;
+
+    return pollutionRate;
+}
+
 //check number of citizens in tile
-function citizensInTile(tile) {
+function citizensInTile(tile, value = false) {
     let tileCoordinate = findTileCoordinate(sceneData, tile);
-    return Object.values(citizens).flat().filter(item => item.location.x == tileCoordinate.x && item.location.y == tileCoordinate.y).length;
+    return value ? Object.values(citizens).flat().filter(item => item.location.x == tileCoordinate.x && item.location.y == tileCoordinate.y) : Object.values(citizens).flat().filter(item => item.location.x == tileCoordinate.x && item.location.y == tileCoordinate.y).length;
 }
 
 //check students of tile
@@ -238,4 +246,9 @@ function startMoving(type, route, data) {
     data.status = "moving";
     data.targetType = type; // set to work mode when arrived
     data.targetRoute = route;
+}
+
+function refreshInfo() {
+    tileInfo(sceneData.flat()[updateInfo]);
+    setTimeout(() => requestAnimationFrame(refreshInfo), 500);
 }
