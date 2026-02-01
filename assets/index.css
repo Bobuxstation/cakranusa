@@ -322,7 +322,7 @@ button:active,
     height: 325px;
     float: left;
     overflow: auto;
-    padding-bottom: 20px;
+    padding-bottom: 65px;
 }
 
 .dual button {
@@ -355,6 +355,7 @@ button:active,
 #menu button,
 #demolish button,
 #saves button,
+#save button,
 .post {
     width: 25vw;
     text-align: left;

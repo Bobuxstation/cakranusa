@@ -154,6 +154,7 @@ function titleUI() {
     document.getElementById("titleOverlay").style.display = "flex";
     document.getElementById("intro").style.display = "flex";
 
+    listJsonSaves();
     initScene(false);
     openTab('', 'tab', true);
     renderer.domElement.style.pointerEvents = 'none';

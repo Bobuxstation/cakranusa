@@ -303,21 +303,21 @@ let facility = {
 //schools and libraries
 let education = {
     "elementary school": {
-        "model": "assets/facility/sd",
+        "model": "assets/facility/school",
         "description": "Increase citizens education and moral values",
         "type": "education",
         "education": 1,
         "slots": 16
     },
     "middle school": {
-        "model": "assets/facility/sd",
+        "model": "assets/facility/school",
         "description": "Increase citizens education and moral values",
         "type": "education",
         "education": 2,
         "slots": 16
     },
     "high school": {
-        "model": "assets/facility/sd",
+        "model": "assets/facility/school",
         "description": "Increase citizens education and moral values",
         "type": "education",
         "education": 3,
@@ -374,9 +374,14 @@ let services = {
 
 //tourism
 let tourism = {
-    "Football field": {
-        "model": "assets/facility/football",
-        "description": "Field for playing football",
+    "Park": {
+        "model": "assets/facility/park",
+        "description": "Green space for the city",
+        "type": "tourism",
+    },
+    "Fountain Monument": {
+        "model": "assets/facility/monumen",
+        "description": "Green space for the city",
         "type": "tourism",
     }
 }
@@ -467,7 +472,7 @@ async function renderThumbnail(item, subItem) {
     previewCamera.rotation.set(-3.14, 0, 3.14);
 
     let variableModelStr = buildmenu[item][subItem].variableModel ? '_straight' : '';
-    let model = (await loadWMat(buildmenu[item][subItem].model + variableModelStr)).clone();
+    let model = await loadWMat(buildmenu[item][subItem].model + variableModelStr);
     model.scale.setScalar(0.30);
     model.rotation.set(0, -(Math.PI / 2), 0);
 

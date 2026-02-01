@@ -64,8 +64,13 @@
 
             <div class="tab right fitH" id="menu">
                 <button onclick="quitGame()">Quit</button>
-                <button>Save</button>
-                <button>Take Screenshot</button>
+                <button onclick="openTab('save', 'tab', true)">Save</button>
+                <button style="display: none;">Take Screenshot</button>
+            </div>
+
+            <div class="tab right fitH" id="save">
+                <button><input type="text" id="savename"></button>
+                <button onclick="saveGame(document.getElementById('savename').value); openTab('', 'tab', true)">Save</button>
             </div>
 
             <div class="tab dual" id="statistics">
@@ -95,7 +100,7 @@
                 <div class="left">
                     <button onclick="openTab('taxes', 'policyTab')" class="policyTabButton selected">taxes</button>
                     <button onclick="openTab('Budget', 'policyTab')" class="policyTabButton">Budget</button>
-                    <button onclick="openTab('Officials', 'policyTab')" class="policyTabButton">Officials</button>
+                    <button onclick="openTab('Officials', 'policyTab')" class="policyTabButton" style="display: none;">Officials</button>
                 </div>
                 <div class="right">
                     <div class="policyTab innertab" id="taxes" style="display: block;"></div>
@@ -205,8 +210,8 @@
         <div id="titleButtons">
             <button id="hideTool" onclick="newGame();">New Game</button>
             <button id="hideTool" onclick="openTab('saves', 'tab', true)">saves</button>
-            <button id="hideTool">About</button>
-            <button id="hideTool">Quit</button>
+            <button id="hideTool" style="display: none;">About</button>
+            <button id="hideTool" style="display: none;">Quit</button>
         </div>
         <div id="titleLoad" style="display: none;">
             Loading...
