@@ -27,7 +27,7 @@
     "electron-builder": "^20.44.4"
   },
   "build": {
-    "appId": "com.perintisinteractive.Cakranusa",
+    "appId": "com.perintisinteractive.cakranusa",
     "productName": "Cakranusa",
     "win": {
       "verifyUpdateCodeSignature": false,
