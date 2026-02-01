@@ -1,25 +1,27 @@
-const { autoUpdater, AppUpdater } = require("electron-updater");
-const { app, BrowserWindow, electron } = require("electron");
-autoUpdater.autoDownload = true;
-autoUpdater.autoInstallOnAppQuit = true;
+var { autoUpdater, AppUpdater } = require("electron-updater");
+var { app, BrowserWindow, electron } = require("electron");
+var win;
 
-var win
 function createWindow() {
   win = new BrowserWindow({
     width: 1000,
     height: 600,
     backgroundColor: '#1d1d1d',
     autoHideMenuBar: true,
+    icon: './assets/icon.png',
     webPreferences: { nodeIntegration: true, contextIsolation: false, enableRemoteModule: true }
   });
-  require('@electron/remote/main').initialize()
-  require('@electron/remote/main').enable(win.webContents)
 
-  win.loadFile('index.html')
+  require('@electron/remote/main').initialize();
+  require('@electron/remote/main').enable(win.webContents);
+  win.loadFile('index.html');
 }
+
+autoUpdater.autoDownload = true;
+autoUpdater.autoInstallOnAppQuit = true;
+
 app.whenReady().then(() => {
   createWindow()
-
   autoUpdater.checkForUpdates();
   console.log(`Checking for updates. Current version ${app.getVersion()}`);
 })
@@ -40,13 +42,9 @@ autoUpdater.on("update-downloaded", (info) => {
 });
 
 app.on('window-all-closed', () => {
-  if (process.platform !== 'darwin') {
-    app.quit()
-  }
+  if (process.platform !== 'darwin') app.quit();
 })
 
 app.on('activate', () => {
-  if (BrowserWindow.getAllWindows().length === 0) {
-    createWindow()
-  }
+  if (BrowserWindow.getAllWindows().length === 0) createWindow();
 })
