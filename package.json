@@ -6,9 +6,7 @@
   "main": "main.js",
   "scripts": {
     "test": "echo \"No test specified\"",
-    "start": "electron .",
-    "dist": "electron-builder",
-    "distCI": "electron-builder --win --linux --mac"
+    "start": "electron ."
   },
   "repository": "https://github.com/Bobuxstation/cakranusa",
   "publish": {
