@@ -1,7 +1,7 @@
 {
   "name": "cakranusa",
   "version": "1.0.0",
-  "description": "City planning and bureaucracy simulation game",
+  "description": "The Indonesian city management experience.",
   "homepage": "https://github.com/Bobuxstation/cakranusa",
   "main": "main.js",
   "scripts": {
