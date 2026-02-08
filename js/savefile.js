@@ -4,6 +4,11 @@ const path = require('path');
 
 //save game
 function saveGame(saveName) {
+    if (saveName.trim().length == 0) {
+        newNotification("Invalid file name!");
+        return;
+    };
+
     let targetPath = path.join(app.getPath('userData'), "/saves", `${saveName}.json`);
     let saveData = {
         "saveName": saveName,
@@ -19,6 +24,10 @@ function saveGame(saveName) {
 
     let dir = path.join(app.getPath('userData'), '/saves');
     if (!fs.existsSync(dir)) { fs.mkdirSync(dir, { recursive: true }); }
+    if (fs.existsSync(targetPath)) {
+        newNotification("Save file already exists!");
+        return;
+    }
 
     fs.writeFileSync(targetPath, JSON.stringify(saveData, null, 2), 'utf-8');
 }

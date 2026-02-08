@@ -154,6 +154,15 @@ function findFacility(type) {
     return false;
 }
 
+function tourismProfit(amount = false) {
+    let matches = sceneData.flat().filter(item => (item.type == 4 & item.buildingType == "tourism"));
+    if (amount) {
+        return (calculatePollution() < 0.2) ? matches.length * 50_000 : 0;
+    } else {
+        return (calculatePollution() < 0.2) ? matches.length : 0;
+    }
+}
+
 //calculate pollution rates
 function calculatePollution() {
     let factories = sceneData.flat().filter(item => item.zone == 'industrial' && item.type == 3 && item.occupied == true).length;

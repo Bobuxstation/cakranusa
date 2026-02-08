@@ -275,6 +275,7 @@ function citizenSimulation(seed) {
         let citizensFlat = Object.values(citizens).flat();
         document.getElementById("money").innerText = money.toLocaleString('id-ID', { style: 'currency', currency: 'IDR', maximumFractionDigits: 0 });
         document.getElementById("populationData").innerText = citizensFlat.length;
+        document.getElementById("touristData").innerText = tourismProfit();
         document.getElementById("airquality").innerText = `Air Quality: ${((1 - calculatePollution()) * 100).toFixed(1)}%`;
         document.getElementById("population").innerText = `Population: ${citizensFlat.length}`;
         document.getElementById("unemployedData").innerText = citizensFlat.filter(item => item.job == false).length;
@@ -294,6 +295,7 @@ function citizenSimulation(seed) {
         document.getElementById("dateProgress").value = dayTick;
         if (dayTick < 40) dayTick += 1;
         else {
+            money += tourismProfit(true);
             dayTick = 0;
             date += 1;
             pickMessage();

@@ -9,7 +9,12 @@ let vehicleModels = {
     'assets/vehicles/CAR2': 98_000_000,
     'assets/vehicles/CAR3': 67_000_000,
     'assets/vehicles/CAR4': 100_000_000,
-    'assets/vehicles/BIKE1': 15_000_000
+    'assets/vehicles/BIKE1': 15_000_000,
+    'assets/vehicles/BIKE2': 15_000_000,
+    'assets/vehicles/BIKE3': 15_000_000,
+    'assets/vehicles/BIKE4': 15_000_000,
+    'assets/vehicles/BIKE5': 15_000_000,
+    'assets/vehicles/BIKE6': 15_000_000
 };
 
 //========================
@@ -196,27 +201,27 @@ let foliage = {
     'Forest': {
         "model": "assets/trees/j1",
         "description": "Trees for the environment and rainwater absorption",
-        price: 150_000
+        "price": 150_000
     },
     'Oak Forest': {
         "model": "assets/trees/j2",
         "description": "Trees for the environment and rainwater absorption",
-        price: 150_000
+        "price": 150_000
     },
     'Acacia Forest': {
         "model": "assets/trees/j3",
         "description": "Trees for the environment and rainwater absorption",
-        price: 150_000
+        "price": 150_000
     },
     'Pine Forest': {
         "model": "assets/trees/j4",
         "description": "Trees for the environment and rainwater absorption",
-        price: 150_000
+        "price": 150_000
     },
     'Swamp forest': {
         "model": "assets/trees/j5",
         "description": "Trees for the environment and rainwater absorption",
-        price: 150_000
+        "price": 150_000
     }
 };
 
@@ -266,37 +271,43 @@ let facility = {
         "model": "assets/facility/hospital",
         "description": "Keeps citizens healthy",
         "type": "medical",
-        "slots": 8
+        "slots": 8,
+        "price": 150_000_000
     },
     "police station": {
         "model": "assets/facility/polisi",
         "description": "Keeps the city safe",
         "type": "police",
-        "slots": 8
+        "slots": 8,
+        "price": 120_000_000
     },
     "fire department": {
         "model": "assets/facility/damkar",
         "description": "Extinguish any building fires",
         "type": "firedept",
-        "slots": 8
+        "slots": 8,
+        "price": 100_000_000
     },
     "tax office": {
         "model": "assets/facility/polisi",
         "description": "Collects taxes from citizens",
         "type": "taxoffice",
-        "slots": 8
+        "slots": 8,
+        "price": 120_000_000
     },
     "masjid": {
         "model": "assets/facility/mosque",
         "description": "Increase religious and moral values",
         "type": "religion",
-        "slots": 16
+        "slots": 16,
+        "price": 150_000_000
     },
     "cathedral": {
         "model": "assets/facility/katedral",
         "description": "Increase religious and moral values",
         "type": "religion",
-        "slots": 16
+        "slots": 16,
+        "price": 150_000_000
     }
 }
 
@@ -307,21 +318,24 @@ let education = {
         "description": "Increase citizens education and moral values",
         "type": "education",
         "education": 1,
-        "slots": 16
+        "slots": 16,
+        "price": 100_000_000
     },
     "middle school": {
         "model": "assets/facility/school",
         "description": "Increase citizens education and moral values",
         "type": "education",
         "education": 2,
-        "slots": 16
+        "slots": 16,
+        "price": 110_000_000
     },
     "high school": {
         "model": "assets/facility/school",
         "description": "Increase citizens education and moral values",
         "type": "education",
         "education": 3,
-        "slots": 16
+        "slots": 16,
+        "price": 120_000_000
     }
 }
 
@@ -329,18 +343,21 @@ let education = {
 let leisure = {
     "Bus stop": {
         "model": "assets/facility/halte",
-        "description": "Reduces traffic (max. 10 tile range)",
+        "description": "Decoration for now",
         "type": "leisure",
+        "price": 20_000_000
     },
     "Football field": {
         "model": "assets/facility/football",
         "description": "Field for playing football",
         "type": "leisure",
+        "price": 25_000_000
     },
     "Padel Field": {
         "model": "assets/facility/padel",
         "description": "Field for playing padel",
         "type": "leisure",
+        "price": 25_000_000
     }
 }
 
@@ -350,25 +367,29 @@ let services = {
         "model": "assets/facility/recycle plant",
         "description": "Recycle citizens waste to avoid pollution",
         "type": "waste",
-        "capacity": 2400
+        "capacity": 2400,
+        "price": 150_000_000
     },
     "wind turbine": {
         "model": "assets/facility/kincir",
         "description": "Wind turbine for electricity",
         "type": "electric cable",
-        "capacity": 150
+        "capacity": 150,
+        "price": 50_000_000
     },
     "solar panel": {
         "model": "assets/facility/PLTS",
         "description": "Solar panel for electricity",
         "type": "electric cable",
-        "capacity": 150
+        "capacity": 150,
+        "price": 50_000_000
     },
     "water pump": {
         "model": "assets/facility/watertreatment",
         "description": "Pumps water from underground",
         "type": "water pipe",
-        "capacity": 150
+        "capacity": 150,
+        "price": 50_000_000
     }
 }
 
@@ -378,11 +399,13 @@ let tourism = {
         "model": "assets/facility/park",
         "description": "Green space for the city",
         "type": "tourism",
+        "price": 25_000_000
     },
     "Fountain Monument": {
         "model": "assets/facility/monumen",
         "description": "Green space for the city",
         "type": "tourism",
+        "price": 25_000_000
     }
 }
 
@@ -400,14 +423,16 @@ let underground = {
         "description": "Supplies electricity to buildings",
         "capacity": 150,
         "label": "Electricity",
-        "variableModel": true
+        "variableModel": true,
+        "price": 100_000
     },
     "water pipe": {
         "model": "assets/pipe/pipe",
         "description": "Supplies water to buildings",
         "capacity": 150,
         "label": "Water",
-        "variableModel": true
+        "variableModel": true,
+        "price": 100_000
     }
 }
 

@@ -48,7 +48,7 @@ let sosmedPosts = {
         "Unboxing my switch (not that new anymore)",
         "Just moved in, why is the mayor a bit tilted?",
         "Bro memiliki kunci untuk semua pintu, nahhh get outttt :emot_tengkorak:",
-        "They just shot the big K 😭​😭​😭​😭​😭​😭​",
+        "They just shot the big K...",
         "If you think about it, old Imran is basically his younger self",
         "Forcing students to do RIS is so Dystopian ngl...",
         "They cut the 2nd tree...",

@@ -12,9 +12,16 @@
     place-items: center;
     height: 100dvh;
     width: 100dvw;
+    flex-direction: column;
+}
+
+#intro span {
+    text-shadow: 0px 0px 5px #000000;
+    color: white;
 }
 
 #intro img {
+    box-shadow: 0px 0px 5px #00000080;
     width: 25vw;
     border-radius: 5px;
 }
@@ -29,7 +36,8 @@
     outline: none;
 }
 
-html, body {
+html,
+body {
     background: black;
 }
 
@@ -65,7 +73,8 @@ html, body {
     float: left;
 }
 
-.postTop span, .postTop b {
+.postTop span,
+.postTop b {
     margin-left: 5px;
 }
 
@@ -226,7 +235,8 @@ canvas {
     margin-bottom: -6px;
 }
 
-button, .post {
+button,
+.post {
     padding: 5px;
     border: darkgray solid;
     padding-bottom: 3px;
@@ -325,6 +335,10 @@ button:active,
     padding-bottom: 65px;
 }
 
+.tutorialTab {
+    padding: 10px;
+}
+
 .dual button {
     display: block;
     width: 75px;
@@ -385,6 +399,13 @@ button:active,
     color: #fff;
     padding: 4px 8px;
     z-index: 1000;
+}
+
+#savename {
+    margin: 5px;
+    padding: 4px;
+    margin-bottom: 0;
+    width: calc(100% - 10px);
 }
 
 input[type=number]::-webkit-inner-spin-button,

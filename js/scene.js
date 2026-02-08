@@ -39,7 +39,7 @@ async function generateGrid(data) {
     let geometry = new THREE.BoxGeometry(1, 1, 1);
     let instance = new THREE.InstancedMesh(geometry, material, terrainSize * terrainSize);
     instance.material.transparent = true;
-    instance.castShadow = true;
+    instance.castShadow = false;
     instance.receiveShadow = true;
 
     // traverse data
@@ -114,7 +114,7 @@ let meshLocations = {}, gridInstance;
 let simulationSpeed = 0;
 
 //will be on the save file
-let sceneData, citizens = {}, money = 100_000_000, date = 0, worldSeed;
+let sceneData, citizens = {}, money = 1_000_000_000, date = 0, worldSeed;
 let officials = {
     transport: false,
     facility: false,
@@ -199,6 +199,9 @@ async function initScene(isNewGame, savefile = false) {
             document.getElementById("titleOverlay").style.display = "flex";
         }
 
+        //splash text
+        typewrite(document.getElementById("splashtext"), `"${splashtext[Math.floor(Math.random() * splashtext.length)]}"`, true);
+
         //set data
         dayTick = 0;
         vehicles = {};
@@ -209,6 +212,10 @@ async function initScene(isNewGame, savefile = false) {
             citizens = savefile.citizens;
             money = savefile.money;
             date = savefile.date;
+        } else {
+            citizens = {};
+            money = 1_000_000_000;
+            date = 0;
         }
 
         //reload model and menus
@@ -230,7 +237,12 @@ async function initScene(isNewGame, savefile = false) {
         citizenSimulation(worldSeed);
 
         //show ui
-        if (savefile || isNewGame) gameUI();
-        newPost(sosmedPosts.intro, { username: 'cakranusa', bio: 'For tutorials, check the help menu', name: "Cakranusa" }, false);
+        if (savefile || isNewGame) {
+            if (isNewGame) newNotification("Welcome to Cakranusa! Start out by building some housing zones.");
+            gameUI();
+            setTimeout(() => {
+                newPost(sosmedPosts.intro, { username: 'cakranusa', bio: 'For tutorials, check the help menu', name: "Cakranusa" }, false);
+            }, 500);
+        };
     }, 3000);
-}; initScene(false)
+}; initScene(false);

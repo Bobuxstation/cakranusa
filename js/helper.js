@@ -17,7 +17,7 @@ function newNotification(text) {
 }
 
 //innerhtml but slower (typewriter)
-function typewrite(target, text) {
+function typewrite(target, text, isIntro = false) {
     let i = 0;
     target.innerHTML = '';
 
@@ -25,7 +25,7 @@ function typewrite(target, text) {
         if (i >= text.length) return;
         target.innerHTML += text.charAt(i);
         i++; 
-        if (simulationRunning && document.getElementById("newsContent").style.display != "none") setTimeout(type, 15);
+        if ((simulationRunning && document.getElementById("newsContent").style.display != "none") || isIntro) setTimeout(type, 15);
     }; type();
 }
 
@@ -327,6 +327,7 @@ function setModelVisibility(val) {
     [...Object.values(meshLocations).filter(i => i.visible == !val),
     ...Object.values(vehicles).filter(i => i.visible == !val)].forEach(item => item.visible = val);
     if (typeof undergroundGroups[tool.type] != "undefined" && (tool.category == "Supply" || tool.category == "Demolish Underground")) Object.values(undergroundGroups[tool.type]).forEach(element => element.visible = !val);
+    labelRenderer.domElement.style.display = val ? "block" : "none";
 
     let otherUnderground = Object.keys(undergroundGroups).filter(i => i != tool.type);
     Object.values(otherUnderground).forEach(i => Object.values(undergroundGroups[i]).forEach(element => element.visible = false));
@@ -345,16 +346,15 @@ function allOfTheLights(scene, addsky = true) {
     const dir = 50;
     const dirLight = new THREE.DirectionalLight(0xffffff, 1);
     dirLight.position.set(-1.5, 1.5, -1.5);
-    dirLight.position.multiplyScalar(30);
-    dirLight.shadow.mapSize.set(4096, 4096);
+    dirLight.position.multiplyScalar(20);
+    dirLight.shadow.mapSize.set(512, 512);
     dirLight.castShadow = true;
     dirLight.shadow.camera.left = -dir;
     dirLight.shadow.camera.right = dir;
     dirLight.shadow.camera.top = dir;
     dirLight.shadow.camera.bottom = -dir;
     dirLight.shadow.camera.near = 1;
-    dirLight.shadow.camera.far = 3500;
-    dirLight.shadow.radius = 0;
+    dirLight.shadow.camera.far = 500;
     scene.add(dirLight);
 
     // create ambient light
