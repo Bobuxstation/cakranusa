@@ -86,6 +86,8 @@ async function generateGrid(data) {
                     scene.add(object);
                     break;
                 case 3:
+                    if (!itemData.buildingModel) break;    
+
                     var object = await loadWMat(itemData.buildingModel);
                     positionTile(checkNeighborForRoads(itemData["posX"], itemData["posZ"], true), itemData, object)
                     animMove(object, true);
@@ -95,7 +97,8 @@ async function generateGrid(data) {
                     scene.add(object);
                     break;
                 case 2:
-                    placeRoad(itemData, { model: itemData.model })
+                    var roadType = itemData.roadType ? itemData.roadType : Object.keys(transport).find(item => transport[item].model == itemData.model)
+                    placeRoad(itemData, { model: itemData.model, type: roadType })
                     break;
                 case 1:
                     placeFoliage(itemData, itemData.foliageType);

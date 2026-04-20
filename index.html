@@ -46,9 +46,7 @@
     <div id="tabs">
         <div>
             <div id="hint" class="dual">
-                <div class="left" id="imageSide">
-                    <img id="hintPreview">
-                </div>
+                <div class="left" id="imageSide"></div>
                 <div class="right">
                     <div>
                         <b id="hintTitle" style="text-transform: capitalize;"></b><br>
@@ -75,11 +73,11 @@
 
             <div class="tab dual" id="statistics">
                 <div class="left">
-                    <button onclick="openTab('Population', 'statsTab')"
-                        class="statsTabButton selected">Population</button>
-                    <button onclick="openTab('education', 'statsTab')" class="statsTabButton">education</button>
-                    <button onclick="openTab('supply', 'statsTab')" class="statsTabButton">supply</button>
-                    <button onclick="openTab('built', 'statsTab')" class="statsTabButton">built</button>
+                    <button onclick="openTab('Population', 'statsTab')" class="statsTabButton selected" name="Population">Population</button>
+                    <button onclick="openTab('education', 'statsTab')" class="statsTabButton" name="education">Education</button>
+                    <button onclick="openTab('supply', 'statsTab')" class="statsTabButton" name="supply">Supply</button>
+                    <button onclick="openTab('built', 'statsTab')" class="statsTabButton" name="built">Built</button>
+                    <button onclick="openTab('achievements', 'statsTab')" class="statsTabButton" name="achievements">Achieve-<br>ments</button>
                 </div>
                 <div class="right">
                     <div class="statsTab innertab" id="Population" style="display: block;">
@@ -94,22 +92,22 @@
                     <div class="statsTab innertab" id="education"></div>
                     <div class="statsTab innertab" id="supply"></div>
                     <div class="statsTab innertab" id="built"></div>
+                    <div class="statsTab innertab" id="achievements"></div>
                 </div>
             </div>
 
             <div class="tab dual" id="manage">
                 <div class="left">
-                    <button onclick="openTab('taxes', 'policyTab')" class="policyTabButton selected">taxes</button>
-                    <button onclick="openTab('Budget', 'policyTab')" class="policyTabButton">Budget</button>
+                    <button onclick="openTab('taxes', 'policyTab')" class="policyTabButton selected" name="taxes">Taxes</button>
+                    <button onclick="openTab('Budget', 'policyTab')" class="policyTabButton" name="Budget">Budget</button>
                 </div>
                 <div class="right">
                     <div class="policyTab innertab" id="taxes" style="display: block;"></div>
                     <div class="policyTab innertab" id="Budget"></div>
-                    <div class="policyTab innertab" id="Officials"></div>
                 </div>
             </div>
 
-            <div class="tab dual" id="Help">
+            <div class="tab dual" id="Guide">
                 <div class="left" id="tutorialLeft"></div>
                 <div class="right" id="tutorialRight"></div>
             </div>
@@ -128,10 +126,10 @@
             <div class="tab right fitH" id="sosmed">
                 <div class="sosmedHeader">
                     sosmed
-                    <button onclick='openTab("Posts", "socialTab")' class="selected socialTabButton">Posts</button>
+                    <button onclick='openTab("Posts", "socialTab")' class="selected socialTabButton" name="Posts">Posts</button>
                     <button
                         onclick='openTab("Profile", "socialTab"); document.getElementById("Profile").innerHTML = "<center><p>To check a user profile here, select it from the post or origin building.</p></center>"'
-                        class="socialTabButton">Profile</button>
+                        class="socialTabButton" name="Profile">Profile</button>
                     <button onclick='openTab("sosmed", "tab", true, "slideInDown", "slideOutUp")'
                         style="width: 25px; float: right;">X</button>
                 </div>
@@ -168,18 +166,18 @@
 
     <div id="tabButtons" class="navigation bottom overlay" style="display: none;">
         <div id="tools">
-            <button onclick="openTab('menu', 'tab', true)" class="tabButton">menu</button>
-            <button onclick="openTab('Help', 'tab', true)" class="tabButton">Help</button>
+            <button onclick="openTab('menu', 'tab', true)" class="tabButton" name="menu">Menu</button>
+            <button onclick="openTab('Guide', 'tab', true)" class="tabButton" name="Guide">Guide</button>
         </div>
 
         <div id="tools2">
-            <button onclick="openTab('statistics', 'tab', true)" class="tabButton">statistics</button>
-            <button onclick="openTab('manage', 'tab', true)" class="tabButton">manage</button>
+            <button onclick="openTab('statistics', 'tab', true)" class="tabButton" name="statistics">Statistics</button>
+            <button onclick="openTab('manage', 'tab', true)" class="tabButton" name="manage">Manage</button>
         </div>
 
         <div id="tools">
-            <button onclick="openTab('build', 'tab', true)" class="tabButton">build</button>
-            <button onclick="openTab('demolish', 'tab', true)" class="tabButton">demolish</button>
+            <button onclick="openTab('build', 'tab', true)" class="tabButton" name="build">Build</button>
+            <button onclick="openTab('demolish', 'tab', true)" class="tabButton" name="demolish">Demolish</button>
         </div>
 
         <div id="tools" class="time">
@@ -209,7 +207,7 @@
     <div id="titleOverlay" class="navigation bottom overlay" style="display: none;">
         <div id="titleButtons">
             <button id="hideTool" onclick="newGame(); openTab('', 'tab', true)">New Game</button>
-            <button id="hideTool" onclick="openTab('saves', 'tab', true)">saves</button>
+            <button id="hideTool" onclick="openTab('saves', 'tab', true)" name="saves">Saves</button>
             <button id="hideTool" onclick="window.close()">Quit</button>
         </div>
         <div id="titleLoad" style="display: none;">

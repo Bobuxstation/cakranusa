@@ -18,7 +18,6 @@ function heuristic(a, b) {
 function astar(grid) {
   const height = grid.length;
   const width = grid[0].length;
-
   let start, end;
 
   // Find start (2) and target (3)
@@ -30,10 +29,7 @@ function astar(grid) {
   }
 
   if (!start || !end) return null;
-
-  const heuristic = (a, b) =>
-    Math.abs(a.x - b.x) + Math.abs(a.y - b.y);
-
+  const heuristic = (a, b) => Math.abs(a.x - b.x) + Math.abs(a.y - b.y);
   const directions = [
     { x: 0, y: -1, dir: "up", rot: -(Math.PI / 2) },
     { x: 0, y: 1, dir: "down", rot: (Math.PI / 2) },
@@ -43,7 +39,6 @@ function astar(grid) {
 
   const openSet = [];
   const closedSet = new Set();
-
   openSet.push({
     x: start.x,
     y: start.y,
@@ -75,7 +70,14 @@ function astar(grid) {
         });
         node = node.parent;
       }
-      return path.reverse();
+
+      let reversedPath = path.reverse();
+      reversedPath.at(-1).direction = reversedPath.at(-2).direction;
+      reversedPath.at(-1).rot = reversedPath.at(-2).rot;
+      reversedPath.at(0).direction = reversedPath.at(1).direction;
+      reversedPath.at(0).rot = reversedPath.at(1).rot;
+
+      return reversedPath;
     }
 
     for (const d of directions) {
@@ -126,10 +128,47 @@ function astar(grid) {
 //find coordinate of tile
 function findTileCoordinate(map, tile) {
   let posY = map.find(item => (item.indexOf(tile) != -1));
-  let posX = posY.indexOf(tile);
-  posY = map.indexOf(posY);
+  return { x: posY.indexOf(tile), y: map.indexOf(posY) };
+}
 
-  return { x: posX, y: posY };
+//get vehicle position for next step & adjust to road type and lane
+function getNextPosition(data, targetPos, currentStep) {
+  let laneDisplacement = data.isWalking ? 0.35 : 0.15;
+  let nextStep = data.targetRoute[currentStep + 2] || targetPos;
+  let changePos = { x: data.location.y - (sceneData[0].length / 2), y: sceneData[data.location.y][data.location.x].height + 0.125, z: data.location.x - (sceneData[0].length / 2) };
+
+  if (targetPos.direction != nextStep.direction) {
+    //set corner turn (going to corner tile)
+    if (["upright", "downleft", "leftup", "rightdown"].includes(`${targetPos.direction}${nextStep.direction}`)) data.sharpCorner = true;
+    else data.largeCorner = true;
+    data.cornerCounter = 0;
+
+    //go straight (to corner tile)
+    if (targetPos.direction == "left") changePos.x -= laneDisplacement;
+    else if (targetPos.direction == "right") changePos.x += laneDisplacement;
+    else if (targetPos.direction == "down") changePos.z -= laneDisplacement;
+    else if (targetPos.direction == "up") changePos.z += laneDisplacement;
+  } else {
+    //get corner turn (if going from corner tile)
+    let forward = 0;
+    if (data.sharpCorner) forward = laneDisplacement;
+    else if (data.largeCorner) forward = (laneDisplacement * -1);
+
+    //go straight (straight tile)
+    if (targetPos.direction == "left") { changePos.x -= laneDisplacement; changePos.z -= forward }
+    else if (targetPos.direction == "right") { changePos.x += laneDisplacement; changePos.z += forward }
+    else if (targetPos.direction == "down") { changePos.z -= laneDisplacement; changePos.x += forward }
+    else if (targetPos.direction == "up") { changePos.z += laneDisplacement; changePos.x -= forward };
+
+    //finish corner turns (if going from corner tile)
+    if (data.cornerCounter > 1) {
+      if (data.cornerCounter) delete data.cornerCounter;
+      if (data.sharpCorner) delete data.sharpCorner;
+      if (data.largeCorner) delete data.largeCorner;
+    } else if (typeof data.cornerCounter != "undefined") data.cornerCounter++;
+  }
+
+  return changePos;
 }
 
 //convert map for pathfinder
@@ -151,4 +190,15 @@ function convertPathfind(map, origin, target) {
   }
 
   return newMap;
+}
+
+//walk or drive to destination
+function shouldWalk(path) {
+  var tiles = (path.map(step => sceneData[step.y][step.x])).filter(tile => tile.type == 2);
+  var walkableTiles = tiles.filter(tile => transport[tile.roadType].walkable);
+
+  if (tiles.length > 24) return false;
+  else if (tiles.length <= 12) return true;
+  else if ((walkableTiles.length / tiles.length) > 0.5) return true;
+  else return false;
 }

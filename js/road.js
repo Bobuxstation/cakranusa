@@ -64,10 +64,11 @@ async function setRoadModel(directions, tile, isUpdate) {
 
 // check neighbor of tiles for roads (north, east, south, west)
 function checkNeighborForRoads(x, z, rand, all = false) {
-    const north = sceneData.flat().find(item => item.posX == x && item.posZ == z + 1 && item.type == 2);
-    const south = sceneData.flat().find(item => item.posX == x && item.posZ == z - 1 && item.type == 2);
-    const east = sceneData.flat().find(item => item.posX == x + 1 && item.posZ == z && item.type == 2);
-    const west = sceneData.flat().find(item => item.posX == x - 1 && item.posZ == z && item.type == 2);
+    const sceneFlat = sceneData.flat();
+    const north = sceneFlat.find(item => item.posX == x && item.posZ == z + 1 && item.type == 2);
+    const south = sceneFlat.find(item => item.posX == x && item.posZ == z - 1 && item.type == 2);
+    const east = sceneFlat.find(item => item.posX == x + 1 && item.posZ == z && item.type == 2);
+    const west = sceneFlat.find(item => item.posX == x - 1 && item.posZ == z && item.type == 2);
 
     const directions = {};
     if (north) directions.north = north;

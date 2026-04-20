@@ -24,7 +24,7 @@ function typewrite(target, text, isIntro = false) {
     function type() {
         if (i >= text.length) return;
         target.innerHTML += text.charAt(i);
-        i++; 
+        i++;
         if ((simulationRunning && document.getElementById("newsContent").style.display != "none") || isIntro) setTimeout(type, 15);
     }; type();
 }
@@ -47,7 +47,7 @@ function openTab(tabname, tabGroup, doubleClickHide = false, inAnim = 'slideInUp
 
     let tabButton = document.getElementsByClassName(`${tabGroup}Button`);
     Object.values(tabButton).forEach(element => {
-        if (element.innerText != tabname) element.classList.remove("selected");
+        if (element.name != tabname) element.classList.remove("selected");
         else if (doubleClickHide & element.className.includes("selected")) element.classList.remove("selected");
         else element.classList.add("selected");
     });
@@ -201,8 +201,8 @@ function mulberry32(a) {
 
 //check if raining for today
 function isRaining(worldSeed, day) {
-  const r = mulberry32(parseInt(`${worldSeed}${day}`));
-  return r < 0.3;
+    const r = mulberry32(parseInt(`${worldSeed}${day}`));
+    return r < 0.3;
 }
 
 // lerp animation function (ease)
@@ -305,18 +305,14 @@ function areObjectsEqual(obj1, obj2) {
 // load obj building models
 async function loadWMat(location) {
     let mtlloader = new THREE.MTLLoader();
-    loaded[`${location}.mtl`] ??= await mtlloader.loadAsync(`${location}.mtl`)
+    loaded[`./assets/default/default.mtl`] ??= await mtlloader.loadAsync(`./assets/default/default.mtl`)
 
     let objloader = new THREE.OBJLoader();
-    objloader.setMaterials(loaded[`${location}.mtl`]);
+    objloader.setMaterials(loaded[`./assets/default/default.mtl`]);
     loaded[`${location}.obj`] ??= await objloader.loadAsync(`${location}.obj`);
 
     let object = loaded[`${location}.obj`].clone();
-    object.traverse((child) => {
-        if (!child.isMesh) return;
-        child.castShadow = true;
-        child.receiveShadow = true;
-    })
+    object.traverse((child) => { if (!child.isMesh) return; child.castShadow = true; child.receiveShadow = true; });
 
     return object;
 }
@@ -343,17 +339,17 @@ function allOfTheLights(scene, addsky = true) {
     scene.add(hemiLight);
 
     // create directional light
-    const dir = 50;
+    const dir = 40;
     const dirLight = new THREE.DirectionalLight(0xffffff, 1);
     dirLight.position.set(-1.5, 1.5, -1.5);
-    dirLight.position.multiplyScalar(20);
+    dirLight.position.multiplyScalar(10);
     dirLight.shadow.mapSize.set(512, 512);
     dirLight.castShadow = true;
     dirLight.shadow.camera.left = -dir;
     dirLight.shadow.camera.right = dir;
     dirLight.shadow.camera.top = dir;
     dirLight.shadow.camera.bottom = -dir;
-    dirLight.shadow.camera.near = 1;
+    dirLight.shadow.camera.near = 0.01;
     dirLight.shadow.camera.far = 500;
     scene.add(dirLight);
 
@@ -414,9 +410,7 @@ function animMove(target, isUp, playSound = true) {
         }
 
         if (t < 1) requestAnimationFrame(lerpAnim);
-    };
-
-    lerpAnim();
+    }; lerpAnim();
 }
 
 // set color of tile
@@ -454,22 +448,22 @@ function spawnSmoke(position, duration = 3000) {
             sprite.material.opacity = 1 - t;
             sprite.position.y += 0.002;
             sprite.material.rotation += 0.002;
-
             requestAnimationFrame(update);
         }
-    }
-    update();
+    }; update();
 }
 
 //vehicle movement animation
-function lerpVehicle(oldPos, targetPos, targetRot, data) {
+function lerpVehicle(oldPos, targetPos, targetRot, data, deleteVehicle = false) {
     let startTime = performance.now();
     function lerpAnim() {
-        let t = Math.min((performance.now() - startTime) / simulationSpeed, 1);
-        try {
-            vehicles[data.uuid].position.set(lerp(oldPos.x, targetPos.x, t), lerp(oldPos.y, targetPos.y, t), lerp(oldPos.z, targetPos.z, t));
-            vehicles[data.uuid].rotation.y = targetRot;
-        } catch (e) { } //sometimes broken idk why
+        let t = Math.min((performance.now() - startTime) / (simulationSpeed * 1.1), 1);
+        try { vehicles[data.uuid].position.set(lerp(oldPos.x, targetPos.x, t), lerp(oldPos.y, targetPos.y, t), lerp(oldPos.z, targetPos.z, t)); vehicles[data.uuid].rotation.y = targetRot; } catch (e) { }
         if (t < 1) requestAnimationFrame(lerpAnim);
+        else if (deleteVehicle) {
+            data.status = data.targetType;
+            scene.remove(vehicles[data.uuid]);
+            delete vehicles[data.uuid];
+        }
     }; lerpAnim();
 }

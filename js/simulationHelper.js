@@ -249,6 +249,7 @@ function calculateFacilityAddition(y, x, moralMode = false) {
 
 //set citizen into moving mode
 function startMoving(type, route, data) {
+    data.isWalking = shouldWalk(route);
     data.targetDir = "";
     data.roadWait = 0;
     data.sessionTick = 0;
@@ -260,4 +261,33 @@ function startMoving(type, route, data) {
 function refreshInfo() {
     tileInfo(sceneData.flat()[updateInfo]);
     setTimeout(() => requestAnimationFrame(refreshInfo), 500);
+}
+
+//load vehicle model (blank placeholder while loading)
+async function initVehicle(data, currentStep) {
+    //create blank placeholder
+    const empty = new THREE.Object3D();
+    scene.add(empty);
+    vehicles[data.uuid] = empty;
+    vehicles[data.uuid].position.set(getNextPosition(data, data.targetRoute.at(currentStep - 1), currentStep));
+    vehicles[data.uuid].rotation.y = data.targetRoute.at(currentStep - 1).rot;
+
+    //start loading model
+    let mtlloader = new THREE.MTLLoader();
+    loaded[`./assets/default/default.mtl`] ??= await mtlloader.loadAsync(`./assets/default/default.mtl`)
+
+    let objloader = new THREE.OBJLoader();
+    let objPath = data.isWalking ? `./assets/default/walker.obj` : `${data.vehicle}.obj`;
+    objloader.setMaterials(loaded[`./assets/default/default.mtl`]);
+    loaded[objPath] ??= await objloader.loadAsync(objPath);
+
+    let object = loaded[objPath].clone();
+    object.traverse((child) => { if (!child.isMesh) return; child.castShadow = true; child.receiveShadow = true; });
+    object.scale.setScalar(0.156);
+    scene.add(object);
+    
+    object.position.set(empty.position.x, empty.position.y, empty.position.z);
+    object.rotation.y = empty.rotation.y;
+    vehicles[data.uuid] = object;
+    scene.remove(empty);
 }

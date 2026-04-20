@@ -111,10 +111,7 @@ function tileInfo(tile) {
                 }));
                 break;
             case 1:
-                floatingDiv.appendChild(infoHeading(`Tree`));
-                floatingDiv.appendChild(infoTable({
-                    "Type": tile.foliageType
-                }));
+                floatingDiv.appendChild(infoHeading(tile.foliageType));
                 break;
             default:
                 floatingDiv.appendChild(infoTable(tile));

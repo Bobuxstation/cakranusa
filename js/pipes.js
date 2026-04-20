@@ -98,10 +98,11 @@ function countNetworkSize(list, type) {
 
 // check neighbor of tiles for pipes (north, east, south, west)
 function checkNeighborForPipes(x, z, type) {
-    const north = sceneData.flat().find(item => item.posX == x && item.posZ == z + 1 && item[type]);
-    const south = sceneData.flat().find(item => item.posX == x && item.posZ == z - 1 && item[type]);
-    const east = sceneData.flat().find(item => item.posX == x + 1 && item.posZ == z && item[type]);
-    const west = sceneData.flat().find(item => item.posX == x - 1 && item.posZ == z && item[type]);
+    const sceneFlat = sceneData.flat();
+    const north = sceneFlat.find(item => item.posX == x && item.posZ == z + 1 && item[type]);
+    const south = sceneFlat.find(item => item.posX == x && item.posZ == z - 1 && item[type]);
+    const east = sceneFlat.find(item => item.posX == x + 1 && item.posZ == z && item[type]);
+    const west = sceneFlat.find(item => item.posX == x - 1 && item.posZ == z && item[type]);
     const directions = {};
 
     if (north) directions.north = north;

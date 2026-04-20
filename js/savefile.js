@@ -30,8 +30,10 @@ function saveGame(saveName) {
     }
 
     fs.writeFileSync(targetPath, JSON.stringify(saveData, null, 2), 'utf-8');
+    newNotification("Game saved!");
 }
 
+//list all saves
 function listJsonSaves() {
     let savesDiv = document.getElementById("saves");
     savesDiv.innerHTML = '';

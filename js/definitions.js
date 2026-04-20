@@ -255,13 +255,15 @@ let transport = {
         "model": "assets/roads/plainroad",
         "description": "Connect buildings with each other",
         "variableModel": true,
-        "price": 1_500_000
+        "price": 1_500_000,
+        "walkable": false
     },
     "road with sidewalks": {
         "model": "assets/roads/road",
         "description": "Connect buildings with each other",
         "variableModel": true,
-        "price": 3_000_000
+        "price": 3_000_000,
+        "walkable": true
     }
 }
 
@@ -503,37 +505,28 @@ async function renderThumbnail(item, subItem) {
 
     previewScene.add(model);
     allOfTheLights(previewScene, false);
-    return new Promise((resolve) => {
-        setTimeout(() => {
-            previewRenderer.render(previewScene, previewCamera);
-            resolve(previewRenderer.domElement.toDataURL());
-        }, 250);
-    });
+
+    setTimeout(() => {
+        previewRenderer.render(previewScene, previewCamera);
+
+        let img = document.createElement("img");
+        img.src = previewRenderer.domElement.toDataURL();
+        img.className = "hintPreview";
+        img.id = `${item}-${subItem}`;
+        document.getElementById("imageSide").appendChild(img);
+    }, 250);
 }
 
 //========================
 // fill build menu
 //========================
 
-//set hint
-function setHint(image, title, content) {
-    if (image) {
-        document.getElementById("imageSide").style.display = "block";
-        document.getElementById("hintPreview").src = image;
-    } else {
-        document.getElementById("imageSide").style.display = "none";
-    };
-
-    document.getElementById("hintTitle").innerText = title;
-    document.getElementById("hintContent").innerText = content;
-    document.getElementById("hint").style.display = "block";
-}
-
 //fill build menu
 Object.keys(buildmenu).forEach((item, i) => {
     const button = document.createElement("button");
     button.className = 'buildTabButton';
     button.innerText = item;
+    button.name = item;
     button.onclick = () => { openTab(`${item}`, 'buildTab') };
 
     const tab = document.createElement("div");
@@ -543,14 +536,21 @@ Object.keys(buildmenu).forEach((item, i) => {
 
     Object.keys(buildmenu[item]).forEach(async (subItem) => {
         const subItemButton = document.createElement("button");
-        const thumbnail = await renderThumbnail(item, subItem);
         const price = buildmenu[item][subItem].price ? buildmenu[item][subItem].price.toLocaleString('id-ID', { style: 'currency', currency: 'IDR', maximumFractionDigits: 0 }) : "Free";
+        tab.appendChild(subItemButton);
 
         subItemButton.innerHTML = `${subItem}<span class="price">${price}</span>`;
         subItemButton.onclick = () => { setTool(subItem, item) };
-        subItemButton.onmouseout = () => { document.getElementById("hint").style.display = "none"; }
-        subItemButton.onmouseover = async () => { setHint(thumbnail, subItem, buildmenu[item][subItem].description || "No Description") }
-        tab.appendChild(subItemButton);
+        subItemButton.onmouseout = () => { document.getElementById("hint").style.display = "none"; };
+        subItemButton.onmouseover = async () => {
+            Object.values(document.getElementsByClassName("hintPreview")).forEach(element => element.style.display = element.id == `${item}-${subItem}` ? "block" : "none");
+            document.getElementById("imageSide").style.display = "block";
+            document.getElementById("hintTitle").innerText = subItem;
+            document.getElementById("hintContent").innerText = buildmenu[item][subItem].description || "No Description";
+            document.getElementById("hint").style.display = "block";
+        };
+
+        renderThumbnail(item, subItem);
     });
 
     document.getElementById("buildLeft").appendChild(button);

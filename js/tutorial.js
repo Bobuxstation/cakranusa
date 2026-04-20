@@ -105,6 +105,7 @@ Object.keys(tutorial).forEach((item, i) => {
     const button = document.createElement("button");
     button.className = 'tutorialTabButton'
     button.innerText = item;
+    button.name = item;
     button.onclick = () => { openTab(`${item}`, 'tutorialTab') };
 
     const tab = document.createElement("div");

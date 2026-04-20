@@ -32,7 +32,7 @@ function setTool(type, category) {
     }, 250);
 
     //close tool button
-    document.getElementById("hideTool").onclick = () => {
+    document.getElementById("hideTool").onclick = (event) => {
         selectDiv.style.animation = "slideOutDown 0.25s both";
         renderer.domElement.style.cursor = 'unset';
 
@@ -53,7 +53,7 @@ function setTool(type, category) {
 let floatingDiv = document.getElementById('floatingDiv');
 controls.addEventListener('change', () => { floatingDiv.style.display = 'none'; outlinePass.selectedObjects = []; });
 
-// select tiles
+// select tiles with tool
 let moved = false;
 async function select(event) {
     var mouse = new THREE.Vector2();
@@ -73,8 +73,8 @@ async function select(event) {
         intersectsGrid = true;
 
         //call corresponding tool function
-        if (tool.category && tool.category != 'Transport') {
-            let categoryWhitelist = !["Demolish", "Demolish Underground", "Supply"].includes(tool.category);
+        if (tool.category) {
+            let categoryWhitelist = !["Demolish", "Demolish Underground", "Supply", "Foliage", 'Transport'].includes(tool.category);
             let hasRoadConnection = checkNeighborForRoads(tile.posX, tile.posZ, true) == false || !(tile.type == 0 || tile.type == 1);
             if (categoryWhitelist && hasRoadConnection) {
                 newNotification(!(tile.type == 0 || tile.type == 1) ? "Cannot build here: Tile already occupied!" : "Cannot build here: Missing road connection!");
@@ -198,6 +198,7 @@ function cleanTileData(tile, resetType = false, reZone = false) {
     if (tile.age) delete tile.age;
     if (tile.model) delete tile.model;
     if (tile.warnings) delete tile.warnings;
+    if (tile.roadType) delete tile.roadType;
 
     if (Object.keys(citizens).find(item => item == tile.index)) delete citizens[tile.index];
     if (typeof meshLocations[tile.index] != "undefined" && typeof warningLabels[tile.index] != "undefined") {
@@ -263,6 +264,7 @@ async function placeZone(tile, zone = tool.type) {
 
     tile.type = 3; //zoned for buildings
     tile.zone = zone;
+    tile.model = zones[zone].model;
 
     // add billboard to tile
     let object = await loadWMat(zones[zone].model);
@@ -295,12 +297,13 @@ async function placeFoliage(tile, type = tool.type) {
 }
 
 // place road on tile and update neighbors
-function placeRoad(tile, data = { model: buildmenu[tool.category][tool.type].model }) {
+function placeRoad(tile, data = { model: buildmenu[tool.category][tool.type].model, type: tool.type }) {
     cleanTileData(tile);
     tile.type = 2;
     tile.qualityState = 100;
     tile.qualityTick = 0;
     tile.model = data.model;
+    tile.roadType = data.type;
     tile.quality = randomIntFromInterval(50, 100);
 
     let neighbors = checkNeighborForRoads(tile["posX"], tile["posZ"], false, true);

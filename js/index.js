@@ -1,5 +1,5 @@
 // Create a scene
-var faker = require("@faker-js/faker").fakerID_ID;
+var { fakerID_ID } = require("@faker-js/faker");
 var scene = new THREE.Scene();
 
 // isometric camera
@@ -63,10 +63,8 @@ function animate() {
     if (typeof tool != "undefined") (tool.category == "Supply" || tool.category == "Demolish Underground") ? setModelVisibility(false) : setModelVisibility(true);
 
     requestAnimationFrame(animate);
-    drawRain();
-}
-
-animate();
+    if (simulationSpeed != 0) drawRain();
+}; animate();
 
 //resize window
 function onWindowResize() {
