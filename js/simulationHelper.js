@@ -291,3 +291,11 @@ async function initVehicle(data, currentStep) {
     vehicles[data.uuid] = object;
     scene.remove(empty);
 }
+
+function calculateLowestQuality(citizen, budget) {
+    let taxRate = (1 - Object.values(taxes).reduce((sum, val) => { return sum + val }, 0)); //tax rate & department budgets affects official
+
+    education[highestEducation].education
+    citizen.education
+    citizen.moral
+}

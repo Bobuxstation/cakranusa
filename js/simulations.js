@@ -1,4 +1,11 @@
-let housingDemand = 0, commercialDemand = 0, IndustrialDemand = 0, FarmlandDemand = 0;
+var { fakerID_ID } = require("@faker-js/faker");
+var housingDemand = 0, commercialDemand = 0, IndustrialDemand = 0, FarmlandDemand = 0;
+var simulationIndex = 0;
+var vehicles = {};
+var dayTick = 0;
+var simulationRunning = true;
+var yesterdayMoney = 0;
+var warningLabels = {};
 
 //========================
 // Citizen & City Simulation
@@ -41,174 +48,183 @@ function createNewCitizen(tile) {
     return data;
 }
 
+// cheat a bit and limit the amount citizens being simulated per frame
+function simulatePopulationPortion(flatScene) {
+    // prioritize moving citizens to avoid traffic
+    const movingCitizens = Object.values(citizens).flat().filter(data => data.status == "moving");
+    const lowPriorityCitizens = Object.values(citizens).flat().filter(data => data.status != "moving");
+    const endIndex = Math.min(simulationIndex + 30, lowPriorityCitizens.length);
+
+    for (let i = 0; i < movingCitizens.length; i++) citizenStep(movingCitizens[i], i, flatScene);
+    for (let i = simulationIndex; i < endIndex; i++) citizenStep(lowPriorityCitizens[i], i, flatScene);
+    simulationIndex = endIndex >= lowPriorityCitizens.length ? 0 : endIndex;
+}
+
 //simulate individual citizen
-let vehicles = {};
-async function citizenStep(flatScene) {
-    Object.values(citizens).flat().forEach((data, index) => {
-        //if health 0, disappear
-        if (data.health <= 0) { deleteCitizen(data); return; };
+async function citizenStep(data, index, flatScene) {
+    //if health 0, disappear
+    if (data.health <= 0) { deleteCitizen(data); return; };
 
-        //if house is destroyed, disappear
-        let checkHome = flatScene.find(item => item.uuid == data.home);
-        if (!checkHome) { deleteCitizen(data); return; };
+    //if house is destroyed, disappear
+    let checkHome = flatScene.find(item => item.uuid == data.home);
+    if (!checkHome) { deleteCitizen(data); return; };
 
-        //apply new job if there is none or if there is a better job
-        let jobTile = findJob(data);
-        let currentJobLevel = flatScene.find(item => item.uuid == data.job) ? flatScene.find(item => item.uuid == data.job).buildingData.level : 0;
-        if ((jobTile != false && data.job == false) || (jobTile ? currentJobLevel < jobTile.buildingData.level : false)) data.job = jobTile.uuid;
-        if (!flatScene.find(item => item.uuid == data.job)) data.job = false;
+    //apply new job if there is none or if there is a better job
+    let jobTile = findJob(data);
+    let currentJobLevel = flatScene.find(item => item.uuid == data.job) ? flatScene.find(item => item.uuid == data.job).buildingData.level : 0;
+    if ((jobTile != false && data.job == false) || (jobTile ? currentJobLevel < jobTile.buildingData.level : false)) data.job = jobTile.uuid;
+    if (!flatScene.find(item => item.uuid == data.job)) data.job = false;
 
-        //add school if there is none
-        let schoolTile = findSchool(Math.floor(data.education));
-        if (schoolTile != false & data.school == false) data.school = schoolTile.uuid;
-        if (!flatScene.find(item => item.uuid == data.school)) data.school = false;
+    //add school if there is none
+    let schoolTile = findSchool(Math.floor(data.education));
+    if (schoolTile != false & data.school == false) data.school = schoolTile.uuid;
+    if (!flatScene.find(item => item.uuid == data.school)) data.school = false;
 
-        //pay taxes
-        if (data.lastPaid != calculateDate(date, true)) {
-            data.lastPaid = calculateDate(date, true);
+    //pay taxes
+    if (data.lastPaid != calculateDate(date, true)) {
+        data.lastPaid = calculateDate(date, true);
 
-            let transportTax = (vehicleModels[data.vehicle] || 0) * taxes.transportation;
-            let landTax = ((houses[checkHome.buildingModel].price / houses[checkHome.buildingModel].slots) || 0) * taxes.land;
-            if (findFacility("taxoffice")) {
-                money += transportTax + landTax;
-                data.money -= transportTax + landTax;
-            }
-
-            //pay budgets
-            if (index == Object.values(citizens).flat().length - 1) {
-                Object.values(budget).forEach(i => {
-                    if (money - i * 1_000_000 <= 0) return;
-                    money -= i * 1_000_000;
-                })
-            }
+        let transportTax = (vehicleModels[data.vehicle] || 0) * taxes.transportation;
+        let landTax = ((houses[checkHome.buildingModel].price / houses[checkHome.buildingModel].slots) || 0) * taxes.land;
+        if (findFacility("taxoffice")) {
+            money += transportTax + landTax;
+            data.money -= transportTax + landTax;
         }
 
-        //simulation steps
-        switch (data.status) {
-            case "home":
-                //find way to work after 10-15 ticks at home
-                if (data.sessionTick <= randomIntFromInterval(10, 15)) break;
-                if (data.health <= 95) data.health += randomIntFromInterval(2, 5);
+        //pay budgets
+        if (index == Object.values(citizens).flat().length - 1) {
+            Object.values(budget).forEach(i => {
+                if (money - i * 1_000_000 <= 0) return;
+                money -= i * 1_000_000;
+            })
+        }
+    }
 
-                //go to hospital if health less than 50
-                let hospitalTile = findFacility("medical");
-                if (data.health < 50 && hospitalTile) {
-                    route = astar(convertPathfind(sceneData, sceneData[data.location.y][data.location.x], hospitalTile));
-                    if (route != null) startMoving("hospital", route, data); break;
-                }
+    //simulation steps
+    switch (data.status) {
+        case "home":
+            //find way to work after 10-15 ticks at home
+            if (data.sessionTick <= randomIntFromInterval(10, 15)) break;
+            if (data.health <= 95) data.health += randomIntFromInterval(2, 5);
 
-                // if education is not high, 15% chance of going to school instead of work
-                if ((data.education != education[highestEducation].education + 1 & data.school != false) && (Math.random() > 0.15)) {
-                    route = astar(convertPathfind(sceneData, sceneData[data.location.y][data.location.x], flatScene.find(item => item.uuid == data.school)));
-                    if (route != null) startMoving("learn", route, data); break;
-                }
+            //go to hospital if health less than 50
+            let hospitalTile = findFacility("medical");
+            if (data.health < 50 && hospitalTile) {
+                route = astar(convertPathfind(sceneData, sceneData[data.location.y][data.location.x], hospitalTile));
+                if (route != null) startMoving("hospital", route, data); break;
+            }
 
-                // pray
-                let masjidTile = findFacility("religion");
-                if (Math.random() < 0.25 && masjidTile) {
-                    route = astar(convertPathfind(sceneData, sceneData[data.location.y][data.location.x], masjidTile));
-                    if (route != null) startMoving("pray", route, data); break;
-                }
+            // if education is not high, 15% chance of going to school instead of work
+            if ((data.education != education[highestEducation].education + 1 & data.school != false) && (Math.random() > 0.15)) {
+                route = astar(convertPathfind(sceneData, sceneData[data.location.y][data.location.x], flatScene.find(item => item.uuid == data.school)));
+                if (route != null) startMoving("learn", route, data); break;
+            }
 
-                //go to work if employed
-                if (data.job != false) {
-                    route = astar(convertPathfind(sceneData, sceneData[data.location.y][data.location.x], flatScene.find(item => item.uuid == data.job)));
-                    if (route != null) startMoving("work", route, data); break;
-                }
-                break;
-            case "moving":
-                //create vehicle if first step
-                let vehicleIsNew = false;
-                let findPos = data.targetRoute.find(item => item.x == data.location.x && item.y == data.location.y);
-                let currentStep = data.targetRoute.indexOf(findPos) == -1 ? 0 : data.targetRoute.indexOf(findPos);
-                if (!vehicles[data.uuid]) { initVehicle(data, currentStep); vehicleIsNew = true; };
+            // pray
+            let masjidTile = findFacility("religion");
+            if (Math.random() < 0.25 && masjidTile) {
+                route = astar(convertPathfind(sceneData, sceneData[data.location.y][data.location.x], masjidTile));
+                if (route != null) startMoving("pray", route, data); break;
+            }
 
-                //delay step if road quality is low (driving only)
-                let hasArrived = data.location.x === data.targetRoute.at(-1).x && data.location.y === data.targetRoute.at(-1).y;
-                let delayTime = Math.floor((100 - sceneData[data.targetRoute[currentStep].y][data.targetRoute[currentStep].x].qualityState || 100) / 10);
-                if (delayTime != 0 && !hasArrived && !vehicleIsNew && !data.isWalking) {
-                    data.roadWait = (data.roadWait < delayTime - 1) ? data.roadWait + 1 : 0;
-                    if (data.roadWait < delayTime - 1) break;
-                }
+            //go to work if employed
+            if (data.job != false) {
+                route = astar(convertPathfind(sceneData, sceneData[data.location.y][data.location.x], flatScene.find(item => item.uuid == data.job)));
+                if (route != null) startMoving("work", route, data); break;
+            }
+            break;
+        case "moving":
+            //create vehicle if first step
+            let vehicleIsNew = false;
+            let findPos = data.targetRoute.find(item => item.x == data.location.x && item.y == data.location.y);
+            let currentStep = data.targetRoute.indexOf(findPos) == -1 ? 0 : data.targetRoute.indexOf(findPos);
+            if (!vehicles[data.uuid]) { initVehicle(data, currentStep); vehicleIsNew = true; };
 
-                //steps
-                if (hasArrived) {
-                    //drive to destination building & delete vehicle model (final step)
-                    try { lerpVehicle(vehicles[data.uuid].position.clone(), getNextPosition(data, data.targetRoute.at(-1), currentStep), data.targetRoute[currentStep].rot, data, true); } catch (error) { }
+            //delay step if road quality is low (driving only)
+            let hasArrived = data.location.x === data.targetRoute.at(-1).x && data.location.y === data.targetRoute.at(-1).y;
+            let delayTime = Math.floor((100 - sceneData[data.targetRoute[currentStep].y][data.targetRoute[currentStep].x].qualityState || 100) / 10);
+            if (delayTime != 0 && !hasArrived && !vehicleIsNew && !data.isWalking) {
+                data.roadWait = (data.roadWait < delayTime - 1) ? data.roadWait + 1 : 0;
+                if (data.roadWait < delayTime - 1) break;
+            }
+
+            //steps
+            if (hasArrived) {
+                //drive to destination building & delete vehicle model (final step)
+                try { lerpVehicle(vehicles[data.uuid].position.clone(), getNextPosition(data, data.targetRoute.at(-1), currentStep), data.targetRoute[currentStep].rot, data, true); } catch (error) { }
+            } else {
+                //move conditions (is home, is final target or vehicle obstructing path)
+                let targetPos = data.targetRoute[currentStep + 1];
+                let isHome = (data.location.x === data.targetRoute[0].x && data.location.y === data.targetRoute[0].y);
+                let isFinalTarget = (targetPos.x === data.targetRoute.at(-1).x && targetPos.y === data.targetRoute.at(-1).y);
+                let vehicleInTarget = data.isWalking ? false : Object.values(citizens).flat().some(item => item.location.x === targetPos.x && item.location.y === targetPos.y && item.location.direction === targetPos.direction);
+                if (vehicleInTarget && !isFinalTarget && !isHome) break;
+
+                //set target position & shift to correct lane
+                let changePos = getNextPosition(data, targetPos, currentStep);
+                data.location = targetPos;
+
+                //set vehicle position (first step) or animate movement
+                if (vehicleIsNew) {
+                    vehicles[data.uuid].position.set(changePos.x, changePos.y, changePos.z);
                 } else {
-                    //move conditions (is home, is final target or vehicle obstructing path)
-                    let targetPos = data.targetRoute[currentStep + 1];
-                    let isHome = (data.location.x === data.targetRoute[0].x && data.location.y === data.targetRoute[0].y);
-                    let isFinalTarget = (targetPos.x === data.targetRoute.at(-1).x && targetPos.y === data.targetRoute.at(-1).y);
-                    let vehicleInTarget = data.isWalking ? false : Object.values(citizens).flat().some(item => item.location.x === targetPos.x && item.location.y === targetPos.y && item.location.direction === targetPos.direction);
-                    if (vehicleInTarget && !isFinalTarget && !isHome) break;
-
-                    //set target position & shift to correct lane
-                    let changePos = getNextPosition(data, targetPos, currentStep);
-                    data.location = targetPos;
-
-                    //set vehicle position (first step) or animate movement
-                    if (vehicleIsNew) {
-                        vehicles[data.uuid].position.set(changePos.x, changePos.y, changePos.z);
-                    } else {
-                        lerpVehicle(vehicles[data.uuid].position.clone(), changePos, data.targetRoute[currentStep].rot, data);
-                    }
+                    lerpVehicle(vehicles[data.uuid].position.clone(), changePos, data.targetRoute[currentStep].rot, data);
                 }
-                break;
-            case "work":
-                //after 15-25 ticks find path home
-                if (data.sessionTick <= randomIntFromInterval(15, 25)) break;
+            }
+            break;
+        case "work":
+            //after 15-25 ticks find path home
+            if (data.sessionTick <= randomIntFromInterval(15, 25)) break;
 
-                //find route and change to moving mode
-                routeHome = astar(convertPathfind(sceneData, sceneData[data.location.y][data.location.x], checkHome));
-                if (routeHome != null) startMoving("home", routeHome, data); else break;
+            //find route and change to moving mode
+            routeHome = astar(convertPathfind(sceneData, sceneData[data.location.y][data.location.x], checkHome));
+            if (routeHome != null) startMoving("home", routeHome, data); else break;
 
-                //tiredness and paycheck
-                let paycheck = flatScene.find(item => item.uuid == data.job) ? flatScene.find(item => item.uuid == data.job).buildingData.pay : 0;
-                data.health -= randomIntFromInterval(20, 25);
-                data.wallet += Math.floor(paycheck * (1 - taxes.salary));
-                money += Math.floor(paycheck * taxes.salary);
-                break;
-            case "learn":
-                //after 15-25 ticks find path home
-                if (data.sessionTick <= randomIntFromInterval(15, 25)) break;
+            //tiredness and paycheck
+            let paycheck = flatScene.find(item => item.uuid == data.job) ? flatScene.find(item => item.uuid == data.job).buildingData.pay : 0;
+            data.health -= randomIntFromInterval(20, 25);
+            data.wallet += Math.floor(paycheck * (1 - taxes.salary));
+            money += Math.floor(paycheck * taxes.salary);
+            break;
+        case "learn":
+            //after 15-25 ticks find path home
+            if (data.sessionTick <= randomIntFromInterval(15, 25)) break;
 
-                //find route and change to moving mode
-                let addition = data.education + calculateFacilityAddition(data.location.y, data.location.x) * budget.education;
-                routeHome = astar(convertPathfind(sceneData, sceneData[data.location.y][data.location.x], checkHome));
-                if (routeHome != null) startMoving("home", routeHome, data); else break;
-                if (data.moral <= 90) data.moral += calculateFacilityAddition(data.location.y, data.location.x, true);
-                if (data.health > 0) data.health -= randomIntFromInterval(5, 10);
-                if (addition >= Math.floor(data.education) + 1) { data.school = false; data.education = Math.floor(data.education) + 1 } else { data.education = addition; };
-                break;
-            case "hospital":
-                //after 15-25 ticks find path home
-                if (data.sessionTick <= randomIntFromInterval(15, 25)) break;
+            //find route and change to moving mode
+            let addition = data.education + calculateFacilityAddition(data.location.y, data.location.x) * budget.education;
+            routeHome = astar(convertPathfind(sceneData, sceneData[data.location.y][data.location.x], checkHome));
+            if (routeHome != null) startMoving("home", routeHome, data); else break;
+            if (data.moral <= 90) data.moral += calculateFacilityAddition(data.location.y, data.location.x, true);
+            if (data.health > 0) data.health -= randomIntFromInterval(5, 10);
+            if (addition >= Math.floor(data.education) + 1) { data.school = false; data.education = Math.floor(data.education) + 1 } else { data.education = addition; };
+            break;
+        case "hospital":
+            //after 15-25 ticks find path home
+            if (data.sessionTick <= randomIntFromInterval(15, 25)) break;
 
-                //find route and change to moving mode
-                routeHome = astar(convertPathfind(sceneData, sceneData[data.location.y][data.location.x], checkHome));
-                if (routeHome != null) startMoving("home", routeHome, data); else break;
-                if (data.health < 100) data.health = budget.healthcare * 100;
-                break;
-            case "pray":
-                //after 15-25 ticks find path home
-                if (data.sessionTick <= randomIntFromInterval(15, 25)) break;
+            //find route and change to moving mode
+            routeHome = astar(convertPathfind(sceneData, sceneData[data.location.y][data.location.x], checkHome));
+            if (routeHome != null) startMoving("home", routeHome, data); else break;
+            if (data.health < 100) data.health = budget.healthcare * 100;
+            break;
+        case "pray":
+            //after 15-25 ticks find path home
+            if (data.sessionTick <= randomIntFromInterval(15, 25)) break;
 
-                //find route and change to moving mode
-                routeHome = astar(convertPathfind(sceneData, sceneData[data.location.y][data.location.x], checkHome));
-                if (routeHome != null) startMoving("home", routeHome, data); else break;
-                if (data.moral <= 90) data.moral += calculateFacilityAddition(data.location.y, data.location.x, true);
-                break;
-            default:
-                //if invalid, teleport to home
-                data.location = findTileCoordinate(sceneData, checkHome);
-                data.status = "home";
-                break;
-        }
+            //find route and change to moving mode
+            routeHome = astar(convertPathfind(sceneData, sceneData[data.location.y][data.location.x], checkHome));
+            if (routeHome != null) startMoving("home", routeHome, data); else break;
+            if (data.moral <= 90) data.moral += calculateFacilityAddition(data.location.y, data.location.x, true);
+            break;
+        default:
+            //if invalid, teleport to home
+            data.location = findTileCoordinate(sceneData, checkHome);
+            data.status = "home";
+            break;
+    }
 
-        //increase timer for session
-        data.sessionTick += 1;
-    })
+    //increase timer for session
+    data.sessionTick += 1;
 }
 
 //set game speed
@@ -221,9 +237,6 @@ function setSpeed(speed) {
 }
 
 //simulate world
-var dayTick = 0;
-var simulationRunning = true;
-var yesterdayMoney = 0;
 function citizenSimulation(seed) {
     if (!simulationRunning) return;
     try {
@@ -264,7 +277,7 @@ function citizenSimulation(seed) {
         //simulate citizen and workpalce tiles
         flatScene.filter(item => (typeof item.quality != "undefined")).forEach(tile => qualityDegrade(tile));
         flatScene.filter(item => (item.type == 4)).forEach(facility => facilityTick(facility));
-        citizenStep(flatScene);
+        simulatePopulationPortion(flatScene);
 
         //update stats
         let citizensFlat = Object.values(citizens).flat();
@@ -303,7 +316,7 @@ function citizenSimulation(seed) {
             yesterdayMoney = money;
         }
     } catch (error) {
-        console.log(error)
+        console.log(error);
     }
 
     //loop simulation
@@ -383,7 +396,6 @@ function qualityDegrade(tile) {
 }
 
 //simulation for zoned tiles
-var warningLabels = {};
 function zoneTileTick(tile, calcSupply, originalSupply, isLast) {
     let warnings = [];
     if (!tile.age) tile.age = 0;
@@ -444,7 +456,7 @@ function zoneTileTick(tile, calcSupply, originalSupply, isLast) {
         if (warnings.length != 0 && typeof warningLabels[tile.index] == "undefined") {
             let element = document.createElement('div');
             element.id = `tile-${tile.index}`;
-            element.innerHTML = `<i class="fa-solid fa-triangle-exclamation"></i>`;
+            element.innerHTML = `<i class="fa-solid fa-bullhorn"></i>`;
             element.className = "warningLabel";
             element.onclick = (event) => { tileSelection(tile, event) };
 

@@ -368,7 +368,6 @@ button:active,
 
 #menu button,
 #demolish button,
-#saves button,
 #save button,
 .post {
     width: 25vw;
@@ -378,6 +377,47 @@ button:active,
     text-transform: capitalize;
 }
 
+#saves {
+    width: 35vw;
+}
+
+#saves hr {
+    margin-top: 5px;
+}
+
+#saves input {
+    margin: 5px;
+    padding: 10px;
+    height: 50px;
+}
+
+.saveName {
+    text-align: left;
+    width: calc(100% - 65px) !important;
+    float: left;
+    margin-bottom: 0 !important;
+}
+
+.deleteSave {
+    width: 50px !important;
+    float: right;
+    aspect-ratio: 1/1;
+    margin-left: 0 !important;
+    margin-bottom: 0 !important;
+    padding-top: 15px !important;
+}
+
+.loadingWheel {
+    border-width: 3px;
+    border-style: solid;
+    border-color: #ffffffbd #ffffff32 #ffffff32;
+    border-image: initial;
+    border-radius: 50%;
+    animation: 3s linear 0s infinite normal none running spin;
+    width: 30px;
+    height: 30px;
+}
+
 .innertab {
     display: none;
 }
@@ -385,10 +425,11 @@ button:active,
 .warningLabel {
     background: rgba(0, 0, 0, 0.7);
     padding: 8px;
-    color: yellow;
+    color: white;
     padding-bottom: 2px;
     cursor: pointer;
     pointer-events: visible;
+    border-radius: 100%;
 }
 
 #floatingDiv {
@@ -418,6 +459,16 @@ input[type=number]::-webkit-outer-spin-button {
     z-index: 999;
     top: 0;
     pointer-events: none;
+}
+
+@keyframes spin {
+    0% {
+        transform: rotate(0deg);
+    }
+
+    100% {
+        transform: rotate(360deg);
+    }
 }
 
 @keyframes slideInUp {

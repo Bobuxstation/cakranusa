@@ -29,14 +29,6 @@ function typewrite(target, text, isIntro = false) {
     }; type();
 }
 
-function calculateLowestQuality(citizen, budget) {
-    let taxRate = (1 - Object.values(taxes).reduce((sum, val) => { return sum + val }, 0)); //tax rate & department budgets affects official
-
-    education[highestEducation].education
-    citizen.education
-    citizen.moral
-}
-
 // open tab
 var lastTab = {};
 function openTab(tabname, tabGroup, doubleClickHide = false, inAnim = 'slideInUp', outAnim = 'slideOutDown') {
@@ -466,4 +458,16 @@ function lerpVehicle(oldPos, targetPos, targetRot, data, deleteVehicle = false) 
             delete vehicles[data.uuid];
         }
     }; lerpAnim();
+}
+
+function chargePrice(notFree) {
+    if (!notFree) return true;
+    if (money - tool.price >= 0) {
+        money -= tool.price
+        if (tool.price != 0) newNotification(`-${tool.price.toLocaleString('id-ID', { style: 'currency', currency: 'IDR', maximumFractionDigits: 0 })}`);
+        return true;
+    } else {
+        newNotification("Cannot build here: Insufficient funds");
+        return false;
+    };
 }

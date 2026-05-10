@@ -82,18 +82,11 @@ async function select(event) {
             };
         }
 
-        //subtract from money
-        if (tool.category) {
-            if (money - tool.price >= 0) money -= tool.price;
-            else { newNotification("Cannot build here: Insufficient funds"); return; };
-            if (tool.price != 0) newNotification(`-${tool.price.toLocaleString('id-ID', { style: 'currency', currency: 'IDR', maximumFractionDigits: 0 })}`);
-        }
-
         //call corresponding tool function
         switch (tool.category) {
             case "Demolish": cleanTileData(tile, true); break;
             case "Demolish Underground": cleanUnderground(tile); break;
-            default: if (tool.category) buildMethod[tool.category](tile); else tileSelection(tile, event); break;
+            default: if (tool.category) buildMethod[tool.category](true, tile); else tileSelection(tile, event); break;
         }
     })
 }
@@ -134,8 +127,7 @@ function hover(event) {
                 condition = false;
             }
 
-            let selectionColor = condition ? 0xff0000 : 0xffffff;
-            let mesh = new THREE.Mesh(new THREE.BoxGeometry(1, 0.2, 1), new THREE.MeshToonMaterial({ color: selectionColor }));
+            let mesh = new THREE.Mesh(new THREE.BoxGeometry(1, 0.2, 1), new THREE.MeshToonMaterial({ color: 0xff0000 }));
             mesh.position.set(tile.posX, tile.posY + 0.16, tile.posZ);
             mesh.material.transparent = true;
             mesh.material.opacity = 0.5;
@@ -220,7 +212,7 @@ function cleanTileData(tile, resetType = false, reZone = false) {
                 delete meshLocations[tile.index];
             };
 
-            if (reZone != false) placeZone(tile, tempZone);
+            if (reZone != false) placeZone(false, tile, tempZone);
         }, 500);
     } else {
         if (meshLocations[tile.index]) scene.remove(meshLocations[tile.index]);
@@ -257,10 +249,10 @@ function tileSelection(tile, event) {
 }
 
 // place tile zone
-async function placeZone(tile, zone = tool.type) {
-    // remove foliage
+async function placeZone(paying, tile, zone = tool.type) {
     if (tile.type == 3 & tile.zone == zone) return;
-    cleanTileData(tile)
+    if (!chargePrice(paying)) return;
+    cleanTileData(tile);
 
     tile.type = 3; //zoned for buildings
     tile.zone = zone;
@@ -278,8 +270,9 @@ async function placeZone(tile, zone = tool.type) {
 }
 
 // place foliage
-async function placeFoliage(tile, type = tool.type) {
+async function placeFoliage(paying, tile, type = tool.type) {
     if (tile.type == 1 & tile.foliageType == type & meshLocations[tile.index]) return;
+    if (!chargePrice(paying)) return;
     cleanTileData(tile);
 
     tile.type = 1; //zoned for buildings
@@ -297,8 +290,10 @@ async function placeFoliage(tile, type = tool.type) {
 }
 
 // place road on tile and update neighbors
-function placeRoad(tile, data = { model: buildmenu[tool.category][tool.type].model, type: tool.type }) {
+function placeRoad(paying, tile, data = { model: buildmenu[tool.category][tool.type].model, type: tool.type }) {
+    if (!chargePrice(paying)) return;
     cleanTileData(tile);
+
     tile.type = 2;
     tile.qualityState = 100;
     tile.qualityTick = 0;
@@ -312,8 +307,9 @@ function placeRoad(tile, data = { model: buildmenu[tool.category][tool.type].mod
 }
 
 // government facility
-async function placeFacility(tile) {
+async function placeFacility(paying, tile) {
     if (tile.type == 4 & tile.building == tool.type) return;
+    if (!chargePrice(paying)) return;
 
     cleanTileData(tile);
     tile.type = 4; // pre made buildings
@@ -336,7 +332,8 @@ async function placeFacility(tile) {
 }
 
 //build underground supplies
-function buildUnderground(tile) {
+function buildUnderground(paying, tile) {
+    if (!chargePrice(paying)) return;
     tile[tool.type] = true;
 
     let neighbors = checkNeighborForPipes(tile["posX"], tile["posZ"], tool.type);

@@ -18,7 +18,7 @@ function newBlankScene(terrainSize, seed) {
                 additionalData.qualityState = 100;
                 additionalData.qualityTick = 0;
                 additionalData.model = 'assets/roads/plainroad';
-            } else if (random < 0.25) {
+            } else if (random < 0.3) {
                 type = 1; // foliage
                 additionalData["foliageType"] = Object.keys(foliage)[Math.floor(worley01Seeded(x, y, 1, seed) * Object.keys(foliage).length)];
             }
@@ -86,22 +86,24 @@ async function generateGrid(data) {
                     scene.add(object);
                     break;
                 case 3:
-                    if (!itemData.buildingModel) break;    
+                    if (!itemData.buildingModel) {
+                        placeZone(false, itemData, itemData.zone ? itemData.zone : "housing");
+                    } else {
+                        var object = await loadWMat(itemData.buildingModel);
+                        positionTile(checkNeighborForRoads(itemData["posX"], itemData["posZ"], true), itemData, object)
+                        animMove(object, true);
+                        setInstanceColor(0x555555, gridInstance, itemData.index);
 
-                    var object = await loadWMat(itemData.buildingModel);
-                    positionTile(checkNeighborForRoads(itemData["posX"], itemData["posZ"], true), itemData, object)
-                    animMove(object, true);
-                    setInstanceColor(0x555555, gridInstance, itemData.index);
-
-                    meshLocations[itemData.index] = object;
-                    scene.add(object);
+                        meshLocations[itemData.index] = object;
+                        scene.add(object);
+                    };
                     break;
                 case 2:
                     var roadType = itemData.roadType ? itemData.roadType : Object.keys(transport).find(item => transport[item].model == itemData.model)
-                    placeRoad(itemData, { model: itemData.model, type: roadType })
+                    placeRoad(false, itemData, { model: itemData.model, type: roadType });
                     break;
                 case 1:
-                    placeFoliage(itemData, itemData.foliageType);
+                    placeFoliage(false, itemData, itemData.foliageType);
                     break;
             }
 
@@ -143,10 +145,11 @@ function gameUI() {
     document.getElementById("tabButtons").style.display = "flex";
     document.getElementById("titleOverlay").style.display = "none";
     document.getElementById("intro").style.display = "none";
-
     setSpeed(1000);
+
     renderer.domElement.style.pointerEvents = 'unset';
     renderer.domElement.style.filter = 'unset';
+    labelRenderer.domElement.style.filter = 'unset';
     rainCanvas.style.filter = 'unset';
 }
 
@@ -160,28 +163,26 @@ function titleUI() {
     listJsonSaves();
     initScene(false);
     openTab('', 'tab', true);
+
     renderer.domElement.style.pointerEvents = 'none';
     renderer.domElement.style.filter = 'blur(2px)';
+    labelRenderer.domElement.style.filter = 'blur(2px)';
     rainCanvas.style.filter = 'blur(2px)';
 }
 
 function newGame() {
+    document.getElementById("logoImage").style.display = "none";
+    document.getElementById("splashtext").style.display = "none";
     document.getElementById("titleButtons").style.display = "none";
     document.getElementById("titleLoad").style.display = "block";
     initScene(true);
 }
 
 function quitGame() {
-    titleUI();
-
-    //temporary blank scene
-    rainCanvas.style.display = "none";
-    scene.remove.apply(scene, scene.children);
-    document.getElementById("Posts").innerHTML = '';
-
-    Object.keys(warningLabels).forEach(label => { if (document.getElementById(`tile-${label}`)) document.getElementById(`tile-${label}`).remove(); scene.remove(warningLabels[label]); delete warningLabels[label]; });
+    document.getElementById("logoImage").style.display = "none";
+    document.getElementById("splashtext").style.display = "none";
     openTab('', 'tab', true);
-    allOfTheLights(scene);
+    titleUI();
 }
 
 let studioLogo = false;
@@ -189,11 +190,13 @@ async function initScene(isNewGame, savefile = false) {
     //pause simulation
     document.getElementById("titleButtons").style.display = "none";
     document.getElementById("titleLoad").style.display = "block";
+
     simulationRunning = false;
     setSpeed(0);
-
     setTimeout(async () => {
         //reshow title buttons
+        document.getElementById("logoImage").style.display = "block";
+        document.getElementById("splashtext").style.display = "block";
         document.getElementById("titleButtons").style.display = "block";
         document.getElementById("titleLoad").style.display = "none";
         if (!studioLogo) {
@@ -206,6 +209,7 @@ async function initScene(isNewGame, savefile = false) {
         typewrite(document.getElementById("splashtext"), `"${splashtext[Math.floor(Math.random() * splashtext.length)]}"`, true);
 
         //set data
+        simulationIndex = 0;
         dayTick = 0;
         vehicles = {};
         meshLocations = {};
@@ -231,6 +235,14 @@ async function initScene(isNewGame, savefile = false) {
         setSupplyStat(calculateSupplied(), calculateSupplied())
         refreshInfo();
 
+        //clear warning labels
+        Object.keys(warningLabels).forEach(label => { 
+            if (document.getElementById(`tile-${label}`)); 
+            document.getElementById(`tile-${label}`).remove(); 
+            scene.remove(warningLabels[label]); 
+            delete warningLabels[label]; 
+        });
+
         //pollution and rain start
         scene.fog.density = 0.001 * (calculatePollution() * 25);
         rainCanvas.style.display = isRaining(worldSeed, date) ? "block" : "none";
@@ -245,6 +257,7 @@ async function initScene(isNewGame, savefile = false) {
             gameUI();
             setTimeout(() => {
                 newPost(sosmedPosts.intro, { username: 'cakranusa', bio: 'For tutorials, check the help menu', name: "Cakranusa" }, false);
+                openTab('Guide', 'tab', true);
             }, 500);
         };
     }, 3000);

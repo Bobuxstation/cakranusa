@@ -1,5 +1,4 @@
 // Create a scene
-var { fakerID_ID } = require("@faker-js/faker");
 var scene = new THREE.Scene();
 
 // isometric camera
@@ -29,8 +28,6 @@ document.body.appendChild(labelRenderer.domElement);
 var controls = new THREE.OrbitControls(camera, renderer.domElement);
 controls.mouseButtons.LEFT = 2;
 controls.mouseButtons.RIGHT = 3;
-controls.touches.ONE = 2;
-controls.touches.TWO = 1;
 
 var composer = new THREE.EffectComposer(renderer);
 composer.addPass(new THREE.RenderPass(scene, camera));
