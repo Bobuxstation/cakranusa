@@ -193,10 +193,12 @@ canvas {
 
 .bottom {
     bottom: 0;
+    border-top: #a9a9a955 solid 1px;
 }
 
 .top {
     top: 34px;
+    border-bottom: #a9a9a955 solid 1px;
 }
 
 .news {
@@ -377,8 +379,8 @@ button:active,
     text-transform: capitalize;
 }
 
-#saves {
-    width: 35vw;
+#saves, #newgame {
+    width: 325px;
 }
 
 #saves hr {
@@ -387,8 +389,19 @@ button:active,
 
 #saves input {
     margin: 5px;
+}
+
+#newgame button,
+#newgame select,
+#newgame input {
+    width: calc(100% - 10px);
+    margin: 5px;
+    margin-bottom: 0px;
     padding: 10px;
-    height: 50px;
+}
+
+#createNew {
+    margin-bottom: 5px !important;
 }
 
 .saveName {
@@ -396,6 +409,8 @@ button:active,
     width: calc(100% - 65px) !important;
     float: left;
     margin-bottom: 0 !important;
+    height: 50px;
+    padding: 10px;
 }
 
 .deleteSave {
@@ -413,7 +428,7 @@ button:active,
     border-color: #ffffffbd #ffffff32 #ffffff32;
     border-image: initial;
     border-radius: 50%;
-    animation: 3s linear 0s infinite normal none running spin;
+    animation: 2s linear 0s infinite normal none running spin;
     width: 30px;
     height: 30px;
 }

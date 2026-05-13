@@ -27,7 +27,7 @@ function createNewCitizen(tile) {
         school: false,
         wallet: 100000, // start with 100k
         health: 100,
-        education: 1, // basic education
+        education: (Math.random() > 0.15) ? 1 : randomIntFromInterval(0, education[highestEducation].education) + 1, // basic education or educated migrant (15% chance)
         moral: randomIntFromInterval(50, 100),
 
         username: username,
@@ -114,8 +114,8 @@ async function citizenStep(data, index, flatScene) {
                 if (route != null) startMoving("hospital", route, data); break;
             }
 
-            // if education is not high, 15% chance of going to school instead of work
-            if ((data.education != education[highestEducation].education + 1 & data.school != false) && (Math.random() > 0.15)) {
+            // if education is not high, 25% chance of going to school instead of work
+            if ((data.education != education[highestEducation].education + 1 & data.school != false) && (Math.random() > 0.25)) {
                 route = astar(convertPathfind(sceneData, sceneData[data.location.y][data.location.x], flatScene.find(item => item.uuid == data.school)));
                 if (route != null) startMoving("learn", route, data); break;
             }

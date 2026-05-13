@@ -203,18 +203,38 @@ async function initScene(isNewGame, savefile = false) {
             studioLogo = true;
             document.getElementById("logoImage").src = "assets/logo.png";
             document.getElementById("titleOverlay").style.display = "flex";
-        }
+        };
+
+        //show ui
+        if (savefile || isNewGame) {
+            if (isNewGame) newNotification("Welcome to Cakranusa! Start out by building some housing zones.");
+            gameUI();
+            setTimeout(() => {
+                newPost(sosmedPosts.intro, { username: 'cakranusa', bio: 'For tutorials, check the help menu', name: "Cakranusa" }, false);
+                openTab('Guide', 'tab', true);
+            }, 500);
+        };
 
         //splash text
         typewrite(document.getElementById("splashtext"), `"${splashtext[Math.floor(Math.random() * splashtext.length)]}"`, true);
+
+        //random seed
+        let seed = Math.floor(Math.random() * 100000);
+        if (document.getElementById("worldseed").value.trim() != "") {
+            seed = document.getElementById("worldseed").value
+                .split("")
+                .map(letter => letter.charCodeAt(0) - 96)
+                .reduce((accumulator, currentValue) => `${accumulator}${currentValue * currentValue}`, 0);
+            document.getElementById("worldseed").value = "";
+        };
 
         //set data
         simulationIndex = 0;
         dayTick = 0;
         vehicles = {};
         meshLocations = {};
-        worldSeed = savefile.worldSeed || Math.random();
-        sceneData = savefile.sceneData || newBlankScene(32, Math.floor(worldSeed * 100000));
+        worldSeed = savefile.worldSeed || parseInt(seed);
+        sceneData = savefile.sceneData || newBlankScene(document.getElementById("citysize").value, worldSeed);
         if (savefile) {
             citizens = savefile.citizens;
             money = savefile.money;
@@ -236,11 +256,11 @@ async function initScene(isNewGame, savefile = false) {
         refreshInfo();
 
         //clear warning labels
-        Object.keys(warningLabels).forEach(label => { 
-            if (document.getElementById(`tile-${label}`)); 
-            document.getElementById(`tile-${label}`).remove(); 
-            scene.remove(warningLabels[label]); 
-            delete warningLabels[label]; 
+        Object.keys(warningLabels).forEach(label => {
+            if (document.getElementById(`tile-${label}`));
+            document.getElementById(`tile-${label}`).remove();
+            scene.remove(warningLabels[label]);
+            delete warningLabels[label];
         });
 
         //pollution and rain start
@@ -250,15 +270,5 @@ async function initScene(isNewGame, savefile = false) {
         //start simulation
         simulationRunning = true;
         citizenSimulation(worldSeed);
-
-        //show ui
-        if (savefile || isNewGame) {
-            if (isNewGame) newNotification("Welcome to Cakranusa! Start out by building some housing zones.");
-            gameUI();
-            setTimeout(() => {
-                newPost(sosmedPosts.intro, { username: 'cakranusa', bio: 'For tutorials, check the help menu', name: "Cakranusa" }, false);
-                openTab('Guide', 'tab', true);
-            }, 500);
-        };
     }, 3000);
 }; initScene(false);

@@ -250,7 +250,7 @@ function tileSelection(tile, event) {
 
 // place tile zone
 async function placeZone(paying, tile, zone = tool.type) {
-    if (tile.type == 3 & tile.zone == zone) return;
+    if (tile.type == 3 & tile.zone == zone) if (paying) return;
     if (!chargePrice(paying)) return;
     cleanTileData(tile);
 
@@ -271,7 +271,7 @@ async function placeZone(paying, tile, zone = tool.type) {
 
 // place foliage
 async function placeFoliage(paying, tile, type = tool.type) {
-    if (tile.type == 1 & tile.foliageType == type & meshLocations[tile.index]) return;
+    if (tile.type == 1 & tile.foliageType == type & meshLocations[tile.index]) if (paying) return;
     if (!chargePrice(paying)) return;
     cleanTileData(tile);
 

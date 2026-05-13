@@ -7,6 +7,7 @@
     <link rel="stylesheet" href="assets/scroll.css">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
+    <!-- Three.js Dependencies -->
     <script type="text/javascript" src="deps/three.min.js"></script>
     <script type="text/javascript" src="deps/ImprovedNoise.js"></script>
     <script type="text/javascript" src="deps/OrbitControls.js"></script>
@@ -24,6 +25,7 @@
     <script type="text/javascript" src="deps/CSS2DRenderer.js"></script>
     <script type="text/javascript" src="deps/fa.js"></script>
 
+    <!-- Actual code -->
     <script type="text/javascript" src="js/rain.js" defer></script>
     <script type="text/javascript" src="js/sosmed.js" defer></script>
     <script type="text/javascript" src="js/biome.js" defer></script>
@@ -45,6 +47,7 @@
 <body>
     <div id="tabs">
         <div>
+            <!-- Build menu hover hint -->
             <div id="hint" class="dual">
                 <div class="left" id="imageSide"></div>
                 <div class="right">
@@ -55,17 +58,20 @@
                 </div>
             </div>
 
+            <!-- Build Menu -->
             <div class="tab dual" id="build">
                 <div class="left" id="buildLeft"></div>
                 <div class="right" id="buildRight"></div>
             </div>
 
+            <!-- Save/Quit Menu -->
             <div class="tab right fitH" id="menu">
                 <button onclick="quitGame()">Quit</button>
                 <button onclick="openTab('saves', 'tab', true); listJsonSaves(true, true)">Save & Quit</button>
                 <button onclick="openTab('saves', 'tab', true); listJsonSaves(true)">Save</button>
             </div>
 
+            <!-- Statistics -->
             <div class="tab dual" id="statistics">
                 <div class="left">
                     <button onclick="openTab('Population', 'statsTab')" class="statsTabButton selected"
@@ -94,6 +100,7 @@
                 </div>
             </div>
 
+            <!-- Manage Budget, Taxes, etc -->
             <div class="tab dual" id="manage">
                 <div class="left">
                     <button onclick="openTab('taxes', 'policyTab')" class="policyTabButton selected"
@@ -107,22 +114,20 @@
                 </div>
             </div>
 
+            <!-- Guidebook -->
             <div class="tab dual" id="Guide">
                 <div class="left" id="tutorialLeft"></div>
                 <div class="right" id="tutorialRight"></div>
             </div>
-
-            <div class="tab dual" id="?">
-                <div class="left" id="tutorialLeft"></div>
-                <div class="right" id="tutorialRight"></div>
-            </div>
-
+            
+            <!-- Demolish menu -->
             <div class="tab right fitH" id="demolish">
                 <button onclick="setTool('', 'Demolish')">Above ground</button>
                 <hr>
                 <div id="demolishUnderground"></div>
             </div>
 
+            <!-- Sosmed menu -->
             <div class="tab right fitH" id="sosmed">
                 <div class="sosmedHeader">
                     sosmed
@@ -142,13 +147,27 @@
                 </div>
             </div>
 
+            <!-- Saves menu -->
             <div class="tab right fitH dual" id="saves"></div>
+            
+            <!-- Create new game -->
+            <div class="tab right fitH dual" id="newgame">
+                <select name="City Size" id="citysize">
+                    <option value="16">16x16 (Small)</option>
+                    <option value="32" selected>32x32 (Medium)</option>
+                    <option value="64">64x64 (Large)</option>
+                </select>
+                <input placeholder="Seed (Leave blank for random seed)" id="worldseed">
+                <button onclick="newGame(); openTab('', 'tab', true);" id="createNew">Create</button>
+            </div>
         </div>
     </div>
 
+    <!-- News bar at top -->
     <div id="newsDetails" style="display: none;"></div>
     <div class="overlay news" id="newsContent" style="display: none;">&nbsp;</div>
 
+    <!-- City Stats at top -->
     <div class="navigation overlay top" id="topNav" style="display: none;">
         <div>
             <span id="money"></span>
@@ -165,6 +184,7 @@
         </div>
     </div>
 
+    <!-- Bottom menu bar -->
     <div id="tabButtons" class="navigation bottom overlay" style="display: none;">
         <div id="tools">
             <button onclick="openTab('menu', 'tab', true)" class="tabButton" name="menu">Menu</button>
@@ -197,6 +217,7 @@
         </div>
     </div>
 
+    <!-- Tool menu bar -->
     <div id="toolOverlay" class="navigation bottom overlay">
         <div>
             <button id="hideTool">
@@ -205,22 +226,26 @@
         </div>
     </div>
 
+    <!-- Title menu bar -->
     <div id="titleOverlay" class="navigation bottom overlay" style="display: none;">
         <div id="titleButtons">
-            <button id="hideTool" onclick="newGame(); openTab('', 'tab', true)">New Game</button>
+            <button id="hideTool" onclick="openTab('newgame', 'tab', true)" name="newgame">New Game</button>
             <button id="hideTool" onclick="openTab('saves', 'tab', true)" name="saves">Saves</button>
             <button id="hideTool" onclick="window.close()">Quit</button>
         </div>
     </div>
 
+    <!-- Intro & loading screen -->
     <div id="intro">
         <img id="logoImage" src="assets/studio.png"><br>
         <span id="splashtext"></span>
         <span id="titleLoad" class="loadingWheel" style="display: none;"></span>
     </div>
 
+    <!-- Floating tooltip and notifications -->
     <div id="floatingDiv"></div>
     <div id="notifications"></div>
 
+    <!-- Rain effect overlay canvas -->
     <canvas id="rainOverlay" style="display: none;"></canvas>
 </body>
