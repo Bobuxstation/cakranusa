@@ -69,10 +69,10 @@ function tileInfo(tile) {
         switch (tile.type) {
             case 4:
                 floatingDiv.appendChild(infoHeading(tile.building));
-                if (!tile.buildingData.slots) break;
+                if (!structures[tile.building].slots) break;
 
-                floatingDiv.appendChild(infoProgress(citizensInTile(tile), tile.buildingData.slots));
-                floatingDiv.appendChild(infoTable({ "Citizen(s) using facility": `${citizensInTile(tile)}/${tile.buildingData.slots}`, }));
+                floatingDiv.appendChild(infoProgress(citizensInTile(tile), eval(structures[tile.building].slots)));
+                floatingDiv.appendChild(infoTable({ "Citizen(s) using facility": `${citizensInTile(tile)}/${eval(structures[tile.building].slots)}`, }));
                 citizensInTile(tile, true).forEach(citizen => { floatingDiv.appendChild(profileShortcut(citizen)) });
                 break;
             case 3:
@@ -94,7 +94,7 @@ function tileInfo(tile) {
                         floatingDiv.appendChild(infoProgress(checkEmployees(tile).length, tile.slot));
                         floatingDiv.appendChild(infoTable({
                             "Workers": `${checkEmployees(tile).length}/${tile.slot}`,
-                            "Min. education level": `${Object.keys(education).find(item => education[item].education == tile.buildingData.level - 1) || "basic education"}`
+                            "Min. education level": `${education.find(item => structures[item].education == allZones[tile.zone][tile.buildingModel].level - 1) || "basic education"}`
                         }))
                         checkEmployees(tile).forEach(citizen => { floatingDiv.appendChild(profileShortcut(citizen)) });
                     }

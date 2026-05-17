@@ -12,7 +12,7 @@ renderer.setSize(window.innerWidth, window.innerHeight);
 renderer.setPixelRatio(window.devicePixelRatio);
 renderer.outputEncoding = THREE.sRGBEncoding;
 renderer.shadowMap.enabled = true;
-renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+renderer.shadowMap.type = THREE.VSMShadowMap;
 renderer.domElement.style.pointerEvents = 'none';
 renderer.domElement.style.filter = 'blur(2px)';
 document.body.appendChild(renderer.domElement);
@@ -34,8 +34,8 @@ composer.addPass(new THREE.RenderPass(scene, camera));
 
 // pixelated filter
 var renderPixelatedPass = new THREE.RenderPixelatedPass(2, scene, camera);
-renderPixelatedPass.depthEdgeStrength = 0.1;
-renderPixelatedPass.normalEdgeStrength = 0.1;
+//renderPixelatedPass.depthEdgeStrength = 0.1;
+//renderPixelatedPass.normalEdgeStrength = 0.1;
 //composer.addPass(renderPixelatedPass);
 
 //selection outline

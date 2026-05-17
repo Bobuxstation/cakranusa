@@ -1,6 +1,6 @@
 // render pipe model on tile based on neighbors
 async function setPipeModel(directions, tile, type, idUpdate) {
-    let typeModel = underground[type].model;
+    let typeModel = structures[type].model;
     let object;
 
     //create supply network if no connection

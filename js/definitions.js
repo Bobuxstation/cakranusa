@@ -193,11 +193,14 @@ let farm = {
     }
 };
 
+let allZones = { "housing": houses, "commercial": commercial, "industrial": industrial, "farm": farm };
+
 //========================
-// Build Menu
+// Structure Data
 //========================
 
-let foliage = {
+let structures = {
+    //Foliage
     'Forest': {
         "model": "assets/trees/j1",
         "description": "Trees for the environment and rainwater absorption",
@@ -222,11 +225,8 @@ let foliage = {
         "model": "assets/trees/j5",
         "description": "Trees for the environment and rainwater absorption",
         "price": 150_000
-    }
-};
-
-//zone types
-let zones = {
+    },
+    //Zoning
     "housing": {
         "model": "assets/zoning/housing",
         "description": "Allocate selected land(s) for citizen housing",
@@ -246,11 +246,8 @@ let zones = {
         "model": "assets/zoning/farm",
         "description": "Allocate selected land(s) for farmland workplaces",
         "price": 100_000
-    }
-}
-
-//transport types
-let transport = {
+    },
+    //Transport
     "road": {
         "model": "assets/roads/plainroad",
         "description": "Connect buildings with each other",
@@ -264,39 +261,38 @@ let transport = {
         "variableModel": true,
         "price": 3_000_000,
         "walkable": true
-    }
-}
-
-//govt facility
-let facility = {
+    },
+    //Healthcare
     "hospital": {
         "model": "assets/facility/hospital",
         "description": "Keeps citizens healthy",
         "type": "medical",
-        "slots": 8,
+        "slots": 'Math.floor(8 * budget.healthcare)',
         "price": 150_000_000
     },
+    //Police
     "police station": {
         "model": "assets/facility/polisi",
         "description": "Keeps the city safe",
         "type": "police",
-        "slots": 8,
+        "slots": 'Math.floor(8 * budget.police)',
         "price": 120_000_000
-    },
-    "fire department": {
-        "model": "assets/facility/damkar",
-        "description": "Extinguish any building fires",
-        "type": "firedept",
-        "slots": 8,
-        "price": 100_000_000
     },
     "tax office": {
         "model": "assets/facility/polisi",
         "description": "Collects taxes from citizens",
         "type": "taxoffice",
-        "slots": 8,
         "price": 120_000_000
     },
+    //Fire Dept
+    "fire department": {
+        "model": "assets/facility/damkar",
+        "description": "Extinguish any building fires",
+        "type": "firedept",
+        "slots": 'Math.floor(8 * budget.firefighter)',
+        "price": 100_000_000
+    },
+    //Religion
     "masjid": {
         "model": "assets/facility/mosque",
         "description": "Increase religious and moral values",
@@ -310,17 +306,14 @@ let facility = {
         "type": "religion",
         "slots": 16,
         "price": 150_000_000
-    }
-}
-
-//schools and libraries
-let education = {
+    },
+    //Education
     "elementary school": {
         "model": "assets/facility/school",
         "description": "Increase citizens education and moral values",
         "type": "education",
         "education": 1,
-        "slots": 16,
+        "slots": 'Math.floor(16 * budget.education)',
         "price": 100_000_000
     },
     "middle school": {
@@ -328,7 +321,7 @@ let education = {
         "description": "Increase citizens education and moral values",
         "type": "education",
         "education": 2,
-        "slots": 16,
+        "slots": 'Math.floor(16 * budget.education)',
         "price": 110_000_000
     },
     "high school": {
@@ -336,13 +329,10 @@ let education = {
         "description": "Increase citizens education and moral values",
         "type": "education",
         "education": 3,
-        "slots": 16,
+        "slots": 'Math.floor(16 * budget.education)',
         "price": 120_000_000
-    }
-}
-
-//schools and libraries
-let leisure = {
+    },
+    //Leisure
     "Bus stop": {
         "model": "assets/facility/halte",
         "description": "Decoration for now",
@@ -360,11 +350,20 @@ let leisure = {
         "description": "Field for playing padel",
         "type": "leisure",
         "price": 25_000_000
-    }
-}
-
-//govt facility
-let services = {
+    },
+    "Park": {
+        "model": "assets/facility/park",
+        "description": "Green space for the city",
+        "type": "tourism",
+        "price": 25_000_000
+    },
+    "Fountain Monument": {
+        "model": "assets/facility/monumen",
+        "description": "Green space for the city",
+        "type": "tourism",
+        "price": 25_000_000
+    },
+    //Services
     "recycling plant": {
         "model": "assets/facility/recycle plant",
         "description": "Recycle citizens waste to avoid pollution",
@@ -392,34 +391,8 @@ let services = {
         "type": "water pipe",
         "capacity": 150,
         "price": 50_000_000
-    }
-}
-
-//tourism
-let tourism = {
-    "Park": {
-        "model": "assets/facility/park",
-        "description": "Green space for the city",
-        "type": "tourism",
-        "price": 25_000_000
     },
-    "Fountain Monument": {
-        "model": "assets/facility/monumen",
-        "description": "Green space for the city",
-        "type": "tourism",
-        "price": 25_000_000
-    }
-}
-
-let highestEducation = Object.keys(education)
-    .filter(key => typeof education[key].education === "number")
-    .reduce((maxKey, key) => education[key].education > education[maxKey].education ? key : maxKey);
-
-//========================
-// underground category
-//========================
-
-let underground = {
+    //Supply
     "electric cable": {
         "model": "assets/pipe/cable",
         "description": "Supplies electricity to buildings",
@@ -435,20 +408,79 @@ let underground = {
         "label": "Water",
         "variableModel": true,
         "price": 100_000
-    }
-}
-
-function loadUnderground() {
-    document.getElementById("demolishUnderground").innerHTML = '';
-    Object.keys(underground).forEach(item => {
-        let button = document.createElement("button");
-        button.innerText = item;
-        button.onclick = () => setTool(item, 'Demolish Underground');
-
-        document.getElementById("demolishUnderground").appendChild(button);
-        undergroundGroups[item] = {};
-    })
+    },
 };
+
+//========================
+// Build Menu
+//========================
+
+//trees
+let foliage = [
+    "Forest",
+    "Oak Forest",
+    "Acacia Forest",
+    "Pine Forest",
+    "Swamp forest"
+];
+
+//zone types
+let zones = [
+    "housing",
+    "commercial",
+    "industrial",
+    "farm"
+];
+
+//transport types
+let transport = [
+    "road",
+    "road with sidewalks"
+];
+
+//govt facility
+let facility = [
+    "hospital",
+    "police station",
+    "fire department",
+    "tax office",
+    "masjid",
+    "cathedral"
+];
+
+//schools and libraries
+let education = [
+    "elementary school",
+    "middle school",
+    "high school"
+];
+
+//schools and libraries
+let leisure = [
+    "Bus stop",
+    "Football field",
+    "Padel Field"
+];
+
+//govt facility
+let services = [
+    "recycling plant",
+    "wind turbine",
+    "solar panel",
+    "water pump"
+];
+
+//tourism
+let tourism = [
+    "Park",
+    "Fountain Monument"
+];
+
+//underground supplies
+let underground = [
+    "electric cable",
+    "water pipe"
+];
 
 //========================
 // Build Menu Definitions
@@ -486,20 +518,20 @@ let buildMethod = {
 
 //build menu preview
 var previewRenderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
-previewRenderer.setSize(1024, 1024);
+previewRenderer.setSize(512, 512);
 previewRenderer.outputEncoding = THREE.sRGBEncoding;
 previewRenderer.shadowMap.enabled = true;
 previewRenderer.shadowMap.type = THREE.PCFSoftShadowMap;
 
 //build menu preview
-async function renderThumbnail(item, subItem) {
+async function renderThumbnail(item, itemKey) {
     let previewScene = new THREE.Scene();
     let previewCamera = new THREE.PerspectiveCamera(75, 1, 0.1, 700);
     previewCamera.position.set(0.05, 0.5, -1.77);
     previewCamera.rotation.set(-3.14, 0, 3.14);
 
-    let variableModelStr = buildmenu[item][subItem].variableModel ? '_straight' : '';
-    let model = await loadWMat(buildmenu[item][subItem].model + variableModelStr);
+    let variableModelStr = item.variableModel ? '_straight' : '';
+    let model = await loadWMat(item.model + variableModelStr);
     model.scale.setScalar(0.30);
     model.rotation.set(0, -(Math.PI / 2), 0);
 
@@ -512,7 +544,7 @@ async function renderThumbnail(item, subItem) {
         let img = document.createElement("img");
         img.src = previewRenderer.domElement.toDataURL();
         img.className = "hintPreview";
-        img.id = `${item}-${subItem}`;
+        img.id = `${itemKey}`;
         document.getElementById("imageSide").appendChild(img);
     }, 250);
 }
@@ -520,6 +552,22 @@ async function renderThumbnail(item, subItem) {
 //========================
 // fill build menu
 //========================
+
+//special categories
+let highestEducation = education.filter(key => typeof structures[key].education === "number").reduce((maxKey, key) => structures[key].education > structures[maxKey].education ? key : maxKey);
+
+//underground demolish categories
+function loadUnderground() {
+    document.getElementById("demolishUnderground").innerHTML = '';
+    underground.forEach(item => {
+        let button = document.createElement("button");
+        button.innerText = item;
+        button.onclick = () => setTool(item, 'Demolish Underground');
+
+        document.getElementById("demolishUnderground").appendChild(button);
+        undergroundGroups[item] = {};
+    })
+};
 
 //fill build menu
 Object.keys(buildmenu).forEach((item, i) => {
@@ -534,23 +582,23 @@ Object.keys(buildmenu).forEach((item, i) => {
     tab.id = item;
     if (i == 0) { tab.style.display = "block"; button.classList.add("selected") };
 
-    Object.keys(buildmenu[item]).forEach(async (subItem) => {
+    buildmenu[item].forEach(async subItemKey => {
+        const subItem = structures[subItemKey];
         const subItemButton = document.createElement("button");
-        const price = buildmenu[item][subItem].price ? buildmenu[item][subItem].price.toLocaleString('id-ID', { style: 'currency', currency: 'IDR', maximumFractionDigits: 0 }) : "Free";
         tab.appendChild(subItemButton);
 
-        subItemButton.innerHTML = `${subItem}<span class="price">${price}</span>`;
-        subItemButton.onclick = () => { setTool(subItem, item) };
+        subItemButton.innerHTML = `${subItemKey}<span class="price">${subItem.price ? subItem.price.toLocaleString('id-ID', { style: 'currency', currency: 'IDR', maximumFractionDigits: 0 }) : "Free"}</span>`;
+        subItemButton.onclick = () => { setTool(subItemKey, item) };
         subItemButton.onmouseout = () => { document.getElementById("hint").style.display = "none"; };
         subItemButton.onmouseover = async () => {
-            Object.values(document.getElementsByClassName("hintPreview")).forEach(element => element.style.display = element.id == `${item}-${subItem}` ? "block" : "none");
+            Object.values(document.getElementsByClassName("hintPreview")).forEach(element => element.style.display = element.id == `${subItemKey}` ? "block" : "none");
             document.getElementById("imageSide").style.display = "block";
-            document.getElementById("hintTitle").innerText = subItem;
-            document.getElementById("hintContent").innerText = buildmenu[item][subItem].description || "No Description";
+            document.getElementById("hintTitle").innerText = subItemKey;
+            document.getElementById("hintContent").innerText = subItem.description || "No Description";
             document.getElementById("hint").style.display = "block";
         };
 
-        renderThumbnail(item, subItem);
+        renderThumbnail(subItem, subItemKey);
     });
 
     document.getElementById("buildLeft").appendChild(button);

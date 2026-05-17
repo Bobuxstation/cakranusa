@@ -21,7 +21,7 @@ function setTool(type, category) {
     tool["category"] = category;
 
     //set price
-    if (buildmenu[category]) tool["price"] = buildmenu[category][type].price || 0;
+    if (structures[type]) tool["price"] = structures[type].price || 0;
     else tool["price"] = 0;
 
     //show selection overlay
@@ -120,14 +120,7 @@ function hover(event) {
             if (lastHoverModel) { scene.remove(lastHoverModel); lastHoverModel = null; };
             lastHoverId = tile.index;
 
-            let condition;
-            if (tool.category && !["Demolish", "Demolish Underground", "Supply", "Transport"].includes(tool.category)) {
-                condition = checkNeighborForRoads(tile["posX"], tile["posZ"], true) == false || !(tile.type == 0 || tile.type == 1);
-            } else {
-                condition = false;
-            }
-
-            let mesh = new THREE.Mesh(new THREE.BoxGeometry(1, 0.2, 1), new THREE.MeshToonMaterial({ color: 0xff0000 }));
+            let mesh = new THREE.Mesh(new THREE.BoxGeometry(1, 0.2, 1), new THREE.MeshToonMaterial({ color: 0xffffff }));
             mesh.position.set(tile.posX, tile.posY + 0.16, tile.posZ);
             mesh.material.transparent = true;
             mesh.material.opacity = 0.5;
@@ -241,7 +234,9 @@ function tileSelection(tile, event) {
         floatingDiv.style.display = 'block';
 
         outlinePass.selectedObjects = [meshLocations[tile.index]];
+
         tileInfo(tile);
+        tileInfo(sceneData.flat()[updateInfo]);
     } else {
         floatingDiv.style.display = 'none';
         outlinePass.selectedObjects = [];
@@ -256,10 +251,9 @@ async function placeZone(paying, tile, zone = tool.type) {
 
     tile.type = 3; //zoned for buildings
     tile.zone = zone;
-    tile.model = zones[zone].model;
 
     // add billboard to tile
-    let object = await loadWMat(zones[zone].model);
+    let object = await loadWMat(structures[zone].model);
     let connectedRoad = checkNeighborForRoads(tile["posX"], tile["posZ"], true);
     scene.add(object);
 
@@ -275,12 +269,11 @@ async function placeFoliage(paying, tile, type = tool.type) {
     if (!chargePrice(paying)) return;
     cleanTileData(tile);
 
-    tile.type = 1; //zoned for buildings
-    tile.zone = type;
+    tile.type = 1; //set to foliage
     tile.foliageType = type;
 
     // add billboard to tile
-    let object = await loadWMat(foliage[type].model);
+    let object = await loadWMat(structures[type].model);
     scene.add(object);
 
     positionTile({}, tile, object)
@@ -290,15 +283,14 @@ async function placeFoliage(paying, tile, type = tool.type) {
 }
 
 // place road on tile and update neighbors
-function placeRoad(paying, tile, data = { model: buildmenu[tool.category][tool.type].model, type: tool.type }) {
+function placeRoad(paying, tile, type = tool.type) {
     if (!chargePrice(paying)) return;
     cleanTileData(tile);
 
     tile.type = 2;
     tile.qualityState = 100;
     tile.qualityTick = 0;
-    tile.model = data.model;
-    tile.roadType = data.type;
+    tile.roadType = type;
     tile.quality = randomIntFromInterval(50, 100);
 
     let neighbors = checkNeighborForRoads(tile["posX"], tile["posZ"], false, true);
@@ -315,11 +307,11 @@ async function placeFacility(paying, tile) {
     tile.type = 4; // pre made buildings
     tile.building = tool.type;
     tile.occupied = true;
+    tile.buildingData = {};
     tile.uuid = makeUniqueId(sceneData.flat());
 
-    var object = await loadWMat(buildmenu[tool.category][tool.type].model);
-    tile.buildingType = buildmenu[tool.category][tool.type].type;
-    tile.buildingData = buildmenu[tool.category][tool.type];
+    var object = await loadWMat(structures[tool.type].model);
+    tile.buildingType = structures[tool.type].type;
 
     let connectedRoad = checkNeighborForRoads(tile["posX"], tile["posZ"], true);
     scene.add(object);

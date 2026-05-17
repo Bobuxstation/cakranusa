@@ -1,6 +1,5 @@
 //create new game (blank scene)
 function newBlankScene(terrainSize, seed) {
-    let ImprovedNoise = new THREE.ImprovedNoise();
     let scene = [];
     let index = 0;
 
@@ -17,10 +16,10 @@ function newBlankScene(terrainSize, seed) {
                 additionalData.quality = randomIntFromInterval(90, 100);
                 additionalData.qualityState = 100;
                 additionalData.qualityTick = 0;
-                additionalData.model = 'assets/roads/plainroad';
+                additionalData.roadType = 'road';
             } else if (random < 0.3) {
                 type = 1; // foliage
-                additionalData["foliageType"] = Object.keys(foliage)[Math.floor(worley01Seeded(x, y, 1, seed) * Object.keys(foliage).length)];
+                additionalData["foliageType"] = foliage[Math.floor(worley01Seeded(x, y, 1, seed) * foliage.length)];
             }
 
             scene[x][y] = { type: type, index: index, height: 0, ...additionalData };
@@ -44,74 +43,80 @@ async function generateGrid(data) {
 
     // traverse data
     let index = 0;
-    gridInstance = instance
-    for (var x = 0; x < terrainSize; x++) {
-        for (var y = 0; y < terrainSize; y++) {
-            let itemData = data[x][y];
+    gridInstance = instance;
+    return new Promise(async (resolve) => {
+        for (var x = 0; x < terrainSize; x++) {
+            for (var y = 0; y < terrainSize; y++) {
+                let itemData = data[x][y];
 
-            // checkerboard geometry
-            let dummy = new THREE.Object3D();
-            dummy.position.set((x - (terrainSize / 2)), itemData.height - 0.38, (y - (terrainSize / 2)));
-            dummy.updateMatrix();
-            instance.setMatrixAt(index, dummy.matrix);
+                // checkerboard geometry
+                let dummy = new THREE.Object3D();
+                dummy.position.set((x - (terrainSize / 2)), itemData.height - 0.38, (y - (terrainSize / 2)));
+                dummy.updateMatrix();
+                instance.setMatrixAt(index, dummy.matrix);
 
-            //checkerboard color
-            let color = new THREE.Color();
-            color.set((x + y) % 2 === 0 ? 0x005000 : 0x004000);
-            instance.setColorAt(index, color);
+                //checkerboard color
+                let color = new THREE.Color();
+                color.set((x + y) % 2 === 0 ? 0x005000 : 0x004000);
+                instance.setColorAt(index, color);
 
-            //tile mesh pos
-            let posX = (x - (terrainSize / 2));
-            let posZ = (y - (terrainSize / 2));
-            itemData["posX"] = posX;
-            itemData["posY"] = itemData.height;
-            itemData["posZ"] = posZ;
+                //tile mesh pos
+                let posX = (x - (terrainSize / 2));
+                let posZ = (y - (terrainSize / 2));
+                itemData["posX"] = posX;
+                itemData["posY"] = itemData.height;
+                itemData["posZ"] = posZ;
 
-            //spawn existing pipes
-            Object.keys(underground).forEach(item => {
-                if (!itemData[item]) return;
-                let neighbors = checkNeighborForPipes(itemData["posX"], itemData["posZ"], item);
-                setPipeModel(neighbors, itemData, item);
-            })
+                //spawn existing models
+                switch (itemData.type) {
+                    case 4:
+                        if (!structures[itemData.building]) { cleanTileData(itemData, true); break; };
 
-            //spawn existing models
-            switch (itemData.type) {
-                case 4:
-                    var object = await loadWMat(itemData.buildingData.model);
-                    positionTile(checkNeighborForRoads(itemData["posX"], itemData["posZ"], true), itemData, object)
-                    animMove(object, true);
-                    setInstanceColor(0x555555, gridInstance, itemData.index);
-
-                    meshLocations[itemData.index] = object;
-                    scene.add(object);
-                    break;
-                case 3:
-                    if (!itemData.buildingModel) {
-                        placeZone(false, itemData, itemData.zone ? itemData.zone : "housing");
-                    } else {
-                        var object = await loadWMat(itemData.buildingModel);
+                        var object = await loadWMat(structures[itemData.building].model);
                         positionTile(checkNeighborForRoads(itemData["posX"], itemData["posZ"], true), itemData, object)
                         animMove(object, true);
                         setInstanceColor(0x555555, gridInstance, itemData.index);
 
                         meshLocations[itemData.index] = object;
                         scene.add(object);
-                    };
-                    break;
-                case 2:
-                    var roadType = itemData.roadType ? itemData.roadType : Object.keys(transport).find(item => transport[item].model == itemData.model)
-                    placeRoad(false, itemData, { model: itemData.model, type: roadType });
-                    break;
-                case 1:
-                    placeFoliage(false, itemData, itemData.foliageType);
-                    break;
+                        break;
+                    case 3:
+                        if (!itemData.occupied || !allZones[itemData.zone][itemData.buildingModel]) {
+                            placeZone(false, itemData, itemData.zone ? itemData.zone : "housing");
+                        } else {
+                            var object = await loadWMat(itemData.buildingModel);
+                            positionTile(checkNeighborForRoads(itemData["posX"], itemData["posZ"], true), itemData, object)
+                            animMove(object, true);
+                            setInstanceColor(0x555555, gridInstance, itemData.index);
+
+                            meshLocations[itemData.index] = object;
+                            scene.add(object);
+                        };
+                        break;
+                    case 2:
+                        if (!structures[itemData.roadType]) { cleanTileData(itemData, true); break; };
+                        placeRoad(false, itemData, itemData.roadType);
+                        break;
+                    case 1:
+                        if (!structures[itemData.foliageType]) { cleanTileData(itemData, true); break; };
+                        placeFoliage(false, itemData, itemData.foliageType);
+                        break;
+                }
+
+                //spawn existing pipes
+                underground.forEach(item => {
+                    if (!itemData[item]) return;
+                    let neighbors = checkNeighborForPipes(itemData["posX"], itemData["posZ"], item);
+                    setPipeModel(neighbors, itemData, item);
+                })
+
+                index++;
             }
-
-            index++;
         }
-    }
 
-    scene.add(instance);
+        scene.add(instance);
+        resolve();
+    });
 };
 
 //will not be on the save file
@@ -229,6 +234,7 @@ async function initScene(isNewGame, savefile = false) {
         };
 
         //set data
+        updateInfo = 0;
         simulationIndex = 0;
         dayTick = 0;
         vehicles = {};
@@ -239,6 +245,8 @@ async function initScene(isNewGame, savefile = false) {
             citizens = savefile.citizens;
             money = savefile.money;
             date = savefile.date;
+            taxes = savefile.taxes;
+            budget = savefile.budget;
         } else {
             citizens = {};
             money = 1_000_000_000;
@@ -250,10 +258,9 @@ async function initScene(isNewGame, savefile = false) {
         allOfTheLights(scene);
         loadUnderground();
         await generateGrid(sceneData);
-        valueSliders(savefile.taxes || taxes, "taxes", "To collect land and vehicle taxes, build a tax office.", 20, true);
-        valueSliders(savefile.budget || budget, "Budget", "High budgets will consume funds, While low budgets will encourage corruption and bribery.", 150, false);
-        setSupplyStat(calculateSupplied(), calculateSupplied())
-        refreshInfo();
+        valueSliders(taxes, "taxes", "To collect land and vehicle taxes, build a tax office.", 20, true);
+        valueSliders(budget, "Budget", "High budgets will consume funds, While low budgets will encourage corruption and bribery.", 150, false);
+        setSupplyStat(calculateSupplied(), calculateSupplied());
 
         //clear warning labels
         Object.keys(warningLabels).forEach(label => {
@@ -269,6 +276,6 @@ async function initScene(isNewGame, savefile = false) {
 
         //start simulation
         simulationRunning = true;
-        citizenSimulation(worldSeed);
-    }, 3000);
+        allStep(worldSeed);
+    }, 2000);
 }; initScene(false);

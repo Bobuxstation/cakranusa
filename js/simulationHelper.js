@@ -21,8 +21,6 @@ async function occupyHouse(tile) {
     let buildingType = Object.keys(houses)[Math.floor(Math.random() * Object.keys(houses).length)];
 
     tile.buildingModel = buildingType;
-    tile.consumption = houses[buildingType]["consumption"];
-    tile.road = connectedRoad;
     tile.occupied = true;
     tile.slot = houses[buildingType]["slots"];
     tile.uuid = makeUniqueId(sceneData.flat());
@@ -52,9 +50,6 @@ async function occupyWorkplace(tile, type) {
     if (filterBuildings.length == 0) return;
 
     tile.buildingModel = buildingType;
-    tile.consumption = type[buildingType]["consumption"];
-    tile.buildingData = type[buildingType];
-    tile.road = connectedRoad;
     tile.slot = type[buildingType]["slots"];
     tile.occupied = true;
     tile.uuid = makeUniqueId(sceneData.flat());
@@ -94,14 +89,14 @@ function findZone(zone, occupied, checkRoad) {
 function findJob(data) {
     // find workplace tile
     let matches = sceneData.flat().filter(item => (item.zone === "commercial" || item.zone === "industrial" || item.zone === "farm") && item.occupied);
-    matches = matches.filter(item => item.buildingData.level <= data.education);
-    matches.sort((a, b) => Math.abs(data.education - a.buildingData.level) - Math.abs(data.education - b.buildingData.level));
+    matches = matches.filter(item => allZones[item.zone][item.buildingModel].level <= data.education);
+    matches.sort((a, b) => Math.abs(data.education - allZones[a.zone][a.buildingModel].level) - Math.abs(data.education - allZones[b.zone][b.buildingModel].level));
 
     // shuffle matches with same closest level
     let i = 0;
     while (i < matches.length) {
         let j = i + 1;
-        while (j < matches.length && Math.abs(data.education - matches[i].buildingData.level) === Math.abs(data.education - matches[j].buildingData.level)) { j++; }
+        while (j < matches.length && Math.abs(data.education - allZones[matches[i].zone][matches[i].buildingModel].level) === Math.abs(data.education - allZones[matches[j].zone][matches[j].buildingModel].level)) { j++; }
         for (let k = j - 1; k > i; k--) {
             const l = i + Math.floor(Math.random() * (k - i + 1));
             [matches[k], matches[l]] = [matches[l], matches[k]];
@@ -120,8 +115,8 @@ function findJob(data) {
 //find schools
 function findSchool(level, checkNews = false) {
     //find school tile
-    let matches = sceneData.flat().filter(item => (item.type == 4 & item.buildingType == "education" & typeof item.buildingData != "undefined"));
-    matches = matches.filter(item => item.buildingData.education === level);
+    let matches = sceneData.flat().filter(item => (item.type == 4 & item.buildingType == "education"));
+    matches = matches.filter(item => structures[item.building].education === level);
 
     //shuffle results
     for (let i = matches.length - 1; i > 0; i--) {
@@ -131,7 +126,7 @@ function findSchool(level, checkNews = false) {
 
     //check if not full
     for (let match of matches) {
-        if (match.occupied == true & (checkNews ? true : (checkStudents(match).length < match.buildingData.slots))) return match;
+        if (match.occupied == true & (checkNews ? true : (checkStudents(match).length < eval(structures[match.building].slots)))) return match;
     }
 
     return false;
@@ -140,8 +135,8 @@ function findSchool(level, checkNews = false) {
 //find facility
 function findFacility(type) {
     //find school tile
-    let matches = sceneData.flat().filter(item => (item.type == 4 & item.buildingType == type & typeof item.buildingData != "undefined"));
-    matches = matches.filter(item => item.buildingData.slots > citizensInTile(item));
+    let matches = sceneData.flat().filter(item => (item.type == 4 & item.buildingType == type));
+    matches = matches.filter(item => eval(structures[item.building].slots) > citizensInTile(item));
 
     //shuffle results
     for (let i = matches.length - 1; i > 0; i--) {
@@ -200,7 +195,7 @@ function findOpportunity(booleanMode = false) {
 
         let citizen = citizenFlat.filter(item => item.job != false);
         let sceneFlat = sceneData.flat();
-        citizen = citizen.filter(data => (typeof sceneFlat.find(item => item.uuid == data.job) != "undefined") ? (sceneFlat.find(item => item.uuid == data.job).buildingData.level < Math.floor(data.education)) : false);
+        citizen = citizen.filter(data => (typeof sceneFlat.find(item => item.uuid == data.job) != "undefined") ? (allZones[sceneFlat.find(item => item.uuid == data.job).zone][sceneFlat.find(item => item.uuid == data.job).buildingModel].level < Math.floor(data.education)) : false);
 
         let majorityVal = getMajorityValue(citizen, 'education');
         if (booleanMode) return (citizen.length == 0) ? false : true;
@@ -213,7 +208,7 @@ function findOpportunity(booleanMode = false) {
 //cleanup vehicles not linked to drivers
 function cleanVehicles() {
     Object.keys(vehicles).forEach(key => {
-        if (Object.values(citizens).flat().filter(citizen => citizen.uuid === key).length != 0) return;
+        if (Object.values(citizens).flat().filter(citizen => citizen.uuid === key).length != 0 || key.includes('firedept')) return;
         scene.remove(vehicles[key]);
         delete vehicles[key];
     });
@@ -258,11 +253,6 @@ function startMoving(type, route, data) {
     data.targetRoute = route;
 }
 
-function refreshInfo() {
-    tileInfo(sceneData.flat()[updateInfo]);
-    setTimeout(() => requestAnimationFrame(refreshInfo), 500);
-}
-
 //load vehicle model (blank placeholder while loading)
 async function initVehicle(data, currentStep) {
     //create blank placeholder
@@ -295,7 +285,7 @@ async function initVehicle(data, currentStep) {
 function calculateLowestQuality(citizen, budget) {
     let taxRate = (1 - Object.values(taxes).reduce((sum, val) => { return sum + val }, 0)); //tax rate & department budgets affects official
 
-    education[highestEducation].education
+    structures[highestEducation].education
     citizen.education
     citizen.moral
 }

@@ -195,7 +195,7 @@ function convertPathfind(map, origin, target) {
 //walk or drive to destination
 function shouldWalk(path) {
   var tiles = (path.map(step => sceneData[step.y][step.x])).filter(tile => tile.type == 2);
-  var walkableTiles = tiles.filter(tile => transport[tile.roadType].walkable);
+  var walkableTiles = tiles.filter(tile => structures[tile.roadType].walkable);
 
   if (tiles.length > 24) return false;
   else if (tiles.length <= 12) return true;

@@ -95,9 +95,9 @@ function profilePage(citizen) {
         <span>@${citizen.username}</span><br>
         <i>${citizen.bio}</i>
         <br><br>
-        <p>Education: ${Object.keys(education).find(item => education[item].education == Math.floor(citizen.education) - 1) || "basic education"}</p>
+        <p>Education: ${education.find(item => structures[item].education == Math.floor(citizen.education) - 1) || "basic education"}</p>
         <p>Employed: ${citizen.job ? "Yes" : "No"}</p>
-        <p>Currently studying at: ${citizen.school ? Object.keys(education).find(item => education[item].education == Math.floor(citizen.education)) : "-"}</p>
+        <p>Currently studying at: ${citizen.school ? education.find(item => structures[item].education == Math.floor(citizen.education)) : "-"}</p>
     `;
 
     openTab("Profile", "socialTab");

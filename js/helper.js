@@ -68,8 +68,8 @@ function updateEducationStats() {
     let educationTab = document.getElementById("education");
     educationTab.innerHTML = '';
 
-    Object.keys(education).filter(key => education[key].type == "education").forEach(key => {
-        let item = education[key];
+    education.filter(key => structures[key].type == "education").forEach(key => {
+        let item = structures[key];
         let citizensFlat = Object.values(citizens).flat();
 
         let textElem = document.createElement('p');
@@ -194,7 +194,7 @@ function mulberry32(a) {
 //check if raining for today
 function isRaining(worldSeed, day) {
     const r = mulberry32(parseInt(`${worldSeed}${day}`));
-    return r < 0.3;
+    return r < 0.2;
 }
 
 // lerp animation function (ease)
@@ -335,7 +335,7 @@ function allOfTheLights(scene, addsky = true) {
     const dirLight = new THREE.DirectionalLight(0xffffff, 1);
     dirLight.position.set(-1.5, 1.5, -1.5);
     dirLight.position.multiplyScalar(10);
-    dirLight.shadow.mapSize.set(512, 512);
+    dirLight.shadow.mapSize.set(1024, 1024);
     dirLight.castShadow = true;
     dirLight.shadow.camera.left = -dir;
     dirLight.shadow.camera.right = dir;
@@ -364,6 +364,18 @@ function allOfTheLights(scene, addsky = true) {
     const sun = new THREE.Vector3();
     sun.setFromSphericalCoords(1, THREE.MathUtils.degToRad(90 - 2), THREE.MathUtils.degToRad(180));
     sky.material.uniforms.sunPosition.value.copy(sun);
+
+    // let csm = new CSM({
+    //     maxFar: 1000,
+    //     cascades: 4,
+    //     mode: 'practical',
+    //     parent: scene,
+    //     shadowMapSize: 512,
+    //     lightDirection: new THREE.Vector3(-1, -1, -1).normalize(),
+    //     camera: camera,
+    //     lightNear: 0.01,
+    //     lightIntensity: 0.25
+    // })
 }
 
 //scale, rotate and move building to tile
