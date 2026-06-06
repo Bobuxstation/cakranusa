@@ -2,6 +2,11 @@
 // Helper Functions - UI
 //========================
 
+//timeout
+function sleep(ms) {
+    return new Promise(resolve => setTimeout(resolve, ms / 2));
+}
+
 //toast notifications
 function newNotification(text) {
     let toast = document.createElement('div');
@@ -192,8 +197,8 @@ function mulberry32(a) {
 }
 
 //check if raining for today
-function isRaining(worldSeed, day) {
-    const r = mulberry32(parseInt(`${worldSeed}${day}`));
+function isRaining(day) {
+    const r = mulberry32(parseInt(day));
     return r < 0.2;
 }
 
@@ -207,7 +212,7 @@ function makeUniqueId(array, networkMode = false) {
     let characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
     let maxAttempts = 1000;
     let attempts = 0;
-    let length = 4;
+    let length = 16;
     let id;
 
     function generateId(len) {
@@ -291,7 +296,7 @@ function areObjectsEqual(obj1, obj2) {
 }
 
 //========================
-// Helper Functions - 3D Effects
+// Helper Functions - 3D Scene
 //========================
 
 // load obj building models
@@ -304,7 +309,13 @@ async function loadWMat(location) {
     loaded[`${location}.obj`] ??= await objloader.loadAsync(`${location}.obj`);
 
     let object = loaded[`${location}.obj`].clone();
-    object.traverse((child) => { if (!child.isMesh) return; child.castShadow = true; child.receiveShadow = true; });
+    object.traverse((child) => {
+        if (!child.isMesh) return;
+        child.castShadow = true;
+        child.receiveShadow = true;
+        child.material.transparent = true;
+        child.material = child.material.clone();
+    });
 
     return object;
 }
@@ -457,29 +468,28 @@ function spawnSmoke(position, duration = 3000) {
     }; update();
 }
 
-//vehicle movement animation
-function lerpVehicle(oldPos, targetPos, targetRot, data, deleteVehicle = false) {
+function lerpVehicle(oldPos, targetPos, data, deleteVehicle) {
     let startTime = performance.now();
     function lerpAnim() {
-        let t = Math.min((performance.now() - startTime) / (simulationSpeed * 1.1), 1);
-        try { vehicles[data.uuid].position.set(lerp(oldPos.x, targetPos.x, t), lerp(oldPos.y, targetPos.y, t), lerp(oldPos.z, targetPos.z, t)); vehicles[data.uuid].rotation.y = targetRot; } catch (e) { }
-        if (t < 1) requestAnimationFrame(lerpAnim);
-        else if (deleteVehicle) {
+        let time = Math.min((performance.now() - startTime) / simulationSpeed, 1);
+
+        try {
+            let targetRot = Math.atan2(targetPos.x - oldPos.x, targetPos.z - oldPos.z);
+            vehicles[data.uuid].rotation.y = targetRot;
+            vehicles[data.uuid].position.set(
+                lerp(oldPos.x, targetPos.x, time),
+                lerp(oldPos.y, targetPos.y, time),
+                lerp(oldPos.z, targetPos.z, time));
+            if (deleteVehicle) vehicles[data.uuid].traverse(obj => { if (obj.isMesh) obj.material.opacity = lerp(obj.material.opacity, 0, time) });
+            else vehicles[data.uuid].traverse(obj => { if (obj.isMesh) obj.material.opacity = lerp(obj.material.opacity, 1, time) })
+        } catch (e) {  }
+
+        if (time < 1) requestAnimationFrame(lerpAnim);
+        else if (deleteVehicle && time >= 1) {
             data.status = data.targetType;
+            data.sessionTick = 0;
             scene.remove(vehicles[data.uuid]);
             delete vehicles[data.uuid];
         }
     }; lerpAnim();
-}
-
-function chargePrice(notFree) {
-    if (!notFree) return true;
-    if (money - tool.price >= 0) {
-        money -= tool.price
-        if (tool.price != 0) newNotification(`-${tool.price.toLocaleString('id-ID', { style: 'currency', currency: 'IDR', maximumFractionDigits: 0 })}`);
-        return true;
-    } else {
-        newNotification("Cannot build here: Insufficient funds");
-        return false;
-    };
 }

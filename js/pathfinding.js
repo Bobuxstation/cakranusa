@@ -131,7 +131,6 @@ function findTileCoordinate(map, tile) {
   return { x: posY.indexOf(tile), y: map.indexOf(posY) };
 }
 
-//get vehicle position for next step & adjust to road type and lane
 function getNextPosition(data, targetPos, currentStep) {
   let laneDisplacement = data.isWalking ? 0.35 : 0.15;
   let nextStep = data.targetRoute[currentStep + 2] || targetPos;
@@ -171,12 +170,12 @@ function getNextPosition(data, targetPos, currentStep) {
   return changePos;
 }
 
-//convert map for pathfinder
-function convertPathfind(map, origin, target) {
+//feed map data to pathfinder
+function pathfind(map, origin, target) {
   //get coordinates of origin and target
   let originPos = findTileCoordinate(map, origin);
   let targetPos = findTileCoordinate(map, target);
-  let newMap = []
+  let newMap = [];
 
   //make suitable map for pathfinder
   for (var y = 0; y < map[0].length; y++) {
@@ -189,7 +188,9 @@ function convertPathfind(map, origin, target) {
     }
   }
 
-  return newMap;
+  let pathfindRoute = astar(newMap);
+  if (pathfindRoute) return pathfindRoute;
+  else return false;
 }
 
 //walk or drive to destination

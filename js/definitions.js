@@ -78,7 +78,7 @@ let commercial = {
     'assets/zoning/commercial/shop-1': {
         "level": 2,
         "slots": 3,
-        "pay": 30000,
+        "pay": 30000 * 8,
         "consumption": {
             "electric cable": 15,
             "water pipe": 15
@@ -87,7 +87,7 @@ let commercial = {
     'assets/zoning/commercial/shop-2': {
         "level": 3,
         "slots": 6,
-        "pay": 30000,
+        "pay": 30000 * 8,
         "consumption": {
             "electric cable": 30,
             "water pipe": 30
@@ -96,7 +96,7 @@ let commercial = {
     'assets/zoning/commercial/shop-3': {
         "level": 3,
         "slots": 12,
-        "pay": 60000,
+        "pay": 60000 * 8,
         "consumption": {
             "electric cable": 30,
             "water pipe": 30
@@ -105,7 +105,7 @@ let commercial = {
     'assets/zoning/commercial/shop-4': {
         "level": 3,
         "slots": 12,
-        "pay": 60000,
+        "pay": 60000 * 8,
         "consumption": {
             "electric cable": 30,
             "water pipe": 30
@@ -114,7 +114,7 @@ let commercial = {
     'assets/zoning/commercial/shop-5': {
         "level": 3,
         "slots": 12,
-        "pay": 60000,
+        "pay": 60000 * 8,
         "consumption": {
             "electric cable": 30,
             "water pipe": 30
@@ -127,7 +127,7 @@ let industrial = {
     'assets/zoning/industrial/industrial-1': {
         "level": 4,
         "slots": 6,
-        "pay": 30000,
+        "pay": 30000 * 8,
         "consumption": {
             "electric cable": 30,
             "water pipe": 30
@@ -136,7 +136,7 @@ let industrial = {
     'assets/zoning/industrial/industrial-2': {
         "level": 3,
         "slots": 6,
-        "pay": 30000,
+        "pay": 30000 * 8,
         "consumption": {
             "electric cable": 30,
             "water pipe": 30
@@ -145,7 +145,7 @@ let industrial = {
     'assets/zoning/industrial/industrial-3': {
         "level": 1,
         "slots": 6,
-        "pay": 30000,
+        "pay": 30000 * 8,
         "consumption": {
             "electric cable": 30,
             "water pipe": 30
@@ -158,7 +158,7 @@ let farm = {
     'assets/zoning/farm/farm-1': {
         "level": 1,
         "slots": 5,
-        "pay": 30000,
+        "pay": 30000 * 8,
         "consumption": {
             "electric cable": 5,
             "water pipe": 15
@@ -167,7 +167,7 @@ let farm = {
     'assets/zoning/farm/farm-2': {
         "level": 1,
         "slots": 5,
-        "pay": 30000,
+        "pay": 30000 * 8,
         "consumption": {
             "electric cable": 5,
             "water pipe": 15
@@ -176,7 +176,7 @@ let farm = {
     'assets/zoning/farm/farm-3': {
         "level": 1,
         "slots": 5,
-        "pay": 30000,
+        "pay": 30000 * 8,
         "consumption": {
             "electric cable": 5,
             "water pipe": 15
@@ -185,7 +185,7 @@ let farm = {
     'assets/zoning/farm/farm-4': {
         "level": 1,
         "slots": 8,
-        "pay": 30000,
+        "pay": 30000 * 8,
         "consumption": {
             "electric cable": 5,
             "water pipe": 15
@@ -587,7 +587,7 @@ Object.keys(buildmenu).forEach((item, i) => {
         const subItemButton = document.createElement("button");
         tab.appendChild(subItemButton);
 
-        subItemButton.innerHTML = `${subItemKey}<span class="price">${subItem.price ? subItem.price.toLocaleString('id-ID', { style: 'currency', currency: 'IDR', maximumFractionDigits: 0 }) : "Free"}</span>`;
+        subItemButton.innerHTML = `${subItemKey}<span class="price">~${subItem.price ? subItem.price.toLocaleString('id-ID', { style: 'currency', currency: 'IDR', maximumFractionDigits: 0 }) : "Free"}</span>`;
         subItemButton.onclick = () => { setTool(subItemKey, item) };
         subItemButton.onmouseout = () => { document.getElementById("hint").style.display = "none"; };
         subItemButton.onmouseover = async () => {

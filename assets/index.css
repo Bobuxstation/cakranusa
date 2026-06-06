@@ -257,7 +257,7 @@ button:hover {
 
 button:active,
 .selected {
-    border: gray solid 1px !important;
+    border: gray dashed 1px !important;
     background: lightgray;
     box-shadow: none;
     transition: all 0.10s ease;
@@ -346,6 +346,7 @@ button:active,
     width: 75px;
     padding: 10px;
     margin: 5px;
+    padding-bottom: 8px;
 }
 
 .dual .right {
@@ -398,6 +399,7 @@ button:active,
     margin: 5px;
     margin-bottom: 0px;
     padding: 10px;
+    padding-bottom: 8px;
 }
 
 #createNew {
@@ -419,7 +421,7 @@ button:active,
     aspect-ratio: 1/1;
     margin-left: 0 !important;
     margin-bottom: 0 !important;
-    padding-top: 15px !important;
+    padding-top: 13px !important;
 }
 
 .loadingWheel {
@@ -445,6 +447,7 @@ button:active,
     cursor: pointer;
     pointer-events: visible;
     border-radius: 100%;
+    pointer-events: none;
 }
 
 #floatingDiv {
@@ -474,6 +477,11 @@ input[type=number]::-webkit-outer-spin-button {
     z-index: 999;
     top: 0;
     pointer-events: none;
+}
+
+#increase {
+    color: #008000;
+    margin-left: 5px;
 }
 
 @keyframes spin {

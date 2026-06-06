@@ -125,24 +125,7 @@ let simulationSpeed = 0;
 
 //will be on the save file
 let sceneData, citizens = {}, money = 1_000_000_000, date = 0, worldSeed;
-let officials = {
-    transport: false,
-    facility: false,
-    education: false,
-    police: false
-};
-let budget = {
-    healthcare: 0.75,
-    police: 0.75,
-    firefighter: 0.75,
-    education: 0.75,
-    transportation: 0.75
-}
-let taxes = {
-    salary: 0.10,
-    land: 0.05,
-    transportation: 0.05,
-};
+let officials, budget, taxes;
 
 function gameUI() {
     document.getElementById("newsContent").style.display = "flex";
@@ -212,6 +195,8 @@ async function initScene(isNewGame, savefile = false) {
 
         //show ui
         if (savefile || isNewGame) {
+            document.getElementById("Posts").innerHTML = '';
+            document.getElementById("increase").innerHTML = '...';
             if (isNewGame) newNotification("Welcome to Cakranusa! Start out by building some housing zones.");
             gameUI();
             setTimeout(() => {
@@ -233,24 +218,37 @@ async function initScene(isNewGame, savefile = false) {
             document.getElementById("worldseed").value = "";
         };
 
-        //set data
-        updateInfo = 0;
+        //reset simulation sectioning
         simulationIndex = 0;
+        facilityIndex = 0;
+        zoneIndex = 0;
+        roadIndex = 0;
+
+        //reset other simulation variables
+        updateInfo = 0;
         dayTick = 0;
         vehicles = {};
         meshLocations = {};
-        worldSeed = savefile.worldSeed || parseInt(seed);
-        sceneData = savefile.sceneData || newBlankScene(document.getElementById("citysize").value, worldSeed);
+
+        //set data based on init type
         if (savefile) {
-            citizens = savefile.citizens;
-            money = savefile.money;
-            date = savefile.date;
-            taxes = savefile.taxes;
-            budget = savefile.budget;
+            worldSeed = savefile.worldSeed || parseInt(seed);
+            sceneData = savefile.sceneData || newBlankScene(document.getElementById("citysize").value, worldSeed);
+            citizens = savefile.citizens || {};
+            money = savefile.money || 1_000_000_000;
+            date = savefile.date || 0;
+            taxes = savefile.taxes || { salary: 0.10, land: 0.05, transportation: 0.05, };
+            budget = savefile.budget || { healthcare: 0.75, police: 0.75, firefighter: 0.75, education: 0.75, transportation: 0.75 };
+            officials = savefile.officials || { transport: false, facility: false, education: false, police: false };
         } else {
+            worldSeed = parseInt(seed);
+            sceneData = newBlankScene(document.getElementById("citysize").value, worldSeed);
             citizens = {};
             money = 1_000_000_000;
             date = 0;
+            taxes = { salary: 0.10, land: 0.05, transportation: 0.05, };
+            budget = { healthcare: 0.75, police: 0.75, firefighter: 0.75, education: 0.75, transportation: 0.75 };
+            officials = { transport: false, facility: false, education: false, police: false };
         }
 
         //reload model and menus
@@ -276,6 +274,6 @@ async function initScene(isNewGame, savefile = false) {
 
         //start simulation
         simulationRunning = true;
-        allStep(worldSeed);
+        allStep();
     }, 2000);
 }; initScene(false);

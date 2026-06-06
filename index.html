@@ -95,6 +95,7 @@
                         <p>Unemployed <span id="unemployedData" class="price"></span></p>
                         <p>Unemployment rate <progress id="unemploymentRate" max="100"></progress><span class="price"
                                 id="unemploymentVal"></span></p>
+                        <p>Currently working <span id="currentlyworking" class="price"></span></p>
                     </div>
                     <div class="statsTab innertab" id="education"></div>
                     <div class="statsTab innertab" id="supply"></div>
@@ -173,6 +174,7 @@
     <!-- City Stats at top -->
     <div class="navigation overlay top" id="topNav" style="display: none;">
         <div>
+            <span id="increase" title="Earned today from taxes.">...</span>
             <span id="money"></span>
         </div>
         <div>
@@ -232,9 +234,9 @@
     <!-- Title menu bar -->
     <div id="titleOverlay" class="navigation bottom overlay" style="display: none;">
         <div id="titleButtons">
-            <button id="hideTool" onclick="openTab('newgame', 'tab', true)" name="newgame">New Game</button>
-            <button id="hideTool" onclick="openTab('saves', 'tab', true)" name="saves">Saves</button>
-            <button id="hideTool" onclick="window.close()">Quit</button>
+            <button id="hideTool" onclick="openTab('newgame', 'tab', true)" name="newgame" class="tabButton">New Game</button>
+            <button id="hideTool" onclick="openTab('saves', 'tab', true)" name="saves" class="tabButton">Saves</button>
+            <button id="hideTool" onclick="window.close()" class="tabButton">Quit</button>
         </div>
     </div>
 

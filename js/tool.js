@@ -131,6 +131,18 @@ function hover(event) {
     })
 }
 
+function chargePrice(notFree) {
+    if (!notFree) return true;
+    if (money - tool.price >= 0) {
+        money -= tool.price
+        if (tool.price != 0) newNotification(`-${tool.price.toLocaleString('id-ID', { style: 'currency', currency: 'IDR', maximumFractionDigits: 0 })}`);
+        return true;
+    } else {
+        newNotification("Cannot build here: Insufficient funds");
+        return false;
+    };
+}
+
 //capture hover
 renderer.domElement.addEventListener('mousemove', (e) => { hover(e); });
 

@@ -190,19 +190,29 @@ function checkResidents(tile) {
 //find unfilled job level
 function findOpportunity(booleanMode = false) {
     let citizenFlat = Object.values(citizens).flat();
-    if (citizenFlat.length != 0) {
-        if (citizenFlat.filter(item => item.job != false).length == 0) return booleanMode ? false : 1;
+    if (citizenFlat.length == 0) return booleanMode ? false : 1;
 
-        let citizen = citizenFlat.filter(item => item.job != false);
+    let employed = citizenFlat.filter(item => item.job != false);
+    let employmentRate = employed.length / citizenFlat.length;
+    let candidate = [];
+    let employmentTarget = 0.75;
+    let lowEducationThreshold = 3;
+
+    if (employmentRate < employmentTarget) {
+        candidate = citizenFlat.filter(data => (data.job == false || data.job == null) && Math.floor(data.education) <= lowEducationThreshold);
+    } else {
         let sceneFlat = sceneData.flat();
-        citizen = citizen.filter(data => (typeof sceneFlat.find(item => item.uuid == data.job) != "undefined") ? (allZones[sceneFlat.find(item => item.uuid == data.job).zone][sceneFlat.find(item => item.uuid == data.job).buildingModel].level < Math.floor(data.education)) : false);
-
-        let majorityVal = getMajorityValue(citizen, 'education');
-        if (booleanMode) return (citizen.length == 0) ? false : true;
-        return (majorityVal == null) ? 1 : parseInt(majorityVal);
+        candidate = employed.filter(data => {
+            const building = sceneFlat.find(item => item.uuid == data.job);
+            if (!building) return false;
+            const level = allZones[building.zone][building.buildingModel].level;
+            return level < Math.floor(data.education);
+        });
     }
 
-    return booleanMode ? false : 1;
+    if (booleanMode) return candidate.length > 0;
+    let majorityVal = getMajorityValue(candidate, 'education');
+    return (majorityVal == null) ? 1 : parseInt(majorityVal);
 }
 
 //cleanup vehicles not linked to drivers
@@ -230,14 +240,20 @@ function calculateFacilityAddition(y, x, moralMode = false) {
     let directions = moralMode ? 10 : 0.1;
     let addition = moralMode ? 2 : 0.02;
 
-    if (sceneData[y + 1][x].buildingType == 'leisure') directions += addition;
-    if (sceneData[y - 1][x].buildingType == 'leisure') directions += addition;
-    if (sceneData[y][x + 1].buildingType == 'leisure') directions += addition;
-    if (sceneData[y][x - 1].buildingType == 'leisure') directions += addition;
-    if (sceneData[y + 1][x + 1].buildingType == 'leisure') directions += addition;
-    if (sceneData[y + 1][x - 1].buildingType == 'leisure') directions += addition;
-    if (sceneData[y - 1][x + 1].buildingType == 'leisure') directions += addition;
-    if (sceneData[y - 1][x - 1].buildingType == 'leisure') directions += addition;
+    if (sceneData[y + 1]) {
+        if (sceneData[y + 1][x] && sceneData[y + 1][x].buildingType == 'leisure') directions += addition;
+        if (sceneData[y + 1][x + 1] && sceneData[y + 1][x + 1].buildingType == 'leisure') directions += addition;
+        if (sceneData[y + 1][x - 1] && sceneData[y + 1][x - 1].buildingType == 'leisure') directions += addition;
+    }
+
+    if (sceneData[y - 1]) {
+        if (sceneData[y - 1][x] && sceneData[y - 1][x].buildingType == 'leisure') directions += addition;
+        if (sceneData[y - 1][x + 1] && sceneData[y - 1][x + 1].buildingType == 'leisure') directions += addition;
+        if (sceneData[y - 1][x - 1] && sceneData[y - 1][x - 1].buildingType == 'leisure') directions += addition;
+    }
+
+    if (sceneData[y][x + 1] && sceneData[y][x + 1].buildingType == 'leisure') directions += addition;
+    if (sceneData[y][x - 1] && sceneData[y][x - 1].buildingType == 'leisure') directions += addition;
 
     return parseFloat(directions.toFixed(2));
 }
@@ -253,39 +269,53 @@ function startMoving(type, route, data) {
     data.targetRoute = route;
 }
 
+//return vehicle back home if stuck
+function vehicleTimeout(data, flatScene) {
+    data.status = "home";
+    data.location = findTileCoordinate(sceneData, flatScene.find(item => item.uuid == data.home));
+    if (vehicles[data.uuid]) { scene.remove(vehicles[data.uuid]); delete vehicles[data.uuid]; }
+}
+
+//subtract taxes from salary then subtract city budget from taxes
+function processSalary(data, paycheck) {
+    let maxBudget = Object.keys(budget).length * 1.5;
+    let budgetPercentage = calcFundingSpent(budget) / maxBudget;
+    let taxed = Math.floor(paycheck * taxes.salary);
+
+    data.wallet += Math.floor(paycheck - taxed);
+    money += taxed - (taxed * budgetPercentage);
+    todayEarnings += taxed - (taxed * budgetPercentage);
+}
+
 //load vehicle model (blank placeholder while loading)
 async function initVehicle(data, currentStep) {
     //create blank placeholder
-    const empty = new THREE.Object3D();
-    scene.add(empty);
-    vehicles[data.uuid] = empty;
+    const placeholder = new THREE.Object3D();
+    vehicles[data.uuid] = placeholder;
+    scene.add(placeholder);
+
+    //put vehicle to starting position
     vehicles[data.uuid].position.set(getNextPosition(data, data.targetRoute.at(currentStep - 1), currentStep));
-    vehicles[data.uuid].rotation.y = data.targetRoute.at(currentStep - 1).rot;
 
     //start loading model
-    let mtlloader = new THREE.MTLLoader();
-    loaded[`./assets/default/default.mtl`] ??= await mtlloader.loadAsync(`./assets/default/default.mtl`)
-
-    let objloader = new THREE.OBJLoader();
-    let objPath = data.isWalking ? `./assets/default/walker.obj` : `${data.vehicle}.obj`;
-    objloader.setMaterials(loaded[`./assets/default/default.mtl`]);
-    loaded[objPath] ??= await objloader.loadAsync(objPath);
-
-    let object = loaded[objPath].clone();
-    object.traverse((child) => { if (!child.isMesh) return; child.castShadow = true; child.receiveShadow = true; });
+    let object = await loadWMat(data.isWalking ? `./assets/default/walker` : `${data.vehicle}`);
+    object.traverse(obj => { if (obj.isMesh) obj.material.opacity = 0 })
     object.scale.setScalar(0.156);
-    scene.add(object);
-    
-    object.position.set(empty.position.x, empty.position.y, empty.position.z);
-    object.rotation.y = empty.rotation.y;
-    vehicles[data.uuid] = object;
-    scene.remove(empty);
+    placeholder.add(object);
 }
 
-function calculateLowestQuality(citizen, budget) {
-    let taxRate = (1 - Object.values(taxes).reduce((sum, val) => { return sum + val }, 0)); //tax rate & department budgets affects official
+//calculate funding for departments
+function calcFundingSpent(budget) {
+    return Object.keys(budget).reduce((acc, cur) => { return acc + budget[cur] }, 0);
+}
 
-    structures[highestEducation].education
-    citizen.education
-    citizen.moral
+//facility construction corruption
+function bureaucratCorruption(citizen, budget) {
+    let taxRate = 1 - Object.values(taxes).reduce((a, b) => a + b, 0);
+    let education = citizen.education / highestEducation;
+    let moral = citizen.moral / 100;
+
+    let corruption = ((1 - moral) * 0.5 + (1 - education) * 0.3 + (1 - taxRate) * 0.2) * (2 - budget);
+    corruption = Math.max(0, Math.min(corruption, 1));
+    return { workQuality: Math.round((education * 50 + moral * 50) * (1 - corruption)), priceMarkup: +(corruption * 0.5).toFixed(2) };
 }
