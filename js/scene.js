@@ -211,10 +211,7 @@ async function initScene(isNewGame, savefile = false) {
         //random seed
         let seed = Math.floor(Math.random() * 100000);
         if (document.getElementById("worldseed").value.trim() != "") {
-            seed = document.getElementById("worldseed").value
-                .split("")
-                .map(letter => letter.charCodeAt(0) - 96)
-                .reduce((accumulator, currentValue) => `${accumulator}${currentValue * currentValue}`, 0);
+            seed = document.getElementById("worldseed").value.split("").map(letter => letter.charCodeAt(0) - 96).reduce((accumulator, currentValue) => `${accumulator}${currentValue * currentValue}`, 0);
             document.getElementById("worldseed").value = "";
         };
 
@@ -229,6 +226,8 @@ async function initScene(isNewGame, savefile = false) {
         dayTick = 0;
         vehicles = {};
         meshLocations = {};
+        lastCandidates = [];
+        lastShuffle = [];
 
         //set data based on init type
         if (savefile) {
@@ -238,8 +237,8 @@ async function initScene(isNewGame, savefile = false) {
             money = savefile.money || 1_000_000_000;
             date = savefile.date || 0;
             taxes = savefile.taxes || { salary: 0.10, land: 0.05, transportation: 0.05, };
-            budget = savefile.budget || { healthcare: 0.75, police: 0.75, firefighter: 0.75, education: 0.75, transportation: 0.75 };
-            officials = savefile.officials || { transport: false, facility: false, education: false, police: false };
+            budget = savefile.budget || { healthcare: 0.75, police: 0.75, firefighter: 0.75, education: 0.75, construction: 0.75 };
+            officials = savefile.officials || { healthcare: false, police: false, firefighter: false, education: false, construction: false };
         } else {
             worldSeed = parseInt(seed);
             sceneData = newBlankScene(document.getElementById("citysize").value, worldSeed);
@@ -247,8 +246,8 @@ async function initScene(isNewGame, savefile = false) {
             money = 1_000_000_000;
             date = 0;
             taxes = { salary: 0.10, land: 0.05, transportation: 0.05, };
-            budget = { healthcare: 0.75, police: 0.75, firefighter: 0.75, education: 0.75, transportation: 0.75 };
-            officials = { transport: false, facility: false, education: false, police: false };
+            budget = { healthcare: 0.75, police: 0.75, firefighter: 0.75, education: 0.75, construction: 0.75 };
+            officials = { healthcare: false, police: false, firefighter: false, education: false, construction: false };
         }
 
         //reload model and menus
@@ -256,8 +255,9 @@ async function initScene(isNewGame, savefile = false) {
         allOfTheLights(scene);
         loadUnderground();
         await generateGrid(sceneData);
-        valueSliders(taxes, "taxes", "To collect land and vehicle taxes, build a tax office.", 20, true);
-        valueSliders(budget, "Budget", "High budgets will consume funds, While low budgets will encourage corruption and bribery.", 150, false);
+        ministerTab(officials, 'Ministers')
+        valueSliders(taxes, "taxes", info.taxes, 20, true);
+        valueSliders(budget, "Budget", info.budget, 150, false);
         setSupplyStat(calculateSupplied(), calculateSupplied());
 
         //clear warning labels
@@ -276,4 +276,7 @@ async function initScene(isNewGame, savefile = false) {
         simulationRunning = true;
         allStep();
     }, 2000);
-}; initScene(false);
+}; 
+
+initScene(false);
+//initScene(false, JSON.parse(fs.readFileSync(`C:/Users/User/AppData/Roaming/cakranusa/saves/sons of cakranusa.json`, 'utf-8')));

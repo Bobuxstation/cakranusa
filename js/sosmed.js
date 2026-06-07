@@ -96,7 +96,8 @@ function profilePage(citizen) {
         <i>${citizen.bio}</i>
         <br><br>
         <p>Education: ${education.find(item => structures[item].education == Math.floor(citizen.education) - 1) || "basic education"}</p>
-        <p>Employed: ${citizen.job ? "Yes" : "No"}</p>
+        <p>Moral Points: ${citizen.moral} / 100</p>
+        <p>Employed: ${(Object.values(officials).includes(citizen.uuid) || citizen.job) ? "Yes" : "No"}</p>
         <p>Currently studying at: ${citizen.school ? education.find(item => structures[item].education == Math.floor(citizen.education)) : "-"}</p>
     `;
 

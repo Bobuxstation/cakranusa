@@ -31,10 +31,10 @@ function astar(grid) {
   if (!start || !end) return null;
   const heuristic = (a, b) => Math.abs(a.x - b.x) + Math.abs(a.y - b.y);
   const directions = [
-    { x: 0, y: -1, dir: "up", rot: -(Math.PI / 2) },
-    { x: 0, y: 1, dir: "down", rot: (Math.PI / 2) },
-    { x: -1, y: 0, dir: "left", rot: -Math.PI },
-    { x: 1, y: 0, dir: "right", rot: Math.PI * 2 }
+    { x: 0, y: -1, dir: "up" },
+    { x: 0, y: 1, dir: "down" },
+    { x: -1, y: 0, dir: "left" },
+    { x: 1, y: 0, dir: "right" }
   ];
 
   const openSet = [];
@@ -65,17 +65,14 @@ function astar(grid) {
         path.push({
           x: node.x,
           y: node.y,
-          direction: node.direction,
-          rot: node.rot
+          direction: node.direction
         });
         node = node.parent;
       }
 
       let reversedPath = path.reverse();
       reversedPath.at(-1).direction = reversedPath.at(-2).direction;
-      reversedPath.at(-1).rot = reversedPath.at(-2).rot;
       reversedPath.at(0).direction = reversedPath.at(1).direction;
-      reversedPath.at(0).rot = reversedPath.at(1).rot;
 
       return reversedPath;
     }
@@ -109,8 +106,7 @@ function astar(grid) {
           h,
           f,
           parent: current,
-          direction: d.dir,
-          rot: d.rot
+          direction: d.dir
         };
 
         if (existing) {

@@ -587,14 +587,14 @@ Object.keys(buildmenu).forEach((item, i) => {
         const subItemButton = document.createElement("button");
         tab.appendChild(subItemButton);
 
-        subItemButton.innerHTML = `${subItemKey}<span class="price">~${subItem.price ? subItem.price.toLocaleString('id-ID', { style: 'currency', currency: 'IDR', maximumFractionDigits: 0 }) : "Free"}</span>`;
+        subItemButton.innerHTML = `${subItemKey}<span class="price">~${subItem.price ? subItem.price.toLocaleString('id-ID', { style: 'currency', currency: 'IDR', maximumFractionDigits: 0 }) : "Free"}*</span>`;
         subItemButton.onclick = () => { setTool(subItemKey, item) };
         subItemButton.onmouseout = () => { document.getElementById("hint").style.display = "none"; };
         subItemButton.onmouseover = async () => {
             Object.values(document.getElementsByClassName("hintPreview")).forEach(element => element.style.display = element.id == `${subItemKey}` ? "block" : "none");
             document.getElementById("imageSide").style.display = "block";
             document.getElementById("hintTitle").innerText = subItemKey;
-            document.getElementById("hintContent").innerText = subItem.description || "No Description";
+            document.getElementById("hintContent").innerText = `${subItem.description || "No Description"}\n*Prices vary based on ministry factors`;
             document.getElementById("hint").style.display = "block";
         };
 

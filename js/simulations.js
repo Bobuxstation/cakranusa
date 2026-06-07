@@ -130,7 +130,8 @@ async function citizenStep(data, index, flatScene) {
 
             //go to work if employed
             let jobTile = flatScene.find(item => item.uuid == data.job);
-            if (data.job != false && (route = pathfind(sceneData, sceneData[data.location.y][data.location.x], jobTile))) {
+            let isMinister = Object.values(officials).includes(data.uuid);
+            if (!isMinister && data.job != false && (route = pathfind(sceneData, sceneData[data.location.y][data.location.x], jobTile))) {
                 startMoving("work", route, data); break;
             } else data.job = false;
             break;
@@ -142,7 +143,7 @@ async function citizenStep(data, index, flatScene) {
             let newVehicle = false;
             let findPos = data.targetRoute.find(item => item.x == data.location.x && item.y == data.location.y);
             let currentStep = data.targetRoute.indexOf(findPos) == -1 ? 0 : data.targetRoute.indexOf(findPos);
-            if (!vehicles[data.uuid]) {initVehicle(data, currentStep); newVehicle = true};
+            if (!vehicles[data.uuid]) { initVehicle(data.uuid, data.isWalking ? `./assets/default/walker` : `${data.vehicle}`, getNextPosition(data, data.targetRoute.at(currentStep - 1), currentStep)); newVehicle = true };
 
             //delay step if road quality is low (driving only)
             let hasArrived = data.location.x === data.targetRoute.at(-1).x && data.location.y === data.targetRoute.at(-1).y;
@@ -288,16 +289,21 @@ function allStep() {
         let citizensFlat = Object.values(citizens).flat();
         document.getElementById("money").innerText = money.toLocaleString('id-ID', { style: 'currency', currency: 'IDR', maximumFractionDigits: 0 });
         document.getElementById("populationData").innerText = citizensFlat.length;
-        document.getElementById("touristData").innerText = tourismProfit();
         document.getElementById("airquality").innerText = `Air Quality: ${((1 - calculatePollution()) * 100).toFixed(1)}%`;
+        
+        //population tab stats
         document.getElementById("population").innerText = `Population: ${citizensFlat.length}`;
-        document.getElementById("unemployedData").innerText = citizensFlat.filter(item => item.job == false).length;
+        document.getElementById("touristData").innerText = tourismProfit();
+        document.getElementById("unemployedData").innerText = `${citizensFlat.filter(item => item.job == false).length} / ${citizensFlat.length}`;
         document.getElementById("unemploymentVal").innerText = `${Math.floor(((citizensFlat.filter(item => item.job == false).length / citizensFlat.length) || 0) * 100)}%`;
         document.getElementById("unemploymentRate").value = ((citizensFlat.filter(item => item.job == false).length / citizensFlat.length) || 0) * 100;
         document.getElementById("currentlyworking").innerText = `${citizensFlat.filter(item => item.status == "work").length} / ${citizensFlat.filter(item => item.job != false).length}`;
+        document.getElementById("workVal").innerText = `${Math.floor(((citizensFlat.filter(item => item.status == "work").length / citizensFlat.filter(item => item.job != false).length) || 0) * 100)}%`;
+        document.getElementById("workRate").value = (((citizensFlat.filter(item => item.status == "work").length / citizensFlat.filter(item => item.job != false).length) || 0) || 0) * 100;
         tileInfo(sceneData.flat()[updateInfo]);
 
         //stats menu
+        updateMinisterTab(citizensFlat, officials);
         updateEducationStats();
         summarizeBuilt();
 
@@ -351,55 +357,56 @@ function facilityStep(allFacilities) {
 async function facilityTick(tile) {
     if (tile.buildingType == 'firedept') {
         if (tile.buildingData.working & (typeof vehicles[`firedept-${tile.uuid}`] != "undefined")) {
-            if (tile.buildingData.step >= tile.buildingData.route.length - 1) {
-                //arrived at burning building
-                tile.buildingData.working = false;
-                tile.buildingData.step = 0;
-                tile.buildingData.target.burning = false;
-                tile.buildingData.target.burningCount = 0;
+            //driving to burning building
+            let from = tile.buildingData.route[tile.buildingData.step];
+            let to = tile.buildingData.route[tile.buildingData.step + 1];
+            let start = performance.now();
+            let anim = () => {
+                //set data
+                let time = Math.min((performance.now() - start) / simulationSpeed, 1);
+                let fromX = from.y - sceneData[0].length / 2;
+                let toX = to.y - sceneData[0].length / 2
+                let fromY = from.x - sceneData[0].length / 2;
+                let toY = to.x - sceneData[0].length / 2
+                let fromH = sceneData[from.y][from.x].height + 0.16;
+                let toH = sceneData[to.y][to.x].height + 0.16;
 
-                //delete vehicle model
-                scene.remove(vehicles[`firedept-${tile.uuid}`]);
-                delete vehicles[`firedept-${tile.uuid}`];
-            } else {
-                //driving to burning building
-                let from = tile.buildingData.route[tile.buildingData.step];
-                let to = tile.buildingData.route[tile.buildingData.step + 1];
-                let start = performance.now();
+                //lerp model
+                if (vehicles[`firedept-${tile.uuid}`]) {
+                    //vehicle opacity (intro/outro)
+                    if (tile.buildingData.step >= tile.buildingData.route.length - 2) vehicles[`firedept-${tile.uuid}`].traverse(obj => { if (obj.isMesh) obj.material.opacity = lerp(obj.material.opacity, 0, time) });
+                    else vehicles[`firedept-${tile.uuid}`].traverse(obj => { if (obj.isMesh) obj.material.opacity = lerp(obj.material.opacity, 1, time) });
 
-                //lerp vehicle
-                function anim() {
-                    let t = Math.min((performance.now() - start) / simulationSpeed, 1);
+                    //vehicle pos and rot
+                    vehicles[`firedept-${tile.uuid}`].rotation.set(0, Math.atan2(toX - fromX, toY - fromY), 0);
+                    vehicles[`firedept-${tile.uuid}`].position.set(lerp(fromX, toX, time), lerp(fromH, toH, time), lerp(fromY, toY, time));
+                }
 
-                    let fromX = from.y - sceneData[0].length / 2;
-                    let toX = to.y - sceneData[0].length / 2
-                    let fromY = from.x - sceneData[0].length / 2;
-                    let toY = to.x - sceneData[0].length / 2
+                //loop animation or delete vehicle if set
+                if (time < 1) requestAnimationFrame(anim);
+                else if (tile.buildingData.step >= tile.buildingData.route.length - 2) {
+                    //arrived at burning building
+                    tile.buildingData.working = false;
+                    tile.buildingData.step = 0;
+                    tile.buildingData.target.burning = false;
+                    tile.buildingData.target.burningCount = 0;
 
-                    try {
-                        vehicles[`firedept-${tile.uuid}`].position.set(lerp(fromX, toX, t), lerp(sceneData[from.y][from.x].height + 0.16, sceneData[to.y][to.x].height + 0.16, t), lerp(fromY, toY, t));
-                        vehicles[`firedept-${tile.uuid}`].rotation.set(0, Math.atan2(toX - fromX, toY - fromY), 0);
-                    } catch (e) { } //sometimes broken idk why
-                    if (t < 1) { requestAnimationFrame(anim) } else { tile.buildingData.step++; }
-                }; anim();
-            }
+                    //delete vehicle model
+                    scene.remove(vehicles[`firedept-${tile.uuid}`]);
+                    delete vehicles[`firedept-${tile.uuid}`];
+                } else tile.buildingData.step++;
+            }; anim();
         } else {
-            let burning = sceneData.flat().find(item => item.burning);
-            let route = burning ? pathfind(sceneData, tile, burning) : false;
-            if (!route) return;
+            //find burning building
+            let burning, route;
+            if (!(route = (burning = sceneData.flat().find(item => item.burning)) ? pathfind(sceneData, tile, burning) : false)) return;
 
             //set data
-            let mesh = await loadWMat('assets/vehicles/FIRETRUCK');
-            mesh.scale.setScalar(0.156);
-            mesh.position.set(tile.posX, 0, tile.posY)
-            scene.add(mesh);
-
-            //set data
-            tile.buildingData.route = route;
-            tile.buildingData.target = burning;
+            initVehicle(`firedept-${tile.uuid}`, 'assets/vehicles/FIRETRUCK', { x: tile.posX, y: 0, z: tile.posY })
             tile.buildingData.working = true;
             tile.buildingData.step = 0;
-            vehicles[`firedept-${tile.uuid}`] = mesh;
+            tile.buildingData.route = route;
+            tile.buildingData.target = burning;
         }
     };
 };

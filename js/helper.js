@@ -468,22 +468,25 @@ function spawnSmoke(position, duration = 3000) {
     }; update();
 }
 
+//========================
+// Helper Functions - Vehicles
+//========================
+
 function lerpVehicle(oldPos, targetPos, data, deleteVehicle) {
     let startTime = performance.now();
-    function lerpAnim() {
+    let lerpAnim = () => {
         let time = Math.min((performance.now() - startTime) / simulationSpeed, 1);
-
-        try {
-            let targetRot = Math.atan2(targetPos.x - oldPos.x, targetPos.z - oldPos.z);
-            vehicles[data.uuid].rotation.y = targetRot;
-            vehicles[data.uuid].position.set(
-                lerp(oldPos.x, targetPos.x, time),
-                lerp(oldPos.y, targetPos.y, time),
-                lerp(oldPos.z, targetPos.z, time));
+        if (vehicles[data.uuid]) {
+            //vehicle opacity (intro/outro)
             if (deleteVehicle) vehicles[data.uuid].traverse(obj => { if (obj.isMesh) obj.material.opacity = lerp(obj.material.opacity, 0, time) });
-            else vehicles[data.uuid].traverse(obj => { if (obj.isMesh) obj.material.opacity = lerp(obj.material.opacity, 1, time) })
-        } catch (e) {  }
+            else vehicles[data.uuid].traverse(obj => { if (obj.isMesh) obj.material.opacity = lerp(obj.material.opacity, 1, time) });
 
+            //vehicle pos and rot
+            vehicles[data.uuid].rotation.y = Math.atan2(targetPos.x - oldPos.x, targetPos.z - oldPos.z);
+            vehicles[data.uuid].position.set(lerp(oldPos.x, targetPos.x, time), lerp(oldPos.y, targetPos.y, time), lerp(oldPos.z, targetPos.z, time));
+        }
+
+        //loop animation or delete vehicle if set
         if (time < 1) requestAnimationFrame(lerpAnim);
         else if (deleteVehicle && time >= 1) {
             data.status = data.targetType;
@@ -492,4 +495,37 @@ function lerpVehicle(oldPos, targetPos, data, deleteVehicle) {
             delete vehicles[data.uuid];
         }
     }; lerpAnim();
+}
+
+//load vehicle model (blank placeholder while loading)
+async function initVehicle(uuid, model, position) {
+    //create blank placeholder
+    const placeholder = new THREE.Object3D();
+    vehicles[uuid] = placeholder;
+    scene.add(placeholder);
+
+    //put vehicle to starting position
+    vehicles[uuid].position.set(position);
+
+    //start loading model
+    let object = await loadWMat(model);
+    object.traverse(obj => { if (obj.isMesh) obj.material.opacity = 0 })
+    object.scale.setScalar(0.156);
+    placeholder.add(object);
+}
+
+//cleanup vehicles not linked to drivers
+function cleanVehicles() {
+    Object.keys(vehicles).forEach(key => {
+        if (Object.values(citizens).flat().filter(citizen => citizen.uuid === key).length != 0 || key.includes('firedept')) return;
+        scene.remove(vehicles[key]);
+        delete vehicles[key];
+    });
+};
+
+//return vehicle back home if stuck
+function vehicleTimeout(data, flatScene) {
+    data.status = "home";
+    data.location = findTileCoordinate(sceneData, flatScene.find(item => item.uuid == data.home));
+    if (vehicles[data.uuid]) { scene.remove(vehicles[data.uuid]); delete vehicles[data.uuid]; }
 }

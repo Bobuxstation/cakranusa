@@ -10,19 +10,20 @@ function setTool(type, category) {
     let toolname = document.getElementById("toolname");
     let lastmenu = lastTab['tab'];
 
-    //animations and text
-    renderer.domElement.style.cursor = 'crosshair';
-    toolDiv.style.animation = "slideOutDown 0.25s both";
-    toolname.innerText = `${category}${type ? ` - ${type}` : ""}`;
-
     // hide tabs and activate tool
     openTab('', 'tab', true);
     tool["type"] = type;
     tool["category"] = category;
 
     //set price
-    if (structures[type]) tool["price"] = structures[type].price || 0;
+    let priceCharge = bureaucratCorruption(officials.construction, budget.construction);
+    if (structures[type]) tool["price"] = structures[type].price + (priceCharge.priceMarkup * structures[type].price) || 0;
     else tool["price"] = 0;
+
+    //animations and text
+    renderer.domElement.style.cursor = 'crosshair';
+    toolDiv.style.animation = "slideOutDown 0.25s both";
+    toolname.innerText = `${category}${type ? ` - ${type}` : ""}${tool["price"] ? ` - ${tool["price"].toLocaleString('id-ID', { style: 'currency', currency: 'IDR', maximumFractionDigits: 0 })}` : " - Free"}`;
 
     //show selection overlay
     setTimeout(() => {
@@ -77,7 +78,7 @@ async function select(event) {
             let categoryWhitelist = !["Demolish", "Demolish Underground", "Supply", "Foliage", 'Transport'].includes(tool.category);
             let hasRoadConnection = checkNeighborForRoads(tile.posX, tile.posZ, true) == false || !(tile.type == 0 || tile.type == 1);
             if (categoryWhitelist && hasRoadConnection) {
-                newNotification(!(tile.type == 0 || tile.type == 1) ? "Cannot build here: Tile already occupied!" : "Cannot build here: Missing road connection!");
+                newNotification(!(tile.type == 0 || tile.type == 1) ? info.occupied : info.noroad);
                 return;
             };
         }
@@ -138,7 +139,7 @@ function chargePrice(notFree) {
         if (tool.price != 0) newNotification(`-${tool.price.toLocaleString('id-ID', { style: 'currency', currency: 'IDR', maximumFractionDigits: 0 })}`);
         return true;
     } else {
-        newNotification("Cannot build here: Insufficient funds");
+        newNotification(info.nofunds);
         return false;
     };
 }
@@ -299,11 +300,12 @@ function placeRoad(paying, tile, type = tool.type) {
     if (!chargePrice(paying)) return;
     cleanTileData(tile);
 
+    let quality = bureaucratCorruption(officials.construction, budget.construction);
     tile.type = 2;
     tile.qualityState = 100;
     tile.qualityTick = 0;
     tile.roadType = type;
-    tile.quality = randomIntFromInterval(50, 100);
+    tile.quality = quality.workQuality;
 
     let neighbors = checkNeighborForRoads(tile["posX"], tile["posZ"], false, true);
     setRoadModel(neighbors, tile, false);

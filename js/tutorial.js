@@ -84,6 +84,16 @@ var tutorial = {
     `,
 };
 
+var info = {
+    "occupied": "Cannot build here: Tile already occupied!",
+    "noroad": "Cannot build here: Missing road connection!",
+    "nofunds": "Cannot build here: Insufficient funds",
+    "minister": "You can appoint ministers here, they are responsible for managing city services.",
+    "ministeropen": "A position in the ministry has available candidates",
+    "taxes": "To collect land and vehicle taxes, build a tax office.",
+    "budget": "High budgets will consume funds, While low budgets will encourage corruption and bribery."
+};
+
 var splashtext = [
     "With corruption!",
     "100% Not rushed",

@@ -439,6 +439,11 @@ button:active,
     display: none;
 }
 
+.policyTab p,
+.statsTab p {
+    text-transform: capitalize;
+}
+
 .warningLabel {
     background: rgba(0, 0, 0, 0.7);
     padding: 8px;
@@ -482,6 +487,24 @@ input[type=number]::-webkit-outer-spin-button {
 #increase {
     color: #008000;
     margin-left: 5px;
+}
+
+.candidate {
+    display: flex;
+    align-items: center;
+}
+
+.candidate span {
+    margin-left: 25px;
+}
+
+.candidate div {
+    margin-left: auto;
+}
+
+.candidate button {
+    width: 35px !important;
+    margin: 0;
 }
 
 @keyframes spin {

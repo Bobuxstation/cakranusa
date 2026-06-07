@@ -1,5 +1,5 @@
 //========================
-// Simulation Helpers
+// Citizen
 //========================
 
 //delete citizen
@@ -13,55 +13,6 @@ function deleteCitizen(data) {
             break;
         }
     }
-}
-
-//occupy resizential tile
-async function occupyHouse(tile) {
-    let connectedRoad = checkNeighborForRoads(tile["posX"], tile["posZ"], true);
-    let buildingType = Object.keys(houses)[Math.floor(Math.random() * Object.keys(houses).length)];
-
-    tile.buildingModel = buildingType;
-    tile.occupied = true;
-    tile.slot = houses[buildingType]["slots"];
-    tile.uuid = makeUniqueId(sceneData.flat());
-    setInstanceColor(0x555555, gridInstance, tile.index);
-
-    //create new citizens
-    for (let i = 0; i < houses[buildingType]["slots"]; i++) {
-        citizens[tile.index] ??= [];
-        citizens[tile.index].push(createNewCitizen(tile));
-    }
-
-    let object = await loadWMat(buildingType);
-    scene.remove(meshLocations[tile.index]);
-    scene.add(object);
-
-    meshLocations[tile.index] = object;
-    positionTile(connectedRoad, tile, object)
-    animMove(object, true);
-}
-
-//occupy commercial/industrial/farm tile
-async function occupyWorkplace(tile, type) {
-    //find connected road
-    let connectedRoad = checkNeighborForRoads(tile["posX"], tile["posZ"], true);
-    let filterBuildings = Object.keys(type).filter(item => type[item].level == findOpportunity());
-    let buildingType = filterBuildings[Math.floor(Math.random() * Object.keys(filterBuildings).length)];
-    if (filterBuildings.length == 0) return;
-
-    tile.buildingModel = buildingType;
-    tile.slot = type[buildingType]["slots"];
-    tile.occupied = true;
-    tile.uuid = makeUniqueId(sceneData.flat());
-    setInstanceColor(0x555555, gridInstance, tile.index);
-
-    let object = await loadWMat(buildingType);
-    scene.remove(meshLocations[tile.index]);
-    scene.add(object);
-
-    meshLocations[tile.index] = object;
-    positionTile(connectedRoad, tile, object)
-    animMove(object, true);
 }
 
 // find zone for citizens
@@ -149,42 +100,10 @@ function findFacility(type) {
     return false;
 }
 
-function tourismProfit(amount = false) {
-    let matches = sceneData.flat().filter(item => (item.type == 4 & item.buildingType == "tourism"));
-    if (amount) {
-        return (calculatePollution() < 0.2) ? matches.length * 50_000 : 0;
-    } else {
-        return (calculatePollution() < 0.2) ? matches.length : 0;
-    }
-}
-
-//calculate pollution rates
-function calculatePollution() {
-    let factories = sceneData.flat().filter(item => item.zone == 'industrial' && item.type == 3 && item.occupied == true).length;
-    let pollutionRate = factories / 64;
-
-    return pollutionRate;
-}
-
 //check number of citizens in tile
 function citizensInTile(tile, value = false) {
     let tileCoordinate = findTileCoordinate(sceneData, tile);
     return value ? Object.values(citizens).flat().filter(item => item.location.x == tileCoordinate.x && item.location.y == tileCoordinate.y) : Object.values(citizens).flat().filter(item => item.location.x == tileCoordinate.x && item.location.y == tileCoordinate.y).length;
-}
-
-//check students of tile
-function checkStudents(tile) {
-    return Object.values(citizens).flat().filter(citizen => citizen.school === tile.uuid);
-}
-
-//check employees of tile
-function checkEmployees(tile) {
-    return Object.values(citizens).flat().filter(citizen => citizen.job === tile.uuid);
-}
-
-//check residents of tile
-function checkResidents(tile) {
-    return Object.values(citizens).flat().filter(citizen => citizen.home === tile.uuid);
 }
 
 //find unfilled job level
@@ -215,24 +134,104 @@ function findOpportunity(booleanMode = false) {
     return (majorityVal == null) ? 1 : parseInt(majorityVal);
 }
 
-//cleanup vehicles not linked to drivers
-function cleanVehicles() {
-    Object.keys(vehicles).forEach(key => {
-        if (Object.values(citizens).flat().filter(citizen => citizen.uuid === key).length != 0 || key.includes('firedept')) return;
-        scene.remove(vehicles[key]);
-        delete vehicles[key];
-    });
-};
+//set citizen into moving mode
+function startMoving(type, route, data) {
+    data.isWalking = shouldWalk(route);
+    data.targetDir = "";
+    data.roadWait = 0;
+    data.sessionTick = 0;
+    data.status = "moving";
+    data.targetType = type; // set to work mode when arrived
+    data.targetRoute = route;
+}
 
-//calculate days for date counter
-function calculateDate(days, noDate = false) {
-    const date = new Date(Date.UTC(2026, 0, 1)); // game lore starts in January 1 2026
-    date.setUTCDate(date.getUTCDate() + days);
+//========================
+// Zone Tiles
+//========================
 
-    const dd = String(date.getUTCDate()).padStart(2, '0');
-    const mm = String(date.getUTCMonth() + 1).padStart(2, '0');
-    const yyyy = date.getUTCFullYear();
-    return noDate ? `${mm}/${yyyy}` : `${dd}/${mm}/${yyyy}`;
+//occupy resizential tile
+async function occupyHouse(tile) {
+    let connectedRoad = checkNeighborForRoads(tile["posX"], tile["posZ"], true);
+    let buildingType = Object.keys(houses)[Math.floor(Math.random() * Object.keys(houses).length)];
+
+    tile.buildingModel = buildingType;
+    tile.occupied = true;
+    tile.slot = houses[buildingType]["slots"];
+    tile.uuid = makeUniqueId(sceneData.flat());
+    setInstanceColor(0x555555, gridInstance, tile.index);
+
+    //create new citizens
+    for (let i = 0; i < houses[buildingType]["slots"]; i++) {
+        citizens[tile.index] ??= [];
+        citizens[tile.index].push(createNewCitizen(tile));
+    }
+
+    let object = await loadWMat(buildingType);
+    scene.remove(meshLocations[tile.index]);
+    scene.add(object);
+
+    meshLocations[tile.index] = object;
+    positionTile(connectedRoad, tile, object)
+    animMove(object, true);
+}
+
+//occupy commercial/industrial/farm tile
+async function occupyWorkplace(tile, type) {
+    //find connected road
+    let connectedRoad = checkNeighborForRoads(tile["posX"], tile["posZ"], true);
+    let filterBuildings = Object.keys(type).filter(item => type[item].level == findOpportunity());
+    let buildingType = filterBuildings[Math.floor(Math.random() * Object.keys(filterBuildings).length)];
+    if (filterBuildings.length == 0) return;
+
+    tile.buildingModel = buildingType;
+    tile.slot = type[buildingType]["slots"];
+    tile.occupied = true;
+    tile.uuid = makeUniqueId(sceneData.flat());
+    setInstanceColor(0x555555, gridInstance, tile.index);
+
+    let object = await loadWMat(buildingType);
+    scene.remove(meshLocations[tile.index]);
+    scene.add(object);
+
+    meshLocations[tile.index] = object;
+    positionTile(connectedRoad, tile, object)
+    animMove(object, true);
+}
+
+//check employees of tile
+function checkEmployees(tile) {
+    return Object.values(citizens).flat().filter(citizen => citizen.job === tile.uuid);
+}
+
+//check residents of tile
+function checkResidents(tile) {
+    return Object.values(citizens).flat().filter(citizen => citizen.home === tile.uuid);
+}
+
+//========================
+// Facility
+//========================
+
+function tourismProfit(amount = false) {
+    let matches = sceneData.flat().filter(item => (item.type == 4 & item.buildingType == "tourism"));
+    if (amount) {
+        return (calculatePollution() < 0.2) ? matches.length * 50_000 : 0;
+    } else {
+        return (calculatePollution() < 0.2) ? matches.length : 0;
+    }
+}
+
+//calculate pollution rates
+function calculatePollution() {
+    let factories = sceneData.flat().filter(item => item.zone == 'industrial' && item.type == 3 && item.occupied == true).length;
+    let pollutionRate = factories / 64;
+
+    return pollutionRate;
+}
+
+//check students of tile
+function checkStudents(tile) {
+    return Object.values(citizens).flat().filter(citizen => citizen.school === tile.uuid);
 }
 
 //calculate facility benefits from neighbors
@@ -258,28 +257,25 @@ function calculateFacilityAddition(y, x, moralMode = false) {
     return parseFloat(directions.toFixed(2));
 }
 
-//set citizen into moving mode
-function startMoving(type, route, data) {
-    data.isWalking = shouldWalk(route);
-    data.targetDir = "";
-    data.roadWait = 0;
-    data.sessionTick = 0;
-    data.status = "moving";
-    data.targetType = type; // set to work mode when arrived
-    data.targetRoute = route;
-}
+//========================
+// Other city simulations
+//========================
 
-//return vehicle back home if stuck
-function vehicleTimeout(data, flatScene) {
-    data.status = "home";
-    data.location = findTileCoordinate(sceneData, flatScene.find(item => item.uuid == data.home));
-    if (vehicles[data.uuid]) { scene.remove(vehicles[data.uuid]); delete vehicles[data.uuid]; }
+//calculate days for date counter
+function calculateDate(days, noDate = false) {
+    const date = new Date(Date.UTC(2026, 0, 1)); // game lore starts in January 1 2026
+    date.setUTCDate(date.getUTCDate() + days);
+
+    const dd = String(date.getUTCDate()).padStart(2, '0');
+    const mm = String(date.getUTCMonth() + 1).padStart(2, '0');
+    const yyyy = date.getUTCFullYear();
+    return noDate ? `${mm}/${yyyy}` : `${dd}/${mm}/${yyyy}`;
 }
 
 //subtract taxes from salary then subtract city budget from taxes
 function processSalary(data, paycheck) {
     let maxBudget = Object.keys(budget).length * 1.5;
-    let budgetPercentage = calcFundingSpent(budget) / maxBudget;
+    let budgetPercentage = Object.keys(budget).reduce((acc, cur) => { return acc + budget[cur] }, 0) / maxBudget;
     let taxed = Math.floor(paycheck * taxes.salary);
 
     data.wallet += Math.floor(paycheck - taxed);
@@ -287,35 +283,140 @@ function processSalary(data, paycheck) {
     todayEarnings += taxed - (taxed * budgetPercentage);
 }
 
-//load vehicle model (blank placeholder while loading)
-async function initVehicle(data, currentStep) {
-    //create blank placeholder
-    const placeholder = new THREE.Object3D();
-    vehicles[data.uuid] = placeholder;
-    scene.add(placeholder);
-
-    //put vehicle to starting position
-    vehicles[data.uuid].position.set(getNextPosition(data, data.targetRoute.at(currentStep - 1), currentStep));
-
-    //start loading model
-    let object = await loadWMat(data.isWalking ? `./assets/default/walker` : `${data.vehicle}`);
-    object.traverse(obj => { if (obj.isMesh) obj.material.opacity = 0 })
-    object.scale.setScalar(0.156);
-    placeholder.add(object);
-}
-
-//calculate funding for departments
-function calcFundingSpent(budget) {
-    return Object.keys(budget).reduce((acc, cur) => { return acc + budget[cur] }, 0);
-}
-
 //facility construction corruption
 function bureaucratCorruption(citizen, budget) {
-    let taxRate = 1 - Object.values(taxes).reduce((a, b) => a + b, 0);
-    let education = citizen.education / highestEducation;
-    let moral = citizen.moral / 100;
+    citizen = Object.values(citizens).flat().find(item => item.uuid == citizen);
+    if (!citizen) return { workQuality: randomIntFromInterval(50, 85), priceMarkup: 0.25 };
 
+    let taxRate = 1 - Object.values(taxes).reduce((a, b) => a + b, 0);
+    let education = citizen.education / structures[highestEducation].education;
+    let moral = citizen.moral / 100;
     let corruption = ((1 - moral) * 0.5 + (1 - education) * 0.3 + (1 - taxRate) * 0.2) * (2 - budget);
     corruption = Math.max(0, Math.min(corruption, 1));
-    return { workQuality: Math.round((education * 50 + moral * 50) * (1 - corruption)), priceMarkup: +(corruption * 0.5).toFixed(2) };
+
+    let baseQuality = education * 50 + moral * 50;
+    return { workQuality: Math.round(50 + (baseQuality - 50) * (1 - corruption)), priceMarkup: +(0.25 * corruption).toFixed(2) };
+}
+
+let lastCandidates = [], lastShuffle = [];
+function findCandidate() {
+    let emptyPositions = Object.keys(officials).filter(item => officials[item] == false).length;
+    let filledPositions = Object.keys(officials).filter(item => officials[item] != false);
+    let allCitizens = Object.values(citizens).flat();
+    let pickedCitizens = [];
+
+    const alreadyAssigned = new Set(filledPositions.map(p => officials[p]));
+    const eligible = allCitizens.filter(c => !alreadyAssigned.has(c.uuid)).sort((a, b) => (b.moral + b.education / highestEducation * 100) - (a.moral + a.education / highestEducation * 100)).slice(0, emptyPositions * 3);
+    const candidateIds = eligible.map(c => c.uuid);
+
+    if (JSON.stringify(candidateIds) === JSON.stringify(lastCandidates)) return lastShuffle;
+    lastCandidates = candidateIds;
+
+    for (let i = 0; i < emptyPositions; i++) {
+        const pool = eligible.slice(i * 3, i * 3 + 3).sort(() => Math.random() - 0.5);
+        pickedCitizens.push(pool);
+    }
+
+    lastShuffle = pickedCitizens;
+    return pickedCitizens;
+}
+
+function ministerTab(arr, div) {
+    document.getElementById(div).innerHTML = '';
+
+    //information
+    let infotext = document.createElement("p");
+    infotext.innerHTML = `<i class="fa-solid fa-circle-info"></i> ${info.minister}`;
+    document.getElementById(div).appendChild(infotext);
+
+    //show ministers for each
+    let candidates = findCandidate();
+    let candidateIndex = 0;
+    Object.keys(arr).forEach(item => {
+        let itemData = arr[item];
+
+        let elem = document.createElement("p");
+        elem.innerText = item;
+        document.getElementById(div).appendChild(elem);
+
+        let label = document.createElement("span");
+        label.innerText = `Candidates available`;
+        label.className = "price";
+        elem.appendChild(label);
+
+        if (!itemData && candidates[candidateIndex] && candidates[candidateIndex].length != 0) {
+            //show candidate selection menu
+            candidates[candidateIndex].forEach(element => {
+                let buttonContainer = document.createElement("div");
+                let elem = document.createElement("p");
+                elem.className = 'candidate';
+
+                let name = document.createElement("span");
+                name.innerText = `${element.name.slice(0, 16)}${(element.name.length) > 16 ? '...' : ''}`;
+                elem.appendChild(name);
+
+                let examine = document.createElement("button");
+                examine.innerHTML = '<i class="fa-solid fa-magnifying-glass"></i>';
+                examine.title = 'Examine profile';
+                examine.onclick = () => profilePage(element);
+                buttonContainer.appendChild(examine);
+
+                let choose = document.createElement("button");
+                buttonContainer.appendChild(choose);
+                choose.innerHTML = '<i class="fa-solid fa-user-check"></i>';
+                choose.title = `Appoint as ${item} minister`;
+                choose.onclick = () => { arr[item] = element.uuid; ministerTab(officials, 'Ministers'); };
+
+                elem.appendChild(buttonContainer);
+                document.getElementById(div).appendChild(elem);
+            });
+
+            candidateIndex++;
+        } else if (arr[item] != false) {
+            //manage working minister
+            label.innerText = 'Position filled';
+            let element = Object.values(citizens).flat().find(item => item.uuid == itemData);
+            if (!element) { arr[item] = false; ministerTab(officials, 'Ministers'); newNotification(info.ministeropen); return; };
+
+            let buttonContainer = document.createElement("div");
+            let elem = document.createElement("p");
+            elem.className = 'candidate';
+
+            let name = document.createElement("span");
+            name.innerText = `${element.name.slice(0, 16)}${(element.name.length) > 16 ? '...' : ''}`;
+            elem.appendChild(name);
+
+            let examine = document.createElement("button");
+            examine.innerHTML = '<i class="fa-solid fa-clock-rotate-left"></i>';
+            examine.title = `Check ministry spending`;
+            examine.onclick = () => profilePage(element);
+            buttonContainer.appendChild(examine);
+
+            let choose = document.createElement("button");
+            buttonContainer.appendChild(choose);
+            choose.innerHTML = '<i class="fa-solid fa-user-slash"></i>';
+            choose.title = `Fire as ${item} minister`;
+            choose.onclick = () => { arr[item] = false; ministerTab(officials, 'Ministers'); };
+
+            elem.appendChild(buttonContainer);
+            document.getElementById(div).appendChild(elem);
+        } else label.innerText = 'No candidates!';
+    });
+}
+
+function updateMinisterTab(citizenFlat, arr) {
+    let refresh = false;
+
+    for (const item of Object.keys(arr)) if (arr[item] && !citizenFlat.find(citizen => citizen.uuid == arr[item])) { refresh = true; break; }
+    let emptyPositions = Object.keys(officials).filter(item => officials[item] == false).length;
+    let filledPositions = Object.keys(officials).filter(item => officials[item] != false);
+
+    const alreadyAssigned = new Set(filledPositions.map(p => officials[p]));
+    const candidateIds = citizenFlat.filter(c => !alreadyAssigned.has(c.uuid)).sort((a, b) => (b.moral + b.education / highestEducation * 100) - (a.moral + a.education / highestEducation * 100)).slice(0, emptyPositions * 3).map(c => c.uuid);
+    if (JSON.stringify(candidateIds) !== JSON.stringify(lastCandidates)) refresh = true;
+    if (refresh) ministerTab(arr, 'Ministers');
+}
+
+function fundingEligible() {
+
 }
