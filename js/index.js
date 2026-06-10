@@ -14,7 +14,7 @@ renderer.outputEncoding = THREE.sRGBEncoding;
 renderer.shadowMap.enabled = true;
 renderer.shadowMap.type = THREE.VSMShadowMap;
 renderer.domElement.style.pointerEvents = 'none';
-renderer.domElement.style.filter = 'blur(2px)';
+renderer.domElement.style.filter = 'blur(5px)';
 document.body.appendChild(renderer.domElement);
 
 //warning and label overlays

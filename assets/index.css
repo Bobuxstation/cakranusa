@@ -6,13 +6,13 @@
 
 #intro {
     z-index: 999;
-    position: absolute;
     display: flex;
+    position: absolute;
     justify-content: center;
-    place-items: center;
     height: 100dvh;
-    width: 100dvw;
     flex-direction: column;
+    width: 100vw;
+    place-items: center;
 }
 
 #intro span {
@@ -22,7 +22,7 @@
 
 #intro img {
     box-shadow: 0px 0px 5px #00000080;
-    width: 25vw;
+    width: 280px;
     border-radius: 5px;
 }
 
@@ -82,21 +82,6 @@ body {
     opacity: 0.5;
 }
 
-#newsDetails {
-    width: 15px;
-    height: 10px;
-    background-color: #ffffffbf;
-    clip-path: polygon(50% 0%, 0% 100%, 100% 100%);
-    position: absolute;
-    z-index: 1001;
-    transform: rotate(180deg);
-    right: 13px;
-    top: 13px;
-    animation: flash 2s both;
-    pointer-events: none;
-    display: none;
-}
-
 #tabs {
     background: none !important;
     backdrop-filter: none !important;
@@ -110,6 +95,10 @@ body {
 
 .innertab p:nth-child(even) {
     background-color: #00000015;
+}
+
+.titleTab {
+    margin-top: 15px;
 }
 
 .time button {
@@ -331,7 +320,7 @@ button:active,
 .right,
 .left {
     width: fit-content;
-    height: 325px;
+    height: 295px;
     float: left;
     overflow: auto;
     padding-bottom: 65px;
@@ -357,7 +346,7 @@ button:active,
     background-color: #00000020;
 }
 
-.dual .right button {
+.dual .right button{
     display: inline-block;
     text-transform: capitalize;
     margin-right: 5px;
@@ -378,13 +367,16 @@ button:active,
     display: block;
     margin: 5px;
     text-transform: capitalize;
+    padding: 10px;
+    padding-bottom: 8px;
 }
 
 #saves, #newgame {
     width: 325px;
 }
 
-#saves hr {
+#saves hr,
+#titleSaves hr {
     margin-top: 5px;
 }
 
@@ -392,14 +384,30 @@ button:active,
     margin: 5px;
 }
 
+#titleSavesContent,
+#titleSavesContent div {
+    background: none !important;
+    border: none !important;
+    width: 100% !important;
+    backdrop-filter: none !important;
+}
+
 #newgame button,
 #newgame select,
-#newgame input {
+#newgame input,
+#intro button,
+#intro select,
+#intro input  {
     width: calc(100% - 10px);
     margin: 5px;
     margin-bottom: 0px;
     padding: 10px;
     padding-bottom: 8px;
+}
+
+#intro button:last-child,
+#titleSaves div:last-child{
+    margin-bottom: 5px;
 }
 
 #createNew {
@@ -505,6 +513,50 @@ input[type=number]::-webkit-outer-spin-button {
 .candidate button {
     width: 35px !important;
     margin: 0;
+}
+
+#titleMain div {
+    border: darkgray solid 1px;
+    background: #ffffffbd;
+    backdrop-filter: blur(10px);
+    width: calc(30vw - 30px);
+    max-height: 40vh;
+    overflow: auto;
+}
+
+.tabTitle {
+    text-align: center;
+    background: #00000010 !important;
+    border: none !important;
+    backdrop-filter: none !important;
+    padding: 5px;
+    padding-top: 7px;
+    width: 100% !important;
+    border-bottom: darkgray solid 1px !important;
+}
+
+.tabTitle a {
+    position: absolute;
+    left: 5px;
+    margin-top: -8px;
+    font-size: 20px;
+    transition: all 0.10s ease;
+}
+
+.tabTitle a:hover {
+    background: #00000020 !important;
+    cursor: pointer;
+    transition: all 0.10s ease;
+}
+
+#titleSavesContent {
+    overflow: auto;
+    height: calc(40vh - 25px);
+}
+
+#saveslist {
+    height: 229px;
+    overflow: auto;
 }
 
 @keyframes spin {

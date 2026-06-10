@@ -128,7 +128,6 @@ function dragElement(elmnt) {
 
 //social media post
 function newPost(text, citizen, thumbnail = false) {
-    document.getElementById("newsDetails").style.display = 'block';
     typewrite(document.getElementById("newsContent"), `@${citizen.username}: ${text}`);
 
     let postDiv = document.createElement("div");
@@ -155,7 +154,6 @@ function newPost(text, citizen, thumbnail = false) {
     postDiv.appendChild(content);
 
     document.getElementById("newsContent").onclick = () => {
-        document.getElementById("newsDetails").style.display = 'none';
         openTab('sosmed', 'tab', true, "slideInDown", "slideOutUp");
         openTab("Posts", "socialTab");
     }

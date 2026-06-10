@@ -131,7 +131,7 @@ function gameUI() {
     document.getElementById("newsContent").style.display = "flex";
     document.getElementById("topNav").style.display = "flex";
     document.getElementById("tabButtons").style.display = "flex";
-    document.getElementById("titleOverlay").style.display = "none";
+    document.getElementById("titleMain").style.display = "none";
     document.getElementById("intro").style.display = "none";
     setSpeed(1000);
 
@@ -145,17 +145,17 @@ function titleUI() {
     document.getElementById("newsContent").style.display = "none";
     document.getElementById("topNav").style.display = "none";
     document.getElementById("tabButtons").style.display = "none";
-    document.getElementById("titleOverlay").style.display = "flex";
+    document.getElementById("titleMain").style.display = "block";
     document.getElementById("intro").style.display = "flex";
 
-    listJsonSaves();
     initScene(false);
     openTab('', 'tab', true);
+    openTab('', 'titleTab', true)
 
     renderer.domElement.style.pointerEvents = 'none';
-    renderer.domElement.style.filter = 'blur(2px)';
-    labelRenderer.domElement.style.filter = 'blur(2px)';
-    rainCanvas.style.filter = 'blur(2px)';
+    renderer.domElement.style.filter = 'blur(5px)';
+    labelRenderer.domElement.style.filter = 'blur(5px)';
+    rainCanvas.style.filter = 'blur(5px)';
 }
 
 function newGame() {
@@ -169,6 +169,7 @@ function newGame() {
 function quitGame() {
     document.getElementById("logoImage").style.display = "none";
     document.getElementById("splashtext").style.display = "none";
+    openTab('', 'titleTab', true)
     openTab('', 'tab', true);
     titleUI();
 }
@@ -190,7 +191,7 @@ async function initScene(isNewGame, savefile = false) {
         if (!studioLogo) {
             studioLogo = true;
             document.getElementById("logoImage").src = "assets/logo.png";
-            document.getElementById("titleOverlay").style.display = "flex";
+            document.getElementById("titleMain").style.display = "block";
         };
 
         //show ui
@@ -259,6 +260,10 @@ async function initScene(isNewGame, savefile = false) {
         valueSliders(taxes, "taxes", info.taxes, 20, true);
         valueSliders(budget, "Budget", info.budget, 150, false);
         setSupplyStat(calculateSupplied(), calculateSupplied());
+
+        //reset zoom
+        camera.zoom = 2;
+        camera.updateProjectionMatrix(); 
 
         //clear warning labels
         Object.keys(warningLabels).forEach(label => {

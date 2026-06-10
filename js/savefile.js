@@ -35,8 +35,8 @@ function saveGame(saveName, overwrite, quit = false) {
 }
 
 //list all saves
-function listJsonSaves(saveMode = false, quit = false) {
-    let savesDiv = document.getElementById("saves");
+function listJsonSaves(saveMode, quit, div) {
+    let savesDiv = document.getElementById(div);
     savesDiv.innerHTML = '';
 
     let saveBox = document.createElement("div");
@@ -52,8 +52,8 @@ function listJsonSaves(saveMode = false, quit = false) {
     saveButton.innerHTML = `<i class="fa-solid fa-floppy-disk"></i>`;
     saveButton.className = "deleteSave";
     saveButton.onclick = () => {
-        saveGame(textbox.value, false, quit);
         openTab('', 'tab', true);
+        saveGame(textbox.value, false, quit);
     };
     saveBox.appendChild(saveButton);
 
@@ -69,17 +69,17 @@ function listJsonSaves(saveMode = false, quit = false) {
         button.className = "saveName";
         if (saveMode) {
             button.onclick = () => {
-                saveGame(element.slice(0, -5), true, quit);
                 openTab('', 'tab', true);
+                saveGame(element.slice(0, -5), true, quit);
             };
         } else {
             button.onclick = () => {
                 initScene(false, JSON.parse(fs.readFileSync(path.join(savesDir, element), 'utf-8')));
-                openTab('', 'tab', true);
                 document.getElementById("logoImage").style.display = "none";
                 document.getElementById("splashtext").style.display = "none";
                 document.getElementById("titleButtons").style.display = "none";
                 document.getElementById("titleLoad").style.display = "block";
+                openTab('', 'titleTab', true)
             };
         };
         card.appendChild(button);
@@ -99,10 +99,10 @@ function listJsonSaves(saveMode = false, quit = false) {
         deleteButton.innerHTML = `<i class="fa-solid fa-trash-can"></i>`;
         deleteButton.onclick = () => {
             fs.unlinkSync(path.join(savesDir, element));
-            listJsonSaves(saveMode);
+            listJsonSaves(saveMode, quit, div);
         };
         card.appendChild(deleteButton);
 
         savesDiv.appendChild(card);
     });
-}; listJsonSaves();
+};

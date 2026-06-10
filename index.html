@@ -55,27 +55,29 @@
                 <div class="left" id="imageSide"></div>
                 <div class="right">
                     <div>
-                        <b id="hintTitle" style="text-transform: capitalize;"></b><br>
-                        <span id="hintContent"></span>
+                        <b id="hintTitle" style="text-transform: capitalize;"></b><br><span id="hintContent"></span>
                     </div>
                 </div>
             </div>
 
             <!-- Build Menu -->
             <div class="tab dual" id="build">
+                <div class="tabTitle">Build</div>
                 <div class="left" id="buildLeft"></div>
                 <div class="right" id="buildRight"></div>
             </div>
 
             <!-- Save/Quit Menu -->
             <div class="tab right fitH" id="menu">
+                <div class="tabTitle">Game Menu</div>
                 <button onclick="quitGame()">Quit</button>
-                <button onclick="openTab('saves', 'tab', true); listJsonSaves(true, true)">Save & Quit</button>
-                <button onclick="openTab('saves', 'tab', true); listJsonSaves(true)">Save</button>
+                <button onclick="openTab('saves', 'tab', true); listJsonSaves(true, true, 'saveslist')">Save & Quit</button>
+                <button onclick="openTab('saves', 'tab', true); listJsonSaves(true, false, 'saveslist')">Save</button>
             </div>
 
             <!-- Statistics -->
             <div class="tab dual" id="statistics">
+                <div class="tabTitle">Statistics</div>
                 <div class="left">
                     <button onclick="openTab('Population', 'statsTab')" class="statsTabButton selected"
                         name="Population">Population</button>
@@ -94,8 +96,7 @@
                         <p><progress id="unemploymentRate" max="100"></progress><span class="price"
                                 id="unemploymentVal"></span></p>
                         <p>Currently working <span id="currentlyworking" class="price"></span></p>
-                        <p><progress id="workRate" max="100"></progress><span class="price"
-                                id="workVal"></span></p>
+                        <p><progress id="workRate" max="100"></progress><span class="price" id="workVal"></span></p>
                     </div>
                     <div class="statsTab innertab" id="education"></div>
                     <div class="statsTab innertab" id="supply"></div>
@@ -106,6 +107,7 @@
 
             <!-- Manage Budget, Taxes, etc -->
             <div class="tab dual" id="manage">
+                <div class="tabTitle">Manage</div>
                 <div class="left">
                     <button onclick="openTab('taxes', 'policyTab')" class="policyTabButton selected"
                         name="taxes">Taxes</button>
@@ -123,12 +125,14 @@
 
             <!-- Guidebook -->
             <div class="tab dual" id="Guide">
+                <div class="tabTitle">Guide</div>
                 <div class="left" id="tutorialLeft"></div>
                 <div class="right" id="tutorialRight"></div>
             </div>
 
             <!-- Demolish menu -->
             <div class="tab right fitH" id="demolish">
+                <div class="tabTitle">Demolish</div>
                 <button onclick="setTool('', 'Demolish')">Above ground</button>
                 <hr>
                 <div id="demolishUnderground"></div>
@@ -155,23 +159,16 @@
             </div>
 
             <!-- Saves menu -->
-            <div class="tab right fitH dual" id="saves"></div>
-
-            <!-- Create new game -->
-            <div class="tab right fitH dual" id="newgame">
-                <select name="City Size" id="citysize">
-                    <option value="16">16x16 (Small)</option>
-                    <option value="32" selected>32x32 (Medium)</option>
-                    <option value="64">64x64 (Large)</option>
-                </select>
-                <input placeholder="Seed (Leave blank for random seed)" id="worldseed">
-                <button onclick="newGame(); openTab('', 'tab', true);" id="createNew">Create</button>
+            <div class="tab right fitH dual" id="saves">
+                <div class="tabTitle">
+                    <a onclick="openTab('menu', 'tab', true)">🡠</a> Save Game
+                </div>
+                <div id="saveslist"></div>
             </div>
         </div>
     </div>
 
     <!-- News bar at top -->
-    <div id="newsDetails" style="display: none;"></div>
     <div class="overlay news" id="newsContent" style="display: none;">&nbsp;</div>
 
     <!-- City Stats at top -->
@@ -228,19 +225,8 @@
     <!-- Tool menu bar -->
     <div id="toolOverlay" class="navigation bottom overlay">
         <div>
-            <button id="hideTool">
-                < Return</button>&nbsp;
-                    <span id="toolname">tool</span>
-        </div>
-    </div>
-
-    <!-- Title menu bar -->
-    <div id="titleOverlay" class="navigation bottom overlay" style="display: none;">
-        <div id="titleButtons">
-            <button id="hideTool" onclick="openTab('newgame', 'tab', true)" name="newgame" class="tabButton">New
-                Game</button>
-            <button id="hideTool" onclick="openTab('saves', 'tab', true)" name="saves" class="tabButton">Saves</button>
-            <button id="hideTool" onclick="window.close()" class="tabButton">Quit</button>
+            <button id="hideTool">Return</button>&nbsp;
+            <span id="toolname">tool</span>
         </div>
     </div>
 
@@ -249,6 +235,57 @@
         <img id="logoImage" src="assets/studio.png"><br>
         <span id="splashtext"></span>
         <span id="titleLoad" class="loadingWheel" style="display: none;"></span>
+        <div id="titleMain" style="display: none;">
+            <!-- title buttons -->
+            <div id="titleButtons" class="titleTab">
+                <div class="tabTitle">Main Menu</div>
+                <button id="hideTool" onclick="openTab('titleNew', 'titleTab', true)" name="newgame"
+                    class="tabButton">New Game</button>
+                <button id="hideTool"
+                    onclick="openTab('titleSaves', 'titleTab', true); listJsonSaves(false, false, 'titleSavesContent')"
+                    name="saves" class="tabButton">Load Game</button>
+                <button id="hideTool"
+                    onclick="openTab('credits', 'titleTab', true);"
+                    name="saves" class="tabButton">Credits</button>
+                <button id="hideTool" onclick="window.close()" class="tabButton">Quit</button>
+            </div>
+
+            <!-- create new game -->
+            <div id="titleNew" class="titleTab" style="display: none;">
+                <div class="tabTitle">
+                    <a onclick="openTab('titleButtons', 'titleTab', true)">🡠</a> New Game
+                </div>
+                <select name="City Size" id="citysize">
+                    <option value="16">16x16 (Small)</option>
+                    <option value="32" selected>32x32 (Medium)</option>
+                    <option value="64">64x64 (Large)</option>
+                </select>
+                <input placeholder="Seed (Leave blank for random seed)" id="worldseed">
+                <button onclick="newGame(); openTab('', 'titleTab', true)" id="createNew">Create</button>
+            </div>
+
+            <!-- load from save -->
+            <div id="titleSaves" class="titleTab" style="display: none; overflow: hidden;">
+                <div class="tabTitle">
+                    <a onclick="openTab('titleButtons', 'titleTab', true)">🡠</a> Load Game
+                </div>
+                <div id="titleSavesContent"></div>
+            </div>
+
+            <!-- credits -->
+            <div id="credits" class="titleTab" style="display: none; overflow: hidden;">
+                <div class="tabTitle">
+                    <a onclick="openTab('titleButtons', 'titleTab', true)">🡠</a> Credits
+                </div>
+                <ul style="padding: 10px;">
+                    <li>3D Models & Sprites: Attar</li>
+                    <li>Code: Arsyad</li>
+                    <br>
+                    <li>Packages used: Three.js, Faker.js, Electron</li>
+                    <li>Icons used used: Fontawesome</li>
+                </ul>
+            </div>
+        </div>
     </div>
 
     <!-- Floating tooltip and notifications -->

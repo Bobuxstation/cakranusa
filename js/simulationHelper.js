@@ -417,6 +417,6 @@ function updateMinisterTab(citizenFlat, arr) {
     if (refresh) ministerTab(arr, 'Ministers');
 }
 
-function fundingEligible() {
-
+function constructiondata() {
+    
 }
