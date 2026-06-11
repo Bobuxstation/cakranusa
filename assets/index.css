@@ -559,6 +559,11 @@ input[type=number]::-webkit-outer-spin-button {
     overflow: auto;
 }
 
+#hideTool {
+    padding-top: 1px;
+    padding-bottom: 2px;
+}
+
 @keyframes spin {
     0% {
         transform: rotate(0deg);
