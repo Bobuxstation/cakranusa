@@ -60,7 +60,7 @@ function profileShortcut(citizen) {
 
 //parse tile data for popup
 let updateInfo = 0;
-function tileInfo(tile) {
+async function tileInfo(tile) {
     if (tile.index != updateInfo) {
         updateInfo = tile.index;
     } else if (floatingDiv.style.display == 'block') {
@@ -72,14 +72,14 @@ function tileInfo(tile) {
                 if (!structures[tile.building].slots) break;
 
                 floatingDiv.appendChild(infoProgress(citizensInTile(tile), eval(structures[tile.building].slots)));
-                floatingDiv.appendChild(infoTable({ "Citizen(s) using facility": `${citizensInTile(tile)}/${eval(structures[tile.building].slots)}`, }));
+                floatingDiv.appendChild(infoTable({ [await translate("Citizen(s) using facility")]: `${citizensInTile(tile)}/${eval(structures[tile.building].slots)}`}));
                 citizensInTile(tile, true).forEach(citizen => { floatingDiv.appendChild(profileShortcut(citizen)) });
                 break;
             case 3:
                 if (!tile.occupied) {
                     //zone for sale
                     floatingDiv.appendChild(infoHeading(`${tile.zone}`));
-                    floatingDiv.appendChild(infoWarning(`No demands for ${tile.zone}!`));
+                    floatingDiv.appendChild(infoWarning(`${await translate("No demands for")} ${await translate(tile.zone)}!`));
                 } else {
                     //occupied zone
                     floatingDiv.appendChild(infoHeading(`${tile.zone}`));
@@ -88,13 +88,13 @@ function tileInfo(tile) {
                     tile.warnings.forEach(e => floatingDiv.appendChild(infoWarning(e)));
                     if (tile.zone == "housing") {
                         floatingDiv.appendChild(infoProgress(checkResidents(tile).length, tile.slot));
-                        floatingDiv.appendChild(infoTable({ "Residents": `${checkResidents(tile).length}/${tile.slot}` }))
+                        floatingDiv.appendChild(infoTable({ [await translate("Residents")]: `${checkResidents(tile).length}/${tile.slot}` }))
                         checkResidents(tile).forEach(citizen => { floatingDiv.appendChild(profileShortcut(citizen)) });
                     } else {
                         floatingDiv.appendChild(infoProgress(checkEmployees(tile).length, tile.slot));
                         floatingDiv.appendChild(infoTable({
-                            "Workers": `${checkEmployees(tile).length}/${tile.slot}`,
-                            "Min. education level": `${education.find(item => structures[item].education == allZones[tile.zone][tile.buildingModel].level - 1) || "basic education"}`
+                            [await translate("Workers")]: `${checkEmployees(tile).length}/${tile.slot}`,
+                            [await translate("Min. education level")]: `${await translate(education.find(item => structures[item].education == allZones[tile.zone][tile.buildingModel].level - 1) || "basic education")}`
                         }))
                         checkEmployees(tile).forEach(citizen => { floatingDiv.appendChild(profileShortcut(citizen)) });
                     }
@@ -102,12 +102,12 @@ function tileInfo(tile) {
                 break;
             case 2:
                 floatingDiv.appendChild(infoHeading(`Road`));
-                if (tile.qualityState < 75) floatingDiv.appendChild(infoWarning("Road below standard quality!"));
+                if (tile.qualityState < 75) floatingDiv.appendChild(infoWarning(await translate("roadquality")));
 
                 floatingDiv.appendChild(infoProgress(tile.qualityState, 100));
                 floatingDiv.appendChild(infoTable({
-                    "Quality": `${tile.qualityState}/100`,
-                    "Vehicles Passing": citizensInTile(tile)
+                    [await translate("Quality")]: `${tile.qualityState}/100`,
+                    [await translate("Vehicles Passing")]: citizensInTile(tile)
                 }));
                 break;
             case 1:

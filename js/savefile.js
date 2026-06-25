@@ -3,9 +3,9 @@ const fs = require('fs');
 const path = require('path');
 
 //save game
-function saveGame(saveName, overwrite, quit = false) {
+async function saveGame(saveName, overwrite, quit = false) {
     if (saveName.trim().length == 0) {
-        newNotification("Invalid file name!");
+        newNotification(await translate("Invalid file name!"));
         return;
     };
 
@@ -25,12 +25,12 @@ function saveGame(saveName, overwrite, quit = false) {
     let dir = path.join(app.getPath('userData'), '/saves');
     if (!fs.existsSync(dir)) { fs.mkdirSync(dir, { recursive: true }); }
     if (fs.existsSync(targetPath) & !overwrite) {
-        newNotification("Save file already exists!");
+        newNotification(await translate("Save file already exists!"));
         return;
     }
 
     fs.writeFileSync(targetPath, JSON.stringify(saveData, null, 2), 'utf-8');
-    newNotification("Game saved!");
+    newNotification(await translate("Game saved!"));
     if (quit) quitGame();
 }
 

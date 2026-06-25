@@ -4,7 +4,7 @@
 
 // build tab mode
 let tool = {};
-function setTool(type, category) {
+async function setTool(type, category) {
     let toolDiv = document.getElementById("tabButtons");
     let selectDiv = document.getElementById("toolOverlay");
     let toolname = document.getElementById("toolname");
@@ -23,7 +23,7 @@ function setTool(type, category) {
     //animations and text
     renderer.domElement.style.cursor = 'crosshair';
     toolDiv.style.animation = "slideOutDown 0.25s both";
-    toolname.innerText = `${category}${type ? ` - ${type}` : ""}${tool["price"] ? ` - ${tool["price"].toLocaleString('id-ID', { style: 'currency', currency: 'IDR', maximumFractionDigits: 0 })}` : " - Free"}`;
+    toolname.innerText = `${tool["price"] ? tool["price"].toLocaleString('id-ID', { style: 'currency', currency: 'IDR', maximumFractionDigits: 0 }) : await translate("Free")}`;
 
     //show selection overlay
     setTimeout(() => {
@@ -78,7 +78,7 @@ async function select(event) {
             let categoryWhitelist = !["Demolish", "Demolish Underground", "Supply", "Foliage", 'Transport'].includes(tool.category);
             let hasRoadConnection = checkNeighborForRoads(tile.posX, tile.posZ, true) == false || !(tile.type == 0 || tile.type == 1);
             if (categoryWhitelist && hasRoadConnection) {
-                newNotification(!(tile.type == 0 || tile.type == 1) ? info.occupied : info.noroad);
+                newNotification(!(tile.type == 0 || tile.type == 1) ? (langData.toast.occupied || "") : (langData.toast.noroad || ""));
                 return;
             };
         }
@@ -139,7 +139,7 @@ function chargePrice(notFree) {
         if (tool.price != 0) newNotification(`-${tool.price.toLocaleString('id-ID', { style: 'currency', currency: 'IDR', maximumFractionDigits: 0 })}`);
         return true;
     } else {
-        newNotification(info.nofunds);
+        newNotification(langData.toast.nofunds || "");
         return false;
     };
 }

@@ -27,16 +27,14 @@
 
     <!-- Extra Dependencies -->
     <script type="text/javascript" src="deps/fa.js"></script>
+    <script type="text/javascript" src="js/local.js"></script>
 
     <!-- Actual code -->
-    <script type="text/javascript" src="js/tutorial.js" defer></script>
     <script type="text/javascript" src="js/savefile.js" defer></script>
     <script type="text/javascript" src="js/rain.js" defer></script>
     <script type="text/javascript" src="js/sosmed.js" defer></script>
-    <script type="text/javascript" src="js/biome.js" defer></script>
     <script type="text/javascript" src="js/tileInfo.js" defer></script>
-    <script type="text/javascript" src="js/pipes.js" defer></script>
-    <script type="text/javascript" src="js/road.js" defer></script>
+    <script type="text/javascript" src="js/roadAndPipe.js" defer></script>
     <script type="text/javascript" src="js/helper.js" defer></script>
     <script type="text/javascript" src="js/pathfinding.js" defer></script>
     <script type="text/javascript" src="js/simulations.js" defer></script>
@@ -55,48 +53,86 @@
                 <div class="left" id="imageSide"></div>
                 <div class="right">
                     <div>
-                        <b id="hintTitle" style="text-transform: capitalize;"></b><br><span id="hintContent"></span>
+                        <b id="hintTitle" style="text-transform: capitalize;"></b>
+                        <span id="hintContent"></span>
                     </div>
                 </div>
             </div>
 
             <!-- Build Menu -->
             <div class="tab dual" id="build">
-                <div class="tabTitle">Build</div>
+                <div class="tabTitle">
+                    <span>Build</span>
+                </div>
                 <div class="left" id="buildLeft"></div>
                 <div class="right" id="buildRight"></div>
             </div>
 
             <!-- Save/Quit Menu -->
             <div class="tab right fitH" id="menu">
-                <div class="tabTitle">Game Menu</div>
-                <button onclick="quitGame()">Quit</button>
-                <button onclick="openTab('saves', 'tab', true); listJsonSaves(true, true, 'saveslist')">Save & Quit</button>
-                <button onclick="openTab('saves', 'tab', true); listJsonSaves(true, false, 'saveslist')">Save</button>
+                <div class="tabTitle">
+                    <span>gamemenu</span>
+                </div>
+                <button onclick="quitGame()">
+                    <span>Quit</span>
+                </button>
+                <button onclick="openTab('saves', 'tab', true); listJsonSaves(true, true, 'saveslist')">
+                    <span>savequit</span>
+                </button>
+                <button onclick="openTab('saves', 'tab', true); listJsonSaves(true, false, 'saveslist')">
+                    <span>Save</span>
+                </button>
             </div>
 
             <!-- Statistics -->
             <div class="tab dual" id="statistics">
-                <div class="tabTitle">Statistics</div>
+                <div class="tabTitle">
+                    <span>Statistics</span>
+                </div>
                 <div class="left">
                     <button onclick="openTab('Population', 'statsTab')" class="statsTabButton selected"
-                        name="Population">Population</button>
-                    <button onclick="openTab('education', 'statsTab')" class="statsTabButton"
-                        name="education">Education</button>
-                    <button onclick="openTab('supply', 'statsTab')" class="statsTabButton" name="supply">Supply</button>
-                    <button onclick="openTab('built', 'statsTab')" class="statsTabButton" name="built">Built</button>
-                    <button onclick="openTab('achievements', 'statsTab')" class="statsTabButton"
-                        name="achievements">Achieve-<br>ments</button>
+                        name="Population">
+                        <span>Population</span>
+                    </button>
+                    <button onclick="openTab('education', 'statsTab')" class="statsTabButton" name="education">
+                        <span>Education</span>
+                    </button>
+                    <button onclick="openTab('supply', 'statsTab')" class="statsTabButton" name="supply">
+                        <span>Supply</span>
+                    </button>
+                    <button onclick="openTab('built', 'statsTab')" class="statsTabButton" name="built">
+                        <span>Built</span>
+                    </button>
+                    <button onclick="openTab('achievements', 'statsTab')" class="statsTabButton" name="achievements">
+                        <span>Achievements</span>
+                    </button>
                 </div>
                 <div class="right">
                     <div class="statsTab innertab" id="Population" style="display: block;">
-                        <p>Population <span id="populationData" class="price"></span></p>
-                        <p>Tourists <span id="touristData" class="price"></span></p>
-                        <p>Unemployed <span id="unemployedData" class="price"></span></p>
-                        <p><progress id="unemploymentRate" max="100"></progress><span class="price"
-                                id="unemploymentVal"></span></p>
-                        <p>Currently working <span id="currentlyworking" class="price"></span></p>
-                        <p><progress id="workRate" max="100"></progress><span class="price" id="workVal"></span></p>
+                        <p>
+                            <span>Population</span>
+                            <span id="populationData" class="price"></span>
+                        </p>
+                        <p>
+                            <span>Tourists</span>
+                            <span id="touristData" class="price"></span>
+                        </p>
+                        <p>
+                            <span>Unemployed</span>
+                            <span id="unemployedData" class="price"></span>
+                        </p>
+                        <p>
+                            <progress id="unemploymentRate" max="100"></progress>
+                            <span class="price" id="unemploymentVal"></span>
+                        </p>
+                        <p>
+                            <span>isworking</span>
+                            <span id="currentlyworking" class="price"></span>
+                        </p>
+                        <p>
+                            <progress id="workRate" max="100"></progress>
+                            <span class="price" id="workVal"></span>
+                        </p>
                     </div>
                     <div class="statsTab innertab" id="education"></div>
                     <div class="statsTab innertab" id="supply"></div>
@@ -107,14 +143,19 @@
 
             <!-- Manage Budget, Taxes, etc -->
             <div class="tab dual" id="manage">
-                <div class="tabTitle">Manage</div>
+                <div class="tabTitle">
+                    <span>Manage</span>
+                </div>
                 <div class="left">
-                    <button onclick="openTab('taxes', 'policyTab')" class="policyTabButton selected"
-                        name="taxes">Taxes</button>
-                    <button onclick="openTab('Budget', 'policyTab')" class="policyTabButton"
-                        name="Budget">Budget</button>
-                    <button onclick="openTab('Ministers', 'policyTab')" class="policyTabButton"
-                        name="Ministers">Ministers</button>
+                    <button onclick="openTab('taxes', 'policyTab')" class="policyTabButton selected" name="taxes">
+                        <span>Taxes</span>
+                    </button>
+                    <button onclick="openTab('Budget', 'policyTab')" class="policyTabButton" name="Budget">
+                        <span>Budget</span>
+                    </button>
+                    <button onclick="openTab('Ministers', 'policyTab')" class="policyTabButton" name="Ministers">
+                        <span>Ministers</span>
+                    </button>
                 </div>
                 <div class="right">
                     <div class="policyTab innertab" id="taxes" style="display: block;"></div>
@@ -125,15 +166,21 @@
 
             <!-- Guidebook -->
             <div class="tab dual" id="Guide">
-                <div class="tabTitle">Guide</div>
+                <div class="tabTitle">
+                    <span>Guide</span>
+                </div>
                 <div class="left" id="tutorialLeft"></div>
                 <div class="right" id="tutorialRight"></div>
             </div>
 
             <!-- Demolish menu -->
             <div class="tab right fitH" id="demolish">
-                <div class="tabTitle">Demolish</div>
-                <button onclick="setTool('', 'Demolish')">Above ground</button>
+                <div class="tabTitle">
+                    <span>Demolish</span>
+                </div>
+                <button onclick="setTool('', 'Demolish')">
+                    <span>buildings</span>
+                </button>
                 <hr>
                 <div id="demolishUnderground"></div>
             </div>
@@ -142,26 +189,17 @@
             <div class="tab right fitH" id="sosmed">
                 <div class="sosmedHeader">
                     sosmed
-                    <button onclick='openTab("Posts", "socialTab")' class="selected socialTabButton"
-                        name="Posts">Posts</button>
-                    <button
-                        onclick='openTab("Profile", "socialTab"); document.getElementById("Profile").innerHTML = "<center><p>To check a user profile here, select it from the post or origin building.</p></center>"'
-                        class="socialTabButton" name="Profile">Profile</button>
                     <button onclick='openTab("sosmed", "tab", true, "slideInDown", "slideOutUp")'
                         style="width: 25px; float: right;">X</button>
                 </div>
                 <div id="Posts" class="socialTab"></div>
-                <div id="Profile" class="socialTab" style="display: none;">
-                    <center>
-                        <p>To check a user profile here, select it from the post or origin building.</p>
-                    </center>
-                </div>
+                <div id="Profile" class="socialTab" style="display: none;"></div>
             </div>
 
             <!-- Saves menu -->
             <div class="tab right fitH dual" id="saves">
                 <div class="tabTitle">
-                    <a onclick="openTab('menu', 'tab', true)">🡠</a> Save Game
+                    <a onclick="openTab('menu', 'tab', true)">🡠</a> <span>savegame</span>
                 </div>
                 <div id="saveslist"></div>
             </div>
@@ -174,13 +212,15 @@
     <!-- City Stats at top -->
     <div class="navigation overlay top" id="topNav" style="display: none;">
         <div>
-            <span id="increase" title="Earned today from taxes.">...</span>
+            <span id="increase" title="Earned today from taxes."></span>
             <span id="money"></span>
         </div>
         <div>
+            <span>Population</span>
             <span id="population"></span>
         </div>
         <div>
+            <span>airquality</span>
             <span id="airquality"></span>
         </div>
         <div id="date">
@@ -192,18 +232,30 @@
     <!-- Bottom menu bar -->
     <div id="tabButtons" class="navigation bottom overlay" style="display: none;">
         <div id="tools">
-            <button onclick="openTab('menu', 'tab', true)" class="tabButton" name="menu">Menu</button>
-            <button onclick="openTab('Guide', 'tab', true)" class="tabButton" name="Guide">Guide</button>
+            <button onclick="openTab('menu', 'tab', true)" class="tabButton" name="menu">
+                <span>Menu</span>
+            </button>
+            <button onclick="openTab('Guide', 'tab', true)" class="tabButton" name="Guide">
+                <span>Guide</span>
+            </button>
         </div>
 
         <div id="tools2">
-            <button onclick="openTab('statistics', 'tab', true)" class="tabButton" name="statistics">Statistics</button>
-            <button onclick="openTab('manage', 'tab', true)" class="tabButton" name="manage">Manage</button>
+            <button onclick="openTab('statistics', 'tab', true)" class="tabButton" name="statistics">
+                <span>Statistics</span>
+            </button>
+            <button onclick="openTab('manage', 'tab', true)" class="tabButton" name="manage">
+                <span>Manage</span>
+            </button>
         </div>
 
         <div id="tools">
-            <button onclick="openTab('build', 'tab', true)" class="tabButton" name="build">Build</button>
-            <button onclick="openTab('demolish', 'tab', true)" class="tabButton" name="demolish">Demolish</button>
+            <button onclick="openTab('build', 'tab', true)" class="tabButton" name="build">
+                <span>Build</span>
+            </button>
+            <button onclick="openTab('demolish', 'tab', true)" class="tabButton" name="demolish">
+                <span>Demolish</span>
+            </button>
         </div>
 
         <div id="tools" class="time">
@@ -226,60 +278,75 @@
     <div id="toolOverlay" class="navigation bottom overlay">
         <div>
             <button id="hideTool">🡠</button>&nbsp;
-            <span id="toolname">tool</span>
+            <span id="toolname"></span>
         </div>
         <div>
             <input type="checkbox">&nbsp;
-            <span id="toolname">Use government funding</span>
+            <span id="toolname">centralfund</span>
         </div>
     </div>
 
     <!-- Intro & loading screen -->
     <div id="intro">
         <img id="logoImage" src="assets/studio.png"><br>
-        <span id="splashtext"></span>
+        <i id="splashtext"></i>
         <span id="titleLoad" class="loadingWheel" style="display: none;"></span>
         <div id="titleMain" style="display: none;">
             <!-- title buttons -->
             <div id="titleButtons" class="titleTab">
-                <div class="tabTitle">Main Menu</div>
-                <button id="hideTool" onclick="openTab('titleNew', 'titleTab', true)" name="newgame"
-                    class="tabButton">New Game</button>
+                <div class="tabTitle">
+                    <span>titlemenu</span>
+                </div>
+                <button id="hideTool" onclick="openTab('titleNew', 'titleTab', true)" name="newgame" class="tabButton">
+                    <span>newgame</span>
+                </button>
                 <button id="hideTool"
                     onclick="openTab('titleSaves', 'titleTab', true); listJsonSaves(false, false, 'titleSavesContent')"
-                    name="saves" class="tabButton">Load Game</button>
-                <button id="hideTool"
-                    onclick="openTab('credits', 'titleTab', true);"
-                    name="saves" class="tabButton">Credits</button>
-                <button id="hideTool" onclick="window.close()" class="tabButton">Quit</button>
+                    name="saves" class="tabButton">
+                    <span>loadgame</span>
+                </button>
+                <button id="hideTool" onclick="openTab('settings', 'titleTab', true);" name="saves" class="tabButton">
+                    <span>Settings</span>
+                </button>
+                <button id="hideTool" onclick="openTab('credits', 'titleTab', true);" name="saves" class="tabButton">
+                    <span>Credits</span>
+                </button>
+                <button id="hideTool" onclick="window.close()" class="tabButton">
+                    <span>Quit</span>
+                </button>
             </div>
 
             <!-- create new game -->
             <div id="titleNew" class="titleTab" style="display: none;">
                 <div class="tabTitle">
-                    <a onclick="openTab('titleButtons', 'titleTab', true)">🡠</a> New Game
+                    <a onclick="openTab('titleButtons', 'titleTab', true)">🡠</a>
+                    <span>newgame</span>
                 </div>
                 <select name="City Size" id="citysize">
-                    <option value="16">16x16 (Small)</option>
-                    <option value="32" selected>32x32 (Medium)</option>
-                    <option value="64">64x64 (Large)</option>
+                    <option value="16">size16</option>
+                    <option value="32" selected>size32</option>
+                    <option value="64">size64</option>
                 </select>
-                <input placeholder="Seed (Leave blank for random seed)" id="worldseed">
-                <button onclick="newGame(); openTab('', 'titleTab', true)" id="createNew">Create</button>
+                <input placeholder="Seed" id="worldseed">
+                <button onclick="newGame(); openTab('', 'titleTab', true)" id="createNew">
+                    <span>Create</span>
+                </button>
             </div>
 
             <!-- load from save -->
             <div id="titleSaves" class="titleTab" style="display: none; overflow: hidden;">
                 <div class="tabTitle">
-                    <a onclick="openTab('titleButtons', 'titleTab', true)">🡠</a> Load Game
+                    <a onclick="openTab('titleButtons', 'titleTab', true)">🡠</a>
+                    <span>loadgame</span>
                 </div>
-                <div id="titleSavesContent"></div>
+                <div id="titleSavesContent" style="margin-bottom: 0;"></div>
             </div>
 
             <!-- credits -->
             <div id="credits" class="titleTab" style="display: none; overflow: hidden;">
                 <div class="tabTitle">
-                    <a onclick="openTab('titleButtons', 'titleTab', true)">🡠</a> Credits
+                    <a onclick="openTab('titleButtons', 'titleTab', true)">🡠</a>
+                    <span>Credits</span>
                 </div>
                 <ul style="padding: 10px;">
                     <li>3D Models & Sprites: Attar</li>
@@ -288,6 +355,36 @@
                     <li>Packages used: Three.js, Faker.js, Electron</li>
                     <li>Icons used used: Fontawesome</li>
                 </ul>
+            </div>
+
+            <!-- settings -->
+            <div id="settings" class="titleTab" style="display: none; overflow: hidden;">
+                <div class="tabTitle">
+                    <a onclick="openTab('titleButtons', 'titleTab', true)">🡠</a> <span>Settings</span>
+                </div>
+                <p>
+                    <span>Language</span>
+                    <select onchange="localStorage.setItem('prefLang', this.value); window.location.reload()"
+                        id="language">
+                        <option value="en">English</option>
+                        <option value="id">Bahasa Indonesia</option>
+                    </select>
+                </p>
+                <p>
+                    <span>Resolution Scale</span>
+                    <select onchange="localStorage.setItem('resolutionscale', this.value); window.location.reload()"
+                        id="graphics-scale">
+                        <option value="1">100%</option>
+                        <option value="0.75">75%</option>
+                        <option value="0.5">50%</option>
+                    </select>
+                </p>
+                <p>
+                    <span>Shadows</span>
+                    <input type="checkbox"
+                        onchange="localStorage.setItem('shadowmap', this.checked); window.location.reload()"
+                        id="graphics-shadows">
+                </p>
             </div>
         </div>
     </div>

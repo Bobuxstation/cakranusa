@@ -1,12 +1,13 @@
 {
   "name": "cakranusa",
-  "version": "1.0.4",
+  "version": "1.0.5",
   "description": "The Indonesian city management experience.",
   "homepage": "https://github.com/Bobuxstation/cakranusa",
   "main": "main.js",
   "scripts": {
     "test": "echo \"No test specified\"",
-    "start": "electron ."
+    "start": "electron .",
+    "build": "electron-builder"
   },
   "repository": "https://github.com/Bobuxstation/cakranusa",
   "publish": {

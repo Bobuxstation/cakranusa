@@ -321,32 +321,34 @@ function findCandidate() {
     return pickedCitizens;
 }
 
-function ministerTab(arr, div) {
-    document.getElementById(div).innerHTML = '';
-
+async function ministerTab(arr, div) {
     //information
+    document.getElementById(div).innerHTML = '';
     let infotext = document.createElement("p");
-    infotext.innerHTML = `<i class="fa-solid fa-circle-info"></i> ${info.minister}`;
+    infotext.innerHTML = `<i class="fa-solid fa-circle-info"></i> ${langData.toast.minister || ""}`;
     document.getElementById(div).appendChild(infotext);
 
     //show ministers for each
     let candidates = findCandidate();
     let candidateIndex = 0;
-    Object.keys(arr).forEach(item => {
-        let itemData = arr[item];
-
+    Object.keys(arr).forEach(async item => {
         let elem = document.createElement("p");
-        elem.innerText = item;
+        elem.innerText = await translate(item);
         document.getElementById(div).appendChild(elem);
 
         let label = document.createElement("span");
-        label.innerText = `Candidates available`;
+        label.innerText = await translate(`Candidates available`);
         label.className = "price";
         elem.appendChild(label);
 
+        let typeDiv = document.createElement("div");
+        typeDiv.className = "candidateContainer";
+        elem.appendChild(typeDiv);
+
+        let itemData = arr[item];
         if (!itemData && candidates[candidateIndex] && candidates[candidateIndex].length != 0) {
             //show candidate selection menu
-            candidates[candidateIndex].forEach(element => {
+            candidates[candidateIndex].forEach(async element => {
                 let buttonContainer = document.createElement("div");
                 let elem = document.createElement("p");
                 elem.className = 'candidate';
@@ -357,26 +359,24 @@ function ministerTab(arr, div) {
 
                 let examine = document.createElement("button");
                 examine.innerHTML = '<i class="fa-solid fa-magnifying-glass"></i>';
-                examine.title = 'Examine profile';
+                examine.title = await translate('Examine profile');
                 examine.onclick = () => profilePage(element);
                 buttonContainer.appendChild(examine);
 
                 let choose = document.createElement("button");
                 buttonContainer.appendChild(choose);
                 choose.innerHTML = '<i class="fa-solid fa-user-check"></i>';
-                choose.title = `Appoint as ${item} minister`;
+                choose.title = await translate(`Appoint as minister`);
                 choose.onclick = () => { arr[item] = element.uuid; ministerTab(officials, 'Ministers'); };
 
                 elem.appendChild(buttonContainer);
-                document.getElementById(div).appendChild(elem);
-            });
-
-            candidateIndex++;
+                typeDiv.appendChild(elem);
+            }); candidateIndex++;
         } else if (arr[item] != false) {
             //manage working minister
-            label.innerText = 'Position filled';
+            label.innerText = await translate('Position filled');
             let element = Object.values(citizens).flat().find(item => item.uuid == itemData);
-            if (!element) { arr[item] = false; ministerTab(officials, 'Ministers'); newNotification(info.ministeropen); return; };
+            if (!element) { arr[item] = false; ministerTab(officials, 'Ministers'); newNotification(langData.toast.ministeropen || ""); return; };
 
             let buttonContainer = document.createElement("div");
             let elem = document.createElement("p");
@@ -388,19 +388,19 @@ function ministerTab(arr, div) {
 
             let examine = document.createElement("button");
             examine.innerHTML = '<i class="fa-solid fa-clock-rotate-left"></i>';
-            examine.title = `Check ministry spending`;
+            examine.title = await translate(`Check ministry spending`);
             examine.onclick = () => profilePage(element);
             buttonContainer.appendChild(examine);
 
             let choose = document.createElement("button");
             buttonContainer.appendChild(choose);
             choose.innerHTML = '<i class="fa-solid fa-user-slash"></i>';
-            choose.title = `Fire as ${item} minister`;
+            choose.title = await translate(`Fire as minister`);
             choose.onclick = () => { arr[item] = false; ministerTab(officials, 'Ministers'); };
 
             elem.appendChild(buttonContainer);
-            document.getElementById(div).appendChild(elem);
-        } else label.innerText = 'No candidates!';
+            typeDiv.appendChild(elem);
+        } else label.innerText = await translate('No candidates');
     });
 }
 

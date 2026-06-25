@@ -9,12 +9,11 @@ camera.position.set(30, 30, 30);
 // Create a renderer
 var renderer = new THREE.WebGLRenderer({ antialias: true });
 renderer.setSize(window.innerWidth, window.innerHeight);
-renderer.setPixelRatio(window.devicePixelRatio);
+renderer.setPixelRatio(((localStorage.getItem('resolutionscale') || 1) == 1) ? window.devicePixelRatio : localStorage.getItem('resolutionscale'));
 renderer.outputEncoding = THREE.sRGBEncoding;
-renderer.shadowMap.enabled = true;
+renderer.shadowMap.enabled = (localStorage.getItem("shadowmap") || "true") === "true";
 renderer.shadowMap.type = THREE.VSMShadowMap;
 renderer.domElement.style.pointerEvents = 'none';
-renderer.domElement.style.filter = 'blur(5px)';
 document.body.appendChild(renderer.domElement);
 
 //warning and label overlays

@@ -1,63 +1,4 @@
 //========================
-// Social Media Posts
-//========================
-
-let sosmedPosts = {
-    "education": [
-        "Cakranusa City lacks complete education facilities",
-        "Citizens left uneducated due to lack of education facilities",
-    ],
-    "religion": [
-        "Citizens demand construction of a place of worship",
-        "Cakranusa City lacks a proper place of worship",
-    ],
-    "unemployment": [
-        "Citizens are unable to find jobs",
-        "Cakranusa City job market is unable to fulfill its population",
-    ],
-    "taxRate": [
-        "Citizens complain about high tax rates",
-        "High tax rates raise uncertainty amongst citizens",
-    ],
-    "hospital": [
-        "Cakranusa City still lacks medical facilities",
-        "Citizens requiring medical attention are unable to get one",
-    ],
-    "police": [
-        "Cakranusa City still lacks a police department",
-        "Streets are still left unguarded, when will a police department be built?",
-    ],
-    "firedept": [
-        "Cakranusa City still lacks a fire department",
-        "Citizens are concerned by the lack of a fire department",
-    ],
-    "unSupplied": [
-        "Some houses are still lacking water and electricity supplies",
-        "Citizens complain lack of water and electricity in some houses",
-    ],
-    "noland": [
-        "Potential citizens still waiting for Cakranusa city to sell plots",
-        "Cakranusa City still at 0, when can citizens start moving in?",
-    ],
-    "pollution": [
-        "City air quality levels are concerningly low - Researches place cause on industries.",
-        "Air quality levels hit an all time low - citizens demand less industries",
-        "Growing amount of industries puts a burden on air quality levels - researchers say"
-    ],
-    "random": [
-        "Unboxing my switch (not that new anymore)",
-        "Just moved in, why is the mayor a bit tilted?",
-        "Bro memiliki kunci untuk semua pintu, nahhh get outttt :emot_tengkorak:",
-        "They just shot the big K...",
-        "If you think about it, old Imran is basically his younger self",
-        "Forcing students to do RIS is so Dystopian ngl...",
-        "They cut the 2nd tree...",
-        "Shaq just bought a share of Google, doubt it'll ever succeed, especially as it's superficial"
-    ],
-    "intro": "Welcome to Cakranusa! Social media posts and news will show up here."
-}
-
-//========================
 // Social Media News
 //========================
 
@@ -88,17 +29,18 @@ let newsAccounts = {
 // Social Media Post
 //========================
 
-function profilePage(citizen) {
+async function profilePage(citizen) {
     let profileFocus = document.getElementById("Profile");
     profileFocus.innerHTML = `
-        <h3>${citizen.name}</h3>
-        <span>@${citizen.username}</span><br>
+        <button style="width: 32px;" onclick='openTab("Posts", "socialTab")'>🡠</button>
+        <h3 style="display: inline; margin-left: 5px;">${citizen.name}</h3>
+        <span>@${citizen.username}</span><br><br>
         <i>${citizen.bio}</i>
         <br><br>
-        <p>Education: ${education.find(item => structures[item].education == Math.floor(citizen.education) - 1) || "basic education"}</p>
-        <p>Moral Points: ${citizen.moral} / 100</p>
-        <p>Employed: ${(Object.values(officials).includes(citizen.uuid) || citizen.job) ? "Yes" : "No"}</p>
-        <p>Currently studying at: ${citizen.school ? education.find(item => structures[item].education == Math.floor(citizen.education)) : "-"}</p>
+        <p>${await translate("Education")}: ${education.find(item => structures[item].education == Math.floor(citizen.education) - 1) || await translate("basic education")}</p>
+        <p>${await translate("Moral Points")}: ${citizen.moral} / 100</p>
+        <p>${await translate("Employed")}: ${(Object.values(officials).includes(citizen.uuid) || citizen.job) ? await translate("Yes") : await translate("No")}</p>
+        <p>${await translate("Currently studying at")}: ${citizen.school ? education.find(item => structures[item].education == Math.floor(citizen.education)) : "-"}</p>
     `;
 
     openTab("Profile", "socialTab");
@@ -163,6 +105,7 @@ function newPost(text, citizen, thumbnail = false) {
 let lastMessage = "";
 function pickMessage() {
     let topics = [];
+    let sosmedPosts = langData.sosmed;
 
     if (Object.values(citizens).flat().length == 0) {
         topics.push("noland")

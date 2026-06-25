@@ -15,7 +15,7 @@
     place-items: center;
 }
 
-#intro span {
+#splashtext {
     text-shadow: 0px 0px 5px #000000;
     color: white;
 }
@@ -118,7 +118,7 @@ body {
 
 .price,
 .right p input {
-    float: right;
+    float: right !important;
     color: #008000;
 }
 
@@ -230,7 +230,7 @@ button,
 .post {
     padding: 5px;
     border: darkgray solid;
-    padding-bottom: 3px;
+    padding-bottom: 6px;
     border-width: 1px 1px 3px 1px;
     cursor: pointer;
     transition: all 0.10s ease;
@@ -257,7 +257,7 @@ button:active,
 }
 
 .top span {
-    float: right;
+    float: left;
     padding-bottom: 3px;
 }
 
@@ -269,7 +269,7 @@ button:active,
     display: none;
     pointer-events: all;
     animation: slideInUp 0.25s both;
-    max-height: 260px;
+    max-height: 265px;
 }
 
 #notifications {
@@ -306,24 +306,26 @@ button:active,
 
 #hint .left {
     padding-bottom: 0;
-    height: fit-content;
+    height: 110px;
+    display: flex !important;
+    align-items: center;
 }
 
 #hint .right {
     height: fit-content;
     display: flex;
     place-items: center;
-    height: 80px;
+    height: 110px;
     padding: 15px;
 }
 
 .right,
 .left {
     width: fit-content;
-    height: 295px;
+    height: 265px;
     float: left;
     overflow: auto;
-    padding-bottom: 65px;
+    padding-bottom: 30px;
 }
 
 .tutorialTab {
@@ -332,14 +334,14 @@ button:active,
 
 .dual button {
     display: block;
-    width: 75px;
+    width: 90px;
     padding: 10px;
     margin: 5px;
     padding-bottom: 8px;
 }
 
 .dual .right {
-    width: 325px;
+    width: 350px;
 }
 
 .dual .left {
@@ -492,9 +494,14 @@ input[type=number]::-webkit-outer-spin-button {
     pointer-events: none;
 }
 
+.candidateContainer {
+    margin: -10px;
+    margin-top: 0px;
+}
+
 #increase {
     color: #008000;
-    margin-left: 5px;
+    margin-right: 5px;
 }
 
 .candidate {
@@ -520,7 +527,7 @@ input[type=number]::-webkit-outer-spin-button {
     background: #ffffffbd;
     backdrop-filter: blur(10px);
     width: calc(30vw - 30px);
-    max-height: 40vh;
+    max-height: fit-content;
     overflow: auto;
 }
 
@@ -547,6 +554,26 @@ input[type=number]::-webkit-outer-spin-button {
     background: #00000020 !important;
     cursor: pointer;
     transition: all 0.10s ease;
+}
+
+#settings p {
+    padding: 10px;
+    display: flex;
+    align-items: center;
+    height: 45px;
+    padding-bottom: 0;
+}
+
+#settings p:last-of-type {
+    padding-bottom: 10px;
+}
+
+#settings input,
+#settings select {
+    width: 50%;
+    margin: 10px;
+    position: absolute;
+    right: 0;
 }
 
 #titleSavesContent {

@@ -151,11 +151,7 @@ function titleUI() {
     initScene(false);
     openTab('', 'tab', true);
     openTab('', 'titleTab', true)
-
     renderer.domElement.style.pointerEvents = 'none';
-    renderer.domElement.style.filter = 'blur(5px)';
-    labelRenderer.domElement.style.filter = 'blur(5px)';
-    rainCanvas.style.filter = 'blur(5px)';
 }
 
 function newGame() {
@@ -179,9 +175,9 @@ async function initScene(isNewGame, savefile = false) {
     //pause simulation
     document.getElementById("titleButtons").style.display = "none";
     document.getElementById("titleLoad").style.display = "block";
-
     simulationRunning = false;
     setSpeed(0);
+    
     setTimeout(async () => {
         //reshow title buttons
         document.getElementById("logoImage").style.display = "block";
@@ -190,6 +186,7 @@ async function initScene(isNewGame, savefile = false) {
         document.getElementById("titleLoad").style.display = "none";
         if (!studioLogo) {
             studioLogo = true;
+            await startAutomaticTranslation();
             document.getElementById("logoImage").src = "assets/logo.png";
             document.getElementById("titleMain").style.display = "block";
         };
@@ -198,12 +195,9 @@ async function initScene(isNewGame, savefile = false) {
         if (savefile || isNewGame) {
             document.getElementById("Posts").innerHTML = '';
             document.getElementById("increase").innerHTML = '...';
-            if (isNewGame) newNotification("Welcome to Cakranusa! Start out by building some housing zones.");
             gameUI();
-            setTimeout(() => {
-                newPost(sosmedPosts.intro, { username: 'cakranusa', bio: 'For tutorials, check the help menu', name: "Cakranusa" }, false);
-                openTab('Guide', 'tab', true);
-            }, 500);
+
+            setTimeout(() => openTab('Guide', 'tab', true), 500);
         };
 
         //splash text
@@ -253,12 +247,14 @@ async function initScene(isNewGame, savefile = false) {
 
         //reload model and menus
         scene.remove.apply(scene, scene.children);
+        loadSettings();
+        loadTutorial();
         allOfTheLights(scene);
         loadUnderground();
         await generateGrid(sceneData);
         ministerTab(officials, 'Ministers')
-        valueSliders(taxes, "taxes", info.taxes, 20, true);
-        valueSliders(budget, "Budget", info.budget, 150, false);
+        valueSliders(taxes, "taxes", langData.toast.taxes || "", 20, true);
+        valueSliders(budget, "Budget", langData.toast.budget || "", 150, false);
         setSupplyStat(calculateSupplied(), calculateSupplied());
 
         //reset zoom
@@ -284,4 +280,4 @@ async function initScene(isNewGame, savefile = false) {
 }; 
 
 initScene(false);
-//initScene(false, JSON.parse(fs.readFileSync(`C:/Users/User/AppData/Roaming/cakranusa/saves/sons of cakranusa.json`, 'utf-8')));
+//initScene(false, JSON.parse(fs.readFileSync(`C:/Users/User/AppData/Roaming/cakranusa/saves/largegridcity.json`, 'utf-8')));

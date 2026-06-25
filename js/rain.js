@@ -4,8 +4,6 @@
 //========================
 
 var rainCanvas = document.getElementById("rainOverlay");
-rainCanvas.style.filter = 'blur(5px)';
-
 var ctx = rainCanvas.getContext('2d');
 var maxParts = 1000;
 var particles = [];

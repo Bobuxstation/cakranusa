@@ -7,6 +7,13 @@ function sleep(ms) {
     return new Promise(resolve => setTimeout(resolve, ms / 2));
 }
 
+//load settings
+function loadSettings() {
+    document.getElementById("language").value = localStorage.getItem('prefLang') || 'en';
+    document.getElementById("graphics-scale").value = localStorage.getItem('resolutionscale') || 1;
+    document.getElementById("graphics-shadows").checked = localStorage.getItem('shadowmap') !== 'false';
+}
+
 //toast notifications
 function newNotification(text) {
     let toast = document.createElement('div');
@@ -73,12 +80,12 @@ function updateEducationStats() {
     let educationTab = document.getElementById("education");
     educationTab.innerHTML = '';
 
-    education.filter(key => structures[key].type == "education").forEach(key => {
+    education.filter(key => structures[key].type == "education").forEach(async key => {
         let item = structures[key];
         let citizensFlat = Object.values(citizens).flat();
 
         let textElem = document.createElement('p');
-        textElem.innerHTML = `Graduated ${key} <span class="price">${citizensFlat.filter(i => i.education >= item.education + 1).length} / ${citizensFlat.length}</span>`
+        textElem.innerHTML = await translate(`Graduated ${key}`) + ` <i class="price">${citizensFlat.filter(i => i.education >= item.education + 1).length} / ${citizensFlat.length}</i>`;
         educationTab.appendChild(textElem);
 
         let percentageLabel = document.createElement("p");
@@ -89,7 +96,7 @@ function updateEducationStats() {
         percentageProgress.value = ((citizensFlat.filter(i => i.education >= item.education + 1).length / citizensFlat.length) || 0) * 100;
         percentageLabel.appendChild(percentageProgress);
 
-        let percentageSpan = document.createElement("span");
+        let percentageSpan = document.createElement("i");
         percentageSpan.className = 'price';
         percentageSpan.innerText = `${Math.floor(((citizensFlat.filter(i => i.education >= item.education + 1).length / citizensFlat.length) || 0) * 100)}%`
         percentageLabel.appendChild(percentageSpan);
@@ -99,18 +106,21 @@ function updateEducationStats() {
 //summarize all built tiles
 function summarizeBuilt() {
     let tiles = sceneData.flat().filter(item => item.type != 0 && item.type !== 1);
-    let sum = {};
+    let sum = {}, key;
 
-    tiles.forEach((tile, i) => {
+    tiles.forEach(async (tile, i) => {
         switch (tile.type) {
             case 3:
-                sum[`${tile.zone} (zone)`] = (sum[`${tile.zone} (zone)`] || 0) + 1;
+                key = `${await translate(tile.zone)} (${await translate("zone")})`;
+                sum[key] = (sum[key] || 0) + 1;
                 break;
             case 4:
-                sum[tile.building] = (sum[tile.building] || 0) + 1;
+                key = await translate(tile.building);
+                sum[key] = (sum[key] || 0) + 1;
                 break;
             case 2:
-                sum['road'] = (sum['road'] || 0) + 1;
+                key = await translate('road');
+                sum[key] = (sum[key] || 0) + 1;
                 break;
         }
 
@@ -118,7 +128,7 @@ function summarizeBuilt() {
             document.getElementById('built').innerHTML = '';
             Object.keys(sum).forEach(type => {
                 let label = document.createElement('p');
-                label.innerHTML = `${type}<span class="price">${sum[type]}</span>`;
+                label.innerHTML = `${type}<i class="price">${sum[type]}</i>`;
                 document.getElementById('built').appendChild(label);
             });
         }
@@ -126,7 +136,7 @@ function summarizeBuilt() {
 }
 
 //sync taxes with ui
-function valueSliders(arr, div, infoText, max, showApproval) {
+async function valueSliders(arr, div, infoText, max, showApproval) {
     document.getElementById(div).innerHTML = '';
 
     //tax office notice
@@ -136,8 +146,8 @@ function valueSliders(arr, div, infoText, max, showApproval) {
 
     //approval rates label
     let approval = document.createElement("p");
-    approval.innerHTML = 'Approval rate';
-    let approvalSpan = document.createElement("span");
+    approval.innerHTML = await translate('Approval rate');
+    let approvalSpan = document.createElement("i");
     approvalSpan.className = 'price';
     approvalSpan.id = 'taxesApprovalLabel';
     let approvalProgress = document.createElement("progress");
@@ -145,11 +155,11 @@ function valueSliders(arr, div, infoText, max, showApproval) {
     approvalProgress.max = 100;
 
     //add input
-    Object.keys(arr).forEach(item => {
+    Object.keys(arr).forEach(async item => {
         let elem = document.createElement("p");
-        elem.innerText = item;
+        elem.innerText = await translate(item);
 
-        let label = document.createElement("span");
+        let label = document.createElement("i");
         label.innerText = `${(arr[item] * 100).toFixed(1)}%`;
         label.className = "price";
 
@@ -187,6 +197,39 @@ function valueSliders(arr, div, infoText, max, showApproval) {
 //========================
 // Helper Functions - Math & Data
 //========================
+
+//worley noise for biomes
+function worley01Seeded(x, y, cellSize = 1, seed = 1) {    
+    x /= cellSize;
+    y /= cellSize;
+
+    const ix = Math.floor(x);
+    const iy = Math.floor(y);
+    let minDist = Infinity;
+
+    for (let dx = -1; dx <= 1; dx++) {
+        for (let dy = -1; dy <= 1; dy++) {
+            const cx = ix + dx;
+            const cy = iy + dy;
+
+            // Feature point inside the cell
+            const fx = cx + hash2D(cx, cy, seed);
+            const fy = cy + hash2D(cx, cy, seed + 1);
+
+            const dist = Math.hypot(x - fx, y - fy);
+            minDist = Math.min(minDist, dist);
+        }
+    }
+
+    return Math.min(minDist / Math.SQRT2, 1);
+}
+
+//hash2d
+function hash2D(x, y, seed) {
+    let h = x * 374761393 + y * 668265263 + seed * 1442695040888963407;
+    h = (h ^ (h >> 13)) * 1274126177;
+    return ((h ^ (h >> 16)) >>> 0) / 4294967296;
+}
 
 //biased random
 function mulberry32(a) {

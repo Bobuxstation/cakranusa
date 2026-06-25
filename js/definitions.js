@@ -203,61 +203,50 @@ let structures = {
     //Foliage
     'Forest': {
         "model": "assets/trees/j1",
-        "description": "Trees for the environment and rainwater absorption",
         "price": 150_000
     },
     'Oak Forest': {
         "model": "assets/trees/j2",
-        "description": "Trees for the environment and rainwater absorption",
         "price": 150_000
     },
     'Acacia Forest': {
         "model": "assets/trees/j3",
-        "description": "Trees for the environment and rainwater absorption",
         "price": 150_000
     },
     'Pine Forest': {
         "model": "assets/trees/j4",
-        "description": "Trees for the environment and rainwater absorption",
         "price": 150_000
     },
     'Swamp forest': {
         "model": "assets/trees/j5",
-        "description": "Trees for the environment and rainwater absorption",
         "price": 150_000
     },
     //Zoning
     "housing": {
         "model": "assets/zoning/housing",
-        "description": "Allocate selected land(s) for citizen housing",
         "price": 100_000
     },
     "commercial": {
         "model": "assets/zoning/commercial",
-        "description": "Allocate selected land(s) for commercial workplaces",
         "price": 100_000
     },
     "industrial": {
         "model": "assets/zoning/industrial",
-        "description": "Allocate selected land(s) for industrial workplaces, Affects the environment",
         "price": 100_000
     },
     "farm": {
         "model": "assets/zoning/farm",
-        "description": "Allocate selected land(s) for farmland workplaces",
         "price": 100_000
     },
     //Transport
     "road": {
         "model": "assets/roads/plainroad",
-        "description": "Connect buildings with each other",
         "variableModel": true,
         "price": 1_500_000,
         "walkable": false
     },
     "road with sidewalks": {
         "model": "assets/roads/road",
-        "description": "Connect buildings with each other",
         "variableModel": true,
         "price": 3_000_000,
         "walkable": true
@@ -265,7 +254,6 @@ let structures = {
     //Healthcare
     "hospital": {
         "model": "assets/facility/hospital",
-        "description": "Keeps citizens healthy",
         "type": "medical",
         "slots": 'Math.floor(8 * budget.healthcare)',
         "price": 150_000_000
@@ -273,21 +261,18 @@ let structures = {
     //Police
     "police station": {
         "model": "assets/facility/polisi",
-        "description": "Keeps the city safe",
         "type": "police",
         "slots": 'Math.floor(8 * budget.police)',
         "price": 120_000_000
     },
     "tax office": {
         "model": "assets/facility/polisi",
-        "description": "Collects taxes from citizens",
         "type": "taxoffice",
         "price": 120_000_000
     },
     //Fire Dept
     "fire department": {
         "model": "assets/facility/damkar",
-        "description": "Extinguish any building fires",
         "type": "firedept",
         "slots": 'Math.floor(8 * budget.firefighter)',
         "price": 100_000_000
@@ -295,14 +280,12 @@ let structures = {
     //Religion
     "masjid": {
         "model": "assets/facility/mosque",
-        "description": "Increase religious and moral values",
         "type": "religion",
         "slots": 16,
         "price": 150_000_000
     },
     "cathedral": {
         "model": "assets/facility/katedral",
-        "description": "Increase religious and moral values",
         "type": "religion",
         "slots": 16,
         "price": 150_000_000
@@ -310,7 +293,6 @@ let structures = {
     //Education
     "elementary school": {
         "model": "assets/facility/school",
-        "description": "Increase citizens education and moral values",
         "type": "education",
         "education": 1,
         "slots": 'Math.floor(16 * budget.education)',
@@ -318,7 +300,6 @@ let structures = {
     },
     "middle school": {
         "model": "assets/facility/school",
-        "description": "Increase citizens education and moral values",
         "type": "education",
         "education": 2,
         "slots": 'Math.floor(16 * budget.education)',
@@ -326,7 +307,6 @@ let structures = {
     },
     "high school": {
         "model": "assets/facility/school",
-        "description": "Increase citizens education and moral values",
         "type": "education",
         "education": 3,
         "slots": 'Math.floor(16 * budget.education)',
@@ -335,59 +315,50 @@ let structures = {
     //Leisure
     "Bus stop": {
         "model": "assets/facility/halte",
-        "description": "Decoration for now",
         "type": "leisure",
         "price": 20_000_000
     },
     "Football field": {
         "model": "assets/facility/football",
-        "description": "Field for playing football",
         "type": "leisure",
         "price": 25_000_000
     },
     "Padel Field": {
         "model": "assets/facility/padel",
-        "description": "Field for playing padel",
         "type": "leisure",
         "price": 25_000_000
     },
     "Park": {
         "model": "assets/facility/park",
-        "description": "Green space for the city",
         "type": "tourism",
         "price": 25_000_000
     },
     "Fountain Monument": {
         "model": "assets/facility/monumen",
-        "description": "Green space for the city",
         "type": "tourism",
         "price": 25_000_000
     },
     //Services
     "recycling plant": {
         "model": "assets/facility/recycle plant",
-        "description": "Recycle citizens waste to avoid pollution",
         "type": "waste",
         "capacity": 2400,
         "price": 150_000_000
     },
     "wind turbine": {
         "model": "assets/facility/kincir",
-        "description": "Wind turbine for electricity",
         "type": "electric cable",
         "capacity": 150,
         "price": 50_000_000
     },
     "solar panel": {
         "model": "assets/facility/PLTS",
-        "description": "Solar panel for electricity",
         "type": "electric cable",
         "capacity": 150,
         "price": 50_000_000
     },
     "water pump": {
         "model": "assets/facility/watertreatment",
-        "description": "Pumps water from underground",
         "type": "water pipe",
         "capacity": 150,
         "price": 50_000_000
@@ -395,7 +366,6 @@ let structures = {
     //Supply
     "electric cable": {
         "model": "assets/pipe/cable",
-        "description": "Supplies electricity to buildings",
         "capacity": 150,
         "label": "Electricity",
         "variableModel": true,
@@ -403,7 +373,6 @@ let structures = {
     },
     "water pipe": {
         "model": "assets/pipe/pipe",
-        "description": "Supplies water to buildings",
         "capacity": 150,
         "label": "Water",
         "variableModel": true,
@@ -559,9 +528,9 @@ let highestEducation = education.filter(key => typeof structures[key].education 
 //underground demolish categories
 function loadUnderground() {
     document.getElementById("demolishUnderground").innerHTML = '';
-    underground.forEach(item => {
+    underground.forEach(async item => {
         let button = document.createElement("button");
-        button.innerText = item;
+        button.innerText = await translate(item);
         button.onclick = () => setTool(item, 'Demolish Underground');
 
         document.getElementById("demolishUnderground").appendChild(button);
@@ -570,10 +539,10 @@ function loadUnderground() {
 };
 
 //fill build menu
-Object.keys(buildmenu).forEach((item, i) => {
+Object.keys(buildmenu).forEach(async (item, i) => {
     const button = document.createElement("button");
     button.className = 'buildTabButton';
-    button.innerText = item;
+    button.innerText = await translate(item);
     button.name = item;
     button.onclick = () => { openTab(`${item}`, 'buildTab') };
 
@@ -587,14 +556,16 @@ Object.keys(buildmenu).forEach((item, i) => {
         const subItemButton = document.createElement("button");
         tab.appendChild(subItemButton);
 
-        subItemButton.innerHTML = `${subItemKey}<span class="price">~${subItem.price ? subItem.price.toLocaleString('id-ID', { style: 'currency', currency: 'IDR', maximumFractionDigits: 0 }) : "Free"}*</span>`;
+        subItemButton.innerHTML = `${await translate(subItemKey)}<i class="price">~${subItem.price ? subItem.price.toLocaleString('id-ID', { style: 'currency', currency: 'IDR', maximumFractionDigits: 0 }) : await translate("Free")}*</i>`;
         subItemButton.onclick = () => { setTool(subItemKey, item) };
         subItemButton.onmouseout = () => { document.getElementById("hint").style.display = "none"; };
         subItemButton.onmouseover = async () => {
             Object.values(document.getElementsByClassName("hintPreview")).forEach(element => element.style.display = element.id == `${subItemKey}` ? "block" : "none");
             document.getElementById("imageSide").style.display = "block";
-            document.getElementById("hintTitle").innerText = subItemKey;
-            document.getElementById("hintContent").innerText = `${subItem.description || "No Description"}\n*Prices vary based on ministry factors`;
+            document.getElementById("hintTitle").innerText = await translate(subItemKey);
+            document.getElementById("hintContent").innerText = `
+                ${await translate(`desc-${subItemKey}`)}
+                *${await translate('pricedisclamer')}`;
             document.getElementById("hint").style.display = "block";
         };
 
@@ -604,3 +575,20 @@ Object.keys(buildmenu).forEach((item, i) => {
     document.getElementById("buildLeft").appendChild(button);
     document.getElementById("buildRight").appendChild(tab);
 });
+
+var splashtext = [
+    "With corruption!",
+    "100% Not rushed",
+    "Where are the promised housing zones?",
+    "Disasters coming soon!",
+    "Electricity not included",
+    "0% Employment rates!",
+    "Write it down, @poskita",
+    "Yes, we will fix the broken roads",
+    "32 Road tiles!",
+    "has the keys!",
+    "Stop cutting down those trees!",
+    "Water not included",
+    "Models by TAR",
+    "Brought to you by Perintis Interactive"
+];

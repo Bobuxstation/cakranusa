@@ -289,10 +289,10 @@ function allStep() {
         let citizensFlat = Object.values(citizens).flat();
         document.getElementById("money").innerText = money.toLocaleString('id-ID', { style: 'currency', currency: 'IDR', maximumFractionDigits: 0 });
         document.getElementById("populationData").innerText = citizensFlat.length;
-        document.getElementById("airquality").innerText = `Air Quality: ${((1 - calculatePollution()) * 100).toFixed(1)}%`;
+        document.getElementById("airquality").innerText = `: ${((1 - calculatePollution()) * 100).toFixed(1)}%`;
         
         //population tab stats
-        document.getElementById("population").innerText = `Population: ${citizensFlat.length}`;
+        document.getElementById("population").innerText = `: ${citizensFlat.length}`;
         document.getElementById("touristData").innerText = tourismProfit();
         document.getElementById("unemployedData").innerText = `${citizensFlat.filter(item => item.job == false).length} / ${citizensFlat.length}`;
         document.getElementById("unemploymentVal").innerText = `${Math.floor(((citizensFlat.filter(item => item.job == false).length / citizensFlat.length) || 0) * 100)}%`;
@@ -438,14 +438,14 @@ function zoneTileStep(allZoneTile, calcSupply, originalSupply) {
 
 //simulation for zoned tiles
 var warningLabels = {};
-function zoneTileTick(tile, calcSupply, originalSupply, isLast) {
+async function zoneTileTick(tile, calcSupply, originalSupply, isLast) {
     try {
         let warnings = [];
         if (!tile.age) tile.age = 0;
         if (tile.zone == "housing") {
             //employment info
             let tileJobless = citizens[tile.index] ? citizens[tile.index].filter(u => u.job == false).length : 0;
-            if (tileJobless != 0) warnings.push(`${tileJobless} citizen(s) unemployed!`);
+            if (tileJobless != 0) warnings.push(`${tileJobless} ${await translate("citizen(s) unemployed!")}`);
 
             // if building is empty, sell tile
             if (checkResidents(tile).length == 0) {
@@ -465,10 +465,10 @@ function zoneTileTick(tile, calcSupply, originalSupply, isLast) {
         }
 
         //consume supply
-        Object.keys(allZones[tile.zone][tile.buildingModel].consumption).forEach(item => {
+        Object.keys(allZones[tile.zone][tile.buildingModel].consumption).forEach(async item => {
             if (!calcSupply[item]) return;
             if (!calcSupply[item][tile[`${item}_network`]]) {
-                warnings.push(`Unavailable: ${structures[item].label}`);
+                warnings.push(`${await translate("Unavailable")}: ${await translate(structures[item].label)}`);
                 return;
             };
 
@@ -477,7 +477,7 @@ function zoneTileTick(tile, calcSupply, originalSupply, isLast) {
                 calcSupply[item][tile[`${item}_network`]] -= allZones[tile.zone][tile.buildingModel].consumption[item];
             } else {
                 calcSupply[item][tile[`${item}_network`]] = 0;
-                warnings.push(`Not Enough: ${structures[item].label}`);
+                warnings.push(`${await translate("Not Enough")}: ${await translate(structures[item].label)}`);
             };
         })
 
@@ -548,29 +548,33 @@ function calculateSupplied() {
 function setSupplyStat(calcSupply, originalSupply) {
     let supplyStat = document.getElementById("supply");
     supplyStat.innerHTML = '';
-    Object.keys(calcSupply).forEach(key => {
+    Object.keys(calcSupply).forEach(async key => {
         let heading = document.createElement("p");
-        heading.innerHTML = `<b>${structures[key].label}</b>`;
+        heading.innerHTML = `<b>${await translate(structures[key].label)}</b>`;
         supplyStat.appendChild(heading);
+
+        let supplyContainer = document.createElement("div");
+        supplyContainer.className = "candidateContainer";
+        heading.appendChild(supplyContainer);
 
         if (Object.keys(calcSupply[key]).length == 0) {
             let text = document.createElement("p");
-            text.innerText = `Nothing here!`;
-            supplyStat.appendChild(text);
+            text.innerText = await translate(`Nothing here!`);
+            supplyContainer.appendChild(text);
         }
 
         Object.keys(calcSupply[key]).forEach(item => {
             let usedAmount = originalSupply[key][item] - calcSupply[key][item];
             let text = document.createElement("p");
             text.innerText = item;
-            supplyStat.appendChild(text);
+            supplyContainer.appendChild(text);
 
             let percentageProgress = document.createElement("progress");
             percentageProgress.max = 100;
             percentageProgress.value = ((usedAmount / originalSupply[key][item]) || 0) * 100;
             text.appendChild(percentageProgress);
 
-            let percentageSpan = document.createElement("span");
+            let percentageSpan = document.createElement("i");
             percentageSpan.className = 'price';
             percentageSpan.innerText = `${Math.floor(((usedAmount / originalSupply[key][item]) || 0) * 100)}%`
             text.appendChild(percentageSpan);
