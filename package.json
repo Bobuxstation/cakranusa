@@ -18,12 +18,12 @@
   },
   "devDependencies": {
     "electron": "^39.2.7",
-    "electron-builder": "^26.15.3"
+    "electron-builder": "^25.1.8"
   },
   "publish": {
-      "provider": "github",
-      "releaseType": "release"
-    },
+    "provider": "github",
+    "releaseType": "release"
+  },
   "build": {
     "appId": "com.perintisinteractive.cakranusa",
     "productName": "Cakranusa",
