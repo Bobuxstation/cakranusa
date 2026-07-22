@@ -445,10 +445,8 @@ function animMove(target, isUp, playSound = true) {
     const height = target.scale.y;
     const startTime = performance.now();
 
-    if (!isUp) {
-        spawnSmoke(target.position, 3000);
-        if (playSound) (new Audio("assets/audio/829103__squirrel_404__smasheddemolished-brick-wall-crumblingcaving-in.mp3")).play();
-    };
+    if (!isUp && playSound) (new Audio("assets/audio/829103__squirrel_404__smasheddemolished-brick-wall-crumblingcaving-in.mp3")).play();
+    spawnSmoke(target.position, 3000);
 
     function lerpAnim() {
         const t = Math.min((performance.now() - startTime) / 500, 1);

@@ -68,7 +68,7 @@ async function tileInfo(tile) {
 
         switch (tile.type) {
             case 4:
-                floatingDiv.appendChild(infoHeading(tile.building));
+                floatingDiv.appendChild(infoHeading(await translate(tile.building)));
                 if (!structures[tile.building].slots) break;
 
                 floatingDiv.appendChild(infoProgress(citizensInTile(tile), eval(structures[tile.building].slots)));
@@ -78,11 +78,11 @@ async function tileInfo(tile) {
             case 3:
                 if (!tile.occupied) {
                     //zone for sale
-                    floatingDiv.appendChild(infoHeading(`${tile.zone}`));
+                    floatingDiv.appendChild(infoHeading(`${await translate(tile.zone)}`));
                     floatingDiv.appendChild(infoWarning(`${await translate("No demands for")} ${await translate(tile.zone)}!`));
                 } else {
                     //occupied zone
-                    floatingDiv.appendChild(infoHeading(`${tile.zone}`));
+                    floatingDiv.appendChild(infoHeading(`${await translate(tile.zone)}`));
 
                     //resident info and warning labels
                     tile.warnings.forEach(e => floatingDiv.appendChild(infoWarning(e)));
@@ -101,7 +101,7 @@ async function tileInfo(tile) {
                 };
                 break;
             case 2:
-                floatingDiv.appendChild(infoHeading(`Road`));
+                floatingDiv.appendChild(infoHeading(await translate(`road`)));
                 if (tile.qualityState < 75) floatingDiv.appendChild(infoWarning(await translate("roadquality")));
 
                 floatingDiv.appendChild(infoProgress(tile.qualityState, 100));
@@ -111,7 +111,7 @@ async function tileInfo(tile) {
                 }));
                 break;
             case 1:
-                floatingDiv.appendChild(infoHeading(tile.foliageType));
+                floatingDiv.appendChild(infoHeading(await translate(tile.foliageType)));
                 break;
             default:
                 floatingDiv.appendChild(infoTable(tile));

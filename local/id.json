@@ -65,7 +65,7 @@
         "Facility": "Fasilitas",
         "hospital": "Rumah Sakit",
         "police station": "Kantor Polisi",
-        "fire department": "Dinas Pemadam Kebakaran",
+        "fire department": "Pemadam Kebakaran",
         "tax office": "Kantor Pajak",
         "masjid": "Masjid",
         "cathedral": "Katedral",
@@ -157,7 +157,8 @@
         "Currently studying at": "Belajar di",
         "Workers": "Pekerja",
         "Min. education level": "Tingkat pendidikan minimum",
-        "Yes": "Iya"
+        "Yes": "Iya",
+        "No demands for":"Tidak ada permintaan untuk"
     },
     "toast": {
         "occupied": "Tidak bisa dibangun di sini: Petak ini sudah terisi",

@@ -155,7 +155,8 @@
         "Currently studying at": "Currently studying at",
         "Workers": "Workers",
         "Min. education level": "Minimum education level",
-        "Yes": "Yes"
+        "Yes": "Yes",
+        "No demands for":"No demands for"
     },
     "toast": {
         "occupied": "Cannot build here: Tile already occupied",
