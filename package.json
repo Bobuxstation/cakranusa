@@ -9,10 +9,6 @@
     "start": "electron ."
   },
   "repository": "https://github.com/Bobuxstation/cakranusa",
-  "publish": {
-    "provider": "github",
-    "releaseType": "release"
-  },
   "author": "Perintis Interactive",
   "license": "MIT",
   "dependencies": {
@@ -24,11 +20,18 @@
     "electron": "^39.2.7",
     "electron-builder": "^26.15.3"
   },
+  "publish": {
+      "provider": "github",
+      "releaseType": "release"
+    },
   "build": {
     "appId": "com.perintisinteractive.cakranusa",
     "productName": "Cakranusa",
+    "publish": {
+      "provider": "github",
+      "releaseType": "release"
+    },
     "win": {
-      "verifyUpdateCodeSignature": false,
       "target": [
         {
           "target": "nsis",
@@ -45,7 +48,7 @@
           ]
         }
       ],
-      "publisherName": "Perintis Interactive"
+      "verifyUpdateCodeSignature": false
     },
     "linux": {
       "target": [
