@@ -56,7 +56,6 @@
       "target": [
         "deb",
         "AppImage",
-        "snap",
         "rpm"
       ],
       "maintainer": "Perintis Interactive",
