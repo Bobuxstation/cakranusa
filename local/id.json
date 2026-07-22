@@ -158,7 +158,9 @@
         "Workers": "Pekerja",
         "Min. education level": "Tingkat pendidikan minimum",
         "Yes": "Iya",
-        "No demands for":"Tidak ada permintaan untuk"
+        "No demands for":"Tidak ada permintaan untuk",
+        "Quit??": "Yakin Keluar??",
+        "Nevermind": "Gak Jadi"
     },
     "toast": {
         "occupied": "Tidak bisa dibangun di sini: Petak ini sudah terisi",

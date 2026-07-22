@@ -156,7 +156,9 @@
         "Workers": "Workers",
         "Min. education level": "Minimum education level",
         "Yes": "Yes",
-        "No demands for":"No demands for"
+        "No demands for":"No demands for",
+        "Quit??": "Quit??",
+        "Nevermind": "Nevermind"
     },
     "toast": {
         "occupied": "Cannot build here: Tile already occupied",

@@ -122,6 +122,7 @@ async function generateGrid(data) {
 //will not be on the save file
 let meshLocations = {}, gridInstance;
 let simulationSpeed = 0;
+let finishLoading = false;
 
 //will be on the save file
 let sceneData, citizens = {}, money = 1_000_000_000, date = 0, worldSeed;
@@ -176,6 +177,7 @@ async function initScene(isNewGame, savefile = false) {
     document.getElementById("titleButtons").style.display = "none";
     document.getElementById("titleLoad").style.display = "block";
     simulationRunning = false;
+    finishLoading = false;
     setSpeed(0);
     
     setTimeout(async () => {
@@ -274,6 +276,7 @@ async function initScene(isNewGame, savefile = false) {
         rainCanvas.style.display = isRaining(worldSeed, date) ? "block" : "none";
 
         //start simulation
+        finishLoading = true;
         simulationRunning = true;
         allStep();
     }, 2000);
